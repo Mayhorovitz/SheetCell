@@ -3,15 +3,16 @@ package coordinate;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class CoordinateFactory {
 
     private static final Map<String, Coordinate> cachedCoordinates = new HashMap<>();
 
     public static Coordinate createCoordinate(int row, int column) {
-        if (row <= 0) {
+        if (row < 0) {
             throw new IllegalArgumentException("Row number must be positive. Provided: " + row);
         }
-        if (column <= 0) {
+        if (column < 0) {
             throw new IllegalArgumentException("Column number must be positive. Provided: " + column);
         }
 

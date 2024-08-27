@@ -2,6 +2,7 @@ package cell.api;
 
 import java.util.List;
 import coordinate.Coordinate;
+import sheet.api.Sheet;
 
 public interface Cell {
 
@@ -9,8 +10,11 @@ public interface Cell {
     String getOriginalValue();
     void setCellOriginalValue(String value);
     EffectiveValue getEffectiveValue();
-    boolean calculateEffectiveValue();
     int getVersion();
     List<Cell> getDependsOn();
     List<Cell> getInfluencingOn();
+
+    void updateVersion(int newVersion);
+
+    boolean calculateEffectiveValue();
 }

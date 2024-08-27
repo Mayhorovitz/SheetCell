@@ -21,13 +21,16 @@ public class CellImpl implements Cell {
     private int version;
     private final List<Cell> dependsOn;
     private final List<Cell> influencingOn;
+    private SheetReadActions sheet;
 
-    public CellImpl(int row, int column, String originalValue, int version)  {
+
+    public CellImpl(int row, int column, String originalValue, int version, SheetReadActions sheet )  {
         this.coordinate = new CoordinateImpl(row, column);
         this.originalValue = originalValue;
         this.version = version;
         this.dependsOn = new ArrayList<>();
         this.influencingOn = new ArrayList<>();
+        this.sheet = sheet;
     }
     @Override
     public Coordinate getCoordinate() {
@@ -50,20 +53,10 @@ public class CellImpl implements Cell {
     }
 
     @Override
-    public boolean calculateEffectiveValue() {
-        // build the expression object out of the original value...
-        // it can be {PLUS, 4, 5} OR {CONCAT, {ref, A4}, world}
-        Expression expression = FunctionParser.parseExpression(originalValue);
-
-        EffectiveValue newEffectiveValue = expression.eval(sheet);
-
-        if (newEffectiveValue.equals(effectiveValue)) {
-            return false;
-        } else {
-            effectiveValue = newEffectiveValue;
-            return true;
-        }
+    public void updateVersion(int newVersion){
+        this.version = newVersion;
     }
+
 
     @Override
     public int getVersion() {
@@ -78,5 +71,22 @@ public class CellImpl implements Cell {
     @Override
     public List<Cell> getInfluencingOn() {
         return influencingOn;
+    }
+
+
+    @Override
+    public boolean calculateEffectiveValue() {
+        // build the expression object out of the original value...
+        // it can be {PLUS, 4, 5} OR {CONCAT, {ref, A4}, world}
+        Expression expression = FunctionParser.parseExpression(originalValue);
+
+        EffectiveValue newEffectiveValue = expression.eval(sheet);
+
+        if (newEffectiveValue.equals(effectiveValue)) {
+            return false;
+        } else {
+            effectiveValue = newEffectiveValue;
+            return true;
+        }
     }
 }

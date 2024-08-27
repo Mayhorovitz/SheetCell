@@ -1,9 +1,10 @@
 package sheet.api;
 
 import cell.api.Cell;
+import coordinate.Coordinate;
 
 public interface SheetReadActions {
     int getVersion();
-    Cell getCell(int row, int column);
+    Cell getCell(Coordinate coordinate);
 
 }

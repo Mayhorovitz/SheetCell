@@ -1,8 +1,8 @@
 package expression.parser;
 
-
 import coordinate.Coordinate;
 import coordinate.CoordinateFactory;
+import coordinate.CoordinateImpl;
 import expression.api.Expression;
 import expression.impl.*;
 import cell.api.CellType;
@@ -11,6 +11,8 @@ import cell.api.EffectiveValue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
+import static coordinate.CoordinateFactory.createCoordinate;
 
 public enum FunctionParser {
     IDENTITY {
@@ -91,48 +93,145 @@ public enum FunctionParser {
             return new MinusExpression(left, right);
         }
     },
-    UPPER_CASE {
+    TIMES {
         @Override
         public Expression parse(List<String> arguments) {
-            // validations of the function. it should have exactly one argument
-            if (arguments.size() != 1) {
-                throw new IllegalArgumentException("Invalid number of arguments for UPPER_CASE function. Expected 1, but got " + arguments.size());
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for TIMES function. Expected 2, but got " + arguments.size());
             }
 
             // structure is good. parse arguments
-            Expression arg = parseExpression(arguments.get(0).trim());
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
 
-            // more validations on the expected argument types
-            if (!arg.getFunctionResultType().equals(CellType.STRING)) {
-                throw new IllegalArgumentException("Invalid argument types for UPPER_CASE function. Expected STRING, but got " + arg.getFunctionResultType());
-            }
 
             // all is good. create the relevant function instance
-            return new UpperCaseExpression(arg);
+            return new TimesExpression(left, right);
+        }
+
+    },
+
+    DIVIDE {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for DIVIDE function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+
+            // all is good. create the relevant function instance
+            return new DivideExpression(left, right);
         }
     },
+
+    MOD {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for MOD function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            // all is good. create the relevant function instance
+            return new ModExpression(left, right);
+        }
+    },
+
+    POW {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for POW function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            // all is good. create the relevant function instance
+            return new PowExpression(left, right);
+        }
+    },
+
+    ABS {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for ABS function. Expected 1, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression exp = parseExpression(arguments.getFirst());
+
+            // all is good. create the relevant function instance
+            return new ABSExpression(exp);
+        }
+    },
+
+    CONCAT {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for CONCAT function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            // all is good. create the relevant function instance
+            return new ConcatExpression(left, right);
+        }
+    },
+
+    SUB {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 3) {
+                throw new IllegalArgumentException("Invalid number of arguments for SUB function. Expected 3, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression middle = parseExpression(arguments.get(1));
+            Expression right = parseExpression(arguments.get(2));
+
+            // all is good. create the relevant function instance
+            return new SubExpression(left, middle, right);
+        }
+    },
+
     REF {
         @Override
         public Expression parse(List<String> arguments) {
-            // validations of the function. it should have exactly one argument
+            // validations of the function. it should have exactly two arguments
             if (arguments.size() != 1) {
                 throw new IllegalArgumentException("Invalid number of arguments for REF function. Expected 1, but got " + arguments.size());
             }
 
-            // verify indeed argument represents a reference to a cell and create a Coordinate instance. if not ok returns a null. need to verify it
-            Coordinate target = CoordinateFactory.from(arguments.get(0).trim());
-            if (target == null) {
-                throw new IllegalArgumentException("Invalid argument for REF function. Expected a valid cell reference, but got " + arguments.get(0));
-            }
+            // structure is good. parse arguments
+            String cellId = arguments.getFirst().toUpperCase();
 
-            // should verify if the coordinate is within boundaries of the sheet ?
-            // ...
+            Coordinate cellIdentifier =  createCoordinate(cellId);
 
-            return new RefExpression(target);
+            // create the relevant Ref function instance
+            return new RefExpression(cellIdentifier);
         }
-    }
-
-    ;
+    };
 
     abstract public Expression parse(List<String> arguments);
 
@@ -182,21 +281,6 @@ public enum FunctionParser {
         }
 
         return parts;
-    }
-
-    public static void main(String[] args) {
-
-        //String input = "plus, {plus, 1, 2}, {plus, 1, {plus, 1, 2}}";
-//        String input = "1";
-//        parseMainParts(input).forEach(System.out::println);
-
-//        String input = "{plus, 1, 2}";
-        String input = "{plus, {minus, 44, 22}, {plus, 1, 2}}";
-//        String input = "{upper_case, hello world}";
-//        String input = "4";
-        Expression expression = parseExpression(input);
-        EffectiveValue result = expression.eval(null);
-        System.out.println("result: " + result.getValue() + " of type " + result.getCellType());
     }
 
 }

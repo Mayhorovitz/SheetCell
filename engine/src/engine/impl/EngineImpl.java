@@ -17,7 +17,10 @@ import sheet.impl.SheetImpl;
 import java.io.File;
 import java.lang.reflect.InaccessibleObjectException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static coordinate.CoordinateFactory.createCoordinate;
 
 
 public class EngineImpl implements Engine {
@@ -30,11 +33,15 @@ public class EngineImpl implements Engine {
     int currentSheetVersion = LOAD_VERSION;
 
     @Override
-    public void loadSheet(String filePath) throws Exception {
-        STLSheet loadedSheetFromXML =loadXMLFile(filePath);
+    public void loadFile(String filePath) throws Exception {
+        STLSheet loadedSheetFromXML = loadXMLFile(filePath);
         allSheets = new HashMap<>();
         Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML);
         currentSheet.setSheetVersion(LOAD_VERSION);
+
+
+        calculateSheetEffectiveValues();
+
         allSheets.put(LOAD_VERSION, currentSheet);
     }
 
@@ -50,51 +57,54 @@ public class EngineImpl implements Engine {
             System.out.println("The file is not an XML file.");
             return null;
         }
-            try {
 
-                JAXBContext context = JAXBContext.newInstance(STLSheet.class);
-                Unmarshaller unmarshaller = context.createUnmarshaller();
+        try {
 
-                STLSheet sheet = (STLSheet) unmarshaller.unmarshal(xmlFile);
+            JAXBContext context = JAXBContext.newInstance(STLSheet.class);
+            Unmarshaller unmarshaller = context.createUnmarshaller();
 
-                if (!validateSheet(sheet)) {
-                    System.out.println("The XML file is invalid according to the application's rules.");
-                    return null;
-                }
+            STLSheet sheet = (STLSheet) unmarshaller.unmarshal(xmlFile);
 
-                System.out.println("The XML file has been successfully loaded into the system.");
-                return sheet;
-
-            } catch (JAXBException e) {
-                System.out.println("An error occurred while loading the XML file.");
-                e.printStackTrace();
+            if (!validateSheet(sheet)) {
+                System.out.println("The XML file is invalid according to the application's rules.");
+                return null;
             }
+
+            System.out.println("The XML file has been successfully loaded into the system.");
+            return sheet;
+
+        } catch (JAXBException e) {
+            System.out.println("An error occurred while loading the XML file.");
+            e.printStackTrace();
+        }
         return null;
     }
 
-        private boolean validateSheet(STLSheet sheet) {
-            STLLayout layout = sheet.getSTLLayout();
-            if (layout.getRows() < 1 || layout.getRows() > MAX_ROWS ||
-                    layout.getColumns() < 1 || layout.getColumns() > MAX_COLS) {
-                System.out.println("Invalid sheet layout: Rows and columns must be within allowed range.");
+
+    private boolean validateSheet(STLSheet sheet) {
+        STLLayout layout = sheet.getSTLLayout();
+        if (layout.getRows() < 1 || layout.getRows() > MAX_ROWS ||
+                layout.getColumns() < 1 || layout.getColumns() > MAX_COLS) {
+            System.out.println("Invalid sheet layout: Rows and columns must be within allowed range.");
+            return false;
+        }
+        for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
+            int row = cell.getRow();
+            String column = cell.getColumn();
+            int columnIndex = convertColumnToIndex(column);
+
+            if (row < 1 || row > layout.getRows() || columnIndex < 1 || columnIndex > layout.getColumns()) {
+                System.out.println("Invalid cell location: Cell at row " + row + ", column " + column + " is out of bounds.");
                 return false;
             }
-            for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
-                int row = cell.getRow();
-                String column = cell.getColumn();
-                int columnIndex = convertColumnToIndex(column);
 
-                if (row < 1 || row > layout.getRows() || columnIndex < 1 || columnIndex > layout.getColumns()) {
-                    System.out.println("Invalid cell location: Cell at row " + row + ", column " + column + " is out of bounds.");
-                    return false;
-                }
-
-            }
-
-            return true;
         }
 
-    private static int convertColumnToIndex(String column) {
+        return true;
+    }
+
+
+    private int convertColumnToIndex(String column) {
         int result = 0;
         for (char c : column.toUpperCase().toCharArray()) {
             result = result * 26 + (c - 'A' + 1);
@@ -121,7 +131,7 @@ public class EngineImpl implements Engine {
             String column = stlCell.getColumn();
             int columnIndex = convertColumnToIndex(column);
 
-            Coordinate coordinate = CoordinateFactory.createCoordinate(row, columnIndex);
+            Coordinate coordinate = createCoordinate(row, columnIndex);
             Cell cell = new CellImpl(row, columnIndex, originalValue, 1);
             newSheet.addCell(coordinate, cell);
         }
@@ -129,73 +139,19 @@ public class EngineImpl implements Engine {
 
         return newSheet;
     }
-
-
-
-
     @Override
-    public SpreadsheetDTO getSpreadsheetState() {
-        validateSheetIsLoaded();
-        return convertSheetToDTO(allSheets.get(currentSpreadSheetVersion));
+    public Sheet getCurrentSpreadSheet(){
+        return allSheets.get(LOAD_VERSION);
     }
-
     @Override
-    public CellDTO getCellInfo(String cellId) {
-        validateSheetIsLoaded();
-        Coordinate cellCoordinate = createCoordinate(cellId);
-        Cell cellToDTO = allSheets.get(currentSpreadSheetVersion).getCell(cellCoordinate);
-
-        return new CellDTO(cellToDTO.getOriginalValue(),
-                cellToDTO.getEffectiveValue(),
-                cellToDTO.getLastModifiedVersionVersion());
+    public Cell getCellInfo(String cellIdentifier){
+        Coordinate cellCoordinate = createCoordinate(cellIdentifier);
+        Cell cell = allSheets.get(currentSheetVersion).getCell(cellCoordinate);
+        return cell;
     }
-
     @Override
-    public void updateCell(String cellId, String newValue) {
-        validateSheetIsLoaded();
-        Coordinate coordinate = CoordinateFactory.createCoordinate(cellId);
-        Spreadsheet currentSpreadsheet = allSheets.get(currentSpreadSheetVersion).copySheet(); //need to deep copy instead.
-
-        try {
-            currentSpreadSheetVersion++;
-            currentSpreadsheet.setSheetVersion(currentSpreadSheetVersion);
-            allSheets.put(currentSpreadSheetVersion,currentSpreadsheet);
-            allSheets.get(currentSpreadSheetVersion).setCell(coordinate, newValue);
-
-        } catch (Exception e) {
-            allSheets.remove(currentSpreadSheetVersion);
-            currentSpreadSheetVersion--;
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void exitProgram() {
+    public void exit() {
         System.exit(0);
     }
-
-    @Override
-    public int getCurrentVersion() {
-        validateSheetIsLoaded();
-        //TODO
-        return 0;
-    }
-
-    private void validateSheetIsLoaded() {
-        if (allSheets.get(LOAD_VERSION) == null) {
-            throw new InaccessibleObjectException("File is not loaded yet.\n");
-        }
-    }
-
-    @Override
-    public Map<Integer, SpreadsheetDTO> getSpreadSheetVersionHistory() {
-        validateSheetIsLoaded();
-        Map<Integer, SpreadsheetDTO> spreadSheetByVersionDTO = new HashMap<>();
-
-        for (Map.Entry<Integer, Spreadsheet> entry : allSheets.entrySet()) {
-            spreadSheetByVersionDTO.put(entry.getKey(), convertSheetToDTO(allSheets.get(entry.getKey())));
-        }
-
-        return spreadSheetByVersionDTO;
-    }
 }
+

@@ -7,12 +7,10 @@ import coordinate.Coordinate;
 import coordinate.CoordinateFactory;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class SheetImpl implements Sheet {
+public class SheetImpl implements Sheet , Serializable{
     private String name;
     private int version;
     private int rows;
@@ -20,6 +18,8 @@ public class SheetImpl implements Sheet {
     private int rowHeight;
     private int colWidth;
     private Map<Coordinate, Cell> activeCells;
+    private List<Coordinate> cellsThatHaveChanged;
+
 
     public SheetImpl() {
         this.activeCells = new HashMap<>();
@@ -28,7 +28,12 @@ public class SheetImpl implements Sheet {
     public void setName(String name) {
         this.name = name;
     }
-    void setSheetVersion(int loadVersion){
+
+    public Map<Coordinate, Cell> getActiveCells() {
+        return activeCells;
+    }
+
+    public void setSheetVersion(int loadVersion){
         this.version = loadVersion;
     }
     @Override
@@ -51,28 +56,47 @@ public class SheetImpl implements Sheet {
     public void setVersion(int version) {
         this.version = version;
     }
-
     @Override
     public int getVersion() {
 
-        return 0;
+        return  this.version;
+    }
+    @Override
+    public int getRows() {
+        return rows;
+    }
+    @Override
+    public int getCols() {
+        return cols;
+    }
+    @Override
+    public int getRowHeight() {
+        return rowHeight;
+    }
+    @Override
+    public int getColWidth() {
+        return colWidth;
     }
 
     @Override
-    public Cell getCell(int row, int column) {
-        return activeCells.get(CoordinateFactory.createCoordinate(row, column));
+    public String getName(){
+
+        return this.name;
+    }
+
+    @Override
+    public Cell getCell(Coordinate coordinate) {
+        return activeCells.get(coordinate);
     }
     public void addCell(Coordinate coordinate, Cell cell) {
         activeCells.put(coordinate, cell);
     }
 
-    @Override
     public Sheet updateCellValueAndCalculate(int row, int column, String value) {
-
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
 
         SheetImpl newSheetVersion = copySheet();
-        Cell newCell = new CellImpl(row, column, value, newSheetVersion.getVersion() + 1, newSheetVersion);
+        Cell newCell = new CellImpl(row, column, value, newSheetVersion.getVersion() + 1);
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         try {
@@ -83,30 +107,53 @@ public class SheetImpl implements Sheet {
                             .filter(Cell::calculateEffectiveValue)
                             .collect(Collectors.toList());
 
-            // successful calculation. update sheet and relevant cells version
-            // int newVersion = newSheetVersion.increaseVersion();
-            // cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
+            // חישוב מוצלח. עדכון הגרסה של הגיליון ושל התאים הרלוונטיים
+            int newVersion = newSheetVersion.increaseVersion();
+            cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
 
             return newSheetVersion;
         } catch (Exception e) {
-            // deal with the runtime error that was discovered as part of invocation
+            // התמודדות עם שגיאות בזמן ריצה שזוהו במהלך הקריאה
             return this;
         }
     }
 
+    // פונקציה שממיינת תאים לחישוב
     private List<Cell> orderCellsForCalculation() {
-        // data structure 1 0 1: Topological sort...
-        // build graph from the cells. each cell is a node. each cell that has ref(s) constitutes an edge
-        // handle case of circular dependencies -> should fail
-        return null;
+        // מיון טופולוגי: יצירת גרף מהתאים, כל תא הוא צומת, כל תא שיש לו הפניות מהווה קצה.
+        // טיפול במצב של תלות מעגלית -> אמור להיכשל אם קיימת תלות כזו
+        List<Cell> orderedCells = new ArrayList<>();
+        Map<Cell, Boolean> visited = new HashMap<>();
+
+        for (Cell cell : activeCells.values()) {
+            if (!visited.containsKey(cell)) {
+                topologicalSort(cell, visited, orderedCells);
+            }
+        }
+
+        Collections.reverse(orderedCells); // התוצאה הסופית של המיון הטופולוגי
+        return orderedCells;
     }
 
-    private SheetImpl copySheet() {
-        // lots of options here:
-        // 1. implement clone all the way (yac... !)
-        // 2. implement copy constructor for CellImpl and SheetImpl
+    // פונקציה שמבצעת מיון טופולוגי של תאים
+    private void topologicalSort(Cell cell, Map<Cell, Boolean> visited, List<Cell> orderedCells) {
+        visited.put(cell, true);
 
-        // 3. how about serialization ?
+        for (Cell neighbor : cell.getInfluencingOn()) {
+            if (!visited.containsKey(neighbor)) {
+                topologicalSort(neighbor, visited, orderedCells);
+            } else if (visited.get(neighbor)) {
+                throw new RuntimeException("Circular dependency detected");
+            }
+        }
+
+        visited.put(cell, false);
+        orderedCells.add(cell);
+    }
+
+    // פונקציה להעתקת הגיליון
+    private SheetImpl copySheet() {
+
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -116,9 +163,15 @@ public class SheetImpl implements Sheet {
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
             return (SheetImpl) ois.readObject();
         } catch (Exception e) {
-            // deal with the runtime error that was discovered as part of invocation
+            // התמודדות עם שגיאות בזמן ריצה שזוהו במהלך הקריאה
+            e.printStackTrace();
             return this;
         }
+    }
+
+    // פונקציה שמעלה את גרסת הגיליון
+    private int increaseVersion() {
+        return ++this.version;
     }
 }
 
