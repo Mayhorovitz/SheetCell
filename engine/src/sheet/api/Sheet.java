@@ -38,4 +38,5 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
 
     Sheet updateCellValueAndCalculate(int row, int column, String value);
     Map<Coordinate, Cell> getActiveCells();
+    void updateDependenciesAndInfluences();
 }

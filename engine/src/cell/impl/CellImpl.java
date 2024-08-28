@@ -94,4 +94,14 @@ public class CellImpl implements Cell {
             return true;
         }
     }
+
+    @Override
+    public void resetDependencies() {
+
+    }
+
+    @Override
+    public void resetInfluences() {
+
+    }
 }

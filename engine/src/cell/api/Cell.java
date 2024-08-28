@@ -18,4 +18,8 @@ public interface Cell {
     void updateVersion(int newVersion);
 
     boolean calculateEffectiveValue();
+
+    void resetDependencies();
+
+    void resetInfluences();
 }

@@ -141,11 +141,10 @@ public class EngineImpl implements Engine {
 
             EffectiveValue effectiveValue = expression.eval(newSheet);
             cell.setEffectiveValue(effectiveValue);
-
             newSheet.addCellThatChanged(cell.getCoordinate());
-
-
             newSheet.addCell(coordinate, cell);
+            newSheet.updateDependenciesAndInfluences();
+
         }
 
         return newSheet;

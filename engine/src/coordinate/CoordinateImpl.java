@@ -18,7 +18,22 @@ public class CoordinateImpl implements Coordinate {
     public int getColumn() {
         return column;
     }
+    @Override
+    public String toString() {
+        // המרה של אינדקס העמודה לאות גדולה באנגלית
+        StringBuilder columnLetter = new StringBuilder();
+        int tempColumn = column;
 
+        while (tempColumn > 0) {
+            tempColumn--; // כדי להתאים למיקום האותיות (A=1, B=2,...)
+            char letter = (char) ('A' + (tempColumn % 26));
+            columnLetter.insert(0, letter); // מוסיפים את האות ההתחלתית להתחלה
+            tempColumn = tempColumn / 26;
+        }
+
+        // החזרת המחרוזת עם האות הגדולה של העמודה ומספר השורה
+        return columnLetter.toString() + row;
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
