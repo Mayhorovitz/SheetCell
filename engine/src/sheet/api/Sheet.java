@@ -34,6 +34,7 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     int getColWidth();
 
     int getRowHeight();
+    void addCellThatChanged(Coordinate coordinate);
 
     Sheet updateCellValueAndCalculate(int row, int column, String value);
     Map<Coordinate, Cell> getActiveCells();

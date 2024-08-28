@@ -1,7 +1,9 @@
 package engine.impl;
 
 
+import cell.api.EffectiveValue;
 import cell.impl.CellImpl;
+import expression.api.Expression;
 import generated.*;
 import cell.api.Cell;
 import engine.api.Engine;
@@ -21,13 +23,14 @@ import java.util.List;
 import java.util.Map;
 
 import static coordinate.CoordinateFactory.createCoordinate;
+import static expression.parser.FunctionParser.parseExpression;
 
 
 public class EngineImpl implements Engine {
 
     public static final int MAX_ROWS = 50;
     public static final int MAX_COLS = 20;
-    public static final int LOAD_VERSION = 1;
+    public static final int LOAD_VERSION = 0;
 
     private Map<Integer, Sheet> allSheets;
     int currentSheetVersion = LOAD_VERSION;
@@ -39,8 +42,6 @@ public class EngineImpl implements Engine {
         Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML);
         currentSheet.setSheetVersion(LOAD_VERSION);
 
-
-        calculateSheetEffectiveValues();
 
         allSheets.put(LOAD_VERSION, currentSheet);
     }
@@ -124,18 +125,28 @@ public class EngineImpl implements Engine {
         newSheet.setRowHeight(size.getRowsHeightUnits());
         newSheet.setColWidth(size.getColumnWidthUnits());
 
+
         for (STLCell stlCell : stlSheet.getSTLCells().getSTLCell()) {
 
             String originalValue = stlCell.getSTLOriginalValue();
             int row = stlCell.getRow();
             String column = stlCell.getColumn();
-            int columnIndex = convertColumnToIndex(column);
+            int col = convertColumnToIndex(column);
 
-            Coordinate coordinate = createCoordinate(row, columnIndex);
-            Cell cell = new CellImpl(row, columnIndex, originalValue, 1);
+            Coordinate coordinate = createCoordinate(row, col);
+            Cell cell = new CellImpl(row, col, originalValue, 0, newSheet);
+            Expression expression;
+
+                expression = parseExpression(stlCell.getSTLOriginalValue());
+
+            EffectiveValue effectiveValue = expression.eval(newSheet);
+            cell.setEffectiveValue(effectiveValue);
+
+            newSheet.addCellThatChanged(cell.getCoordinate());
+
+
             newSheet.addCell(coordinate, cell);
         }
-
 
         return newSheet;
     }

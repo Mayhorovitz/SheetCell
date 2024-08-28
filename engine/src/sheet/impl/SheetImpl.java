@@ -23,6 +23,7 @@ public class SheetImpl implements Sheet , Serializable{
 
     public SheetImpl() {
         this.activeCells = new HashMap<>();
+        this.cellsThatHaveChanged = new ArrayList<>();
     }
     @Override
     public void setName(String name) {
@@ -91,12 +92,15 @@ public class SheetImpl implements Sheet , Serializable{
     public void addCell(Coordinate coordinate, Cell cell) {
         activeCells.put(coordinate, cell);
     }
+    public void addCellThatChanged(Coordinate coordinate) {
+        cellsThatHaveChanged.add(coordinate);
+    }
 
     public Sheet updateCellValueAndCalculate(int row, int column, String value) {
         Coordinate coordinate = CoordinateFactory.createCoordinate(row, column);
 
         SheetImpl newSheetVersion = copySheet();
-        Cell newCell = new CellImpl(row, column, value, newSheetVersion.getVersion() + 1);
+        Cell newCell = new CellImpl(row, column, value, newSheetVersion.getVersion() + 1, newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         try {

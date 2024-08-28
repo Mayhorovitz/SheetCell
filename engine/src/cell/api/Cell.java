@@ -9,6 +9,7 @@ public interface Cell {
     Coordinate getCoordinate();
     String getOriginalValue();
     void setCellOriginalValue(String value);
+    void setEffectiveValue(EffectiveValue effectiveValue);
     EffectiveValue getEffectiveValue();
     int getVersion();
     List<Cell> getDependsOn();
