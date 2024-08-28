@@ -1,9 +1,7 @@
 package engine.impl;
 
 
-import cell.api.EffectiveValue;
 import cell.impl.CellImpl;
-import expression.api.Expression;
 import generated.*;
 import cell.api.Cell;
 import engine.api.Engine;
@@ -12,18 +10,13 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import coordinate.Coordinate;
-import coordinate.CoordinateFactory;
-import sheet.api.SheetReadActions;
 import sheet.impl.SheetImpl;
 
 import java.io.File;
-import java.lang.reflect.InaccessibleObjectException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static coordinate.CoordinateFactory.createCoordinate;
-import static expression.parser.FunctionParser.parseExpression;
 
 
 public class EngineImpl implements Engine {
@@ -148,7 +141,7 @@ public class EngineImpl implements Engine {
     // חישוב הערכים האפקטיביים לפי סדר החישוב הנכון
     for (Cell cell : newSheet.orderCellsForCalculation()) {
         cell.calculateEffectiveValue();
-        newSheet.addCellThatChanged(cell.getCoordinate());
+        newSheet.addCellThatChanged(cell);
     }
         return newSheet;
     }
@@ -172,8 +165,8 @@ public class EngineImpl implements Engine {
     }
 
 
-    public int getSheetByVersion(int version) {
-        return allSheets.get(version).getCellsThatHaveChanged().size();
+    public Sheet getSheetByVersion(int version) {
+        return allSheets.get(version);
     }
     @Override
     public void exit() {

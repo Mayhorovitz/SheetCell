@@ -32,10 +32,10 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     int getCols();
 
     int getColWidth();
-    List<Coordinate> getCellsThatHaveChanged();
+    List<Cell> getCellsThatHaveChanged();
 
     int getRowHeight();
-    void addCellThatChanged(Coordinate coordinate);
+    void addCellThatChanged(Cell cell);
     List<Cell> orderCellsForCalculation();
     Map<Coordinate, Cell> getActiveCells();
     void updateDependenciesAndInfluences();

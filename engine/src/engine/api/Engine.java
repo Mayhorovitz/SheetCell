@@ -4,8 +4,6 @@ package engine.api;
 import cell.api.Cell;
 import sheet.api.Sheet;
 
-import java.util.Map;
-
 public interface Engine {
 
     void loadFile(String filePath) throws Exception;
@@ -19,5 +17,5 @@ public interface Engine {
 
     int getCurrentSheetVersion();
 
-    int getSheetByVersion(int version);
+    Sheet getSheetByVersion(int version);
 }

@@ -21,7 +21,7 @@ public class SheetImpl implements Sheet , Serializable {
     private int rowHeight;
     private int colWidth;
     private Map<Coordinate, Cell> activeCells;
-    private List<Coordinate> cellsThatHaveChanged;
+    private List<Cell> cellsThatHaveChanged;
 
 
     public SheetImpl() {
@@ -47,7 +47,7 @@ public class SheetImpl implements Sheet , Serializable {
         this.rows = rows;
     }
 
-    public List<Coordinate> getCellsThatHaveChanged() {
+    public List<Cell> getCellsThatHaveChanged() {
         return cellsThatHaveChanged;
     }
 
@@ -112,8 +112,8 @@ public class SheetImpl implements Sheet , Serializable {
         activeCells.put(coordinate, cell);
     }
 
-    public void addCellThatChanged(Coordinate coordinate) {
-        cellsThatHaveChanged.add(coordinate);
+    public void addCellThatChanged(Cell cell) {
+        cellsThatHaveChanged.add(cell);
     }
 @Override
     public Sheet updateCellValueAndCalculate(String cellId ,String value) {
@@ -123,7 +123,7 @@ public class SheetImpl implements Sheet , Serializable {
         newSheetVersion.updateDependenciesAndInfluences();
         Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
-
+        newSheetVersion.cellsThatHaveChanged.clear();
         try {
             List<Cell> cellsThatHaveChanged =
                     newSheetVersion
@@ -132,7 +132,8 @@ public class SheetImpl implements Sheet , Serializable {
                             .filter(Cell::calculateEffectiveValue)
                             .collect(Collectors.toList());
 
-            // חישוב מוצלח. עדכון הגרסה של הגיליון ושל התאים הרלוונטיים
+            newSheetVersion.cellsThatHaveChanged = cellsThatHaveChanged;
+
             int newVersion = newSheetVersion.increaseVersion();
             cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
             newSheetVersion.updateDependenciesAndInfluences();

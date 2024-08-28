@@ -80,10 +80,7 @@ public class ConsoleUI {
     }
 
     public void displaySpreadSheet() {
-        Sheet currentSheet = engine.getCurrentSpreadSheet();
-        System.out.println("Spreadsheet version is: " + currentSheet.getVersion());
-        String spreadSheetName = currentSheet.getName();
-        System.out.println("Spreadsheet name is: " + spreadSheetName);
+
         printSpreadSheet(engine.getCurrentSpreadSheet());
     }
 
@@ -119,7 +116,8 @@ public class ConsoleUI {
 
 
     private void printSpreadSheet(Sheet sheet) {
-
+        System.out.println("Spreadsheet version is: " + sheet.getVersion());
+        System.out.println("Spreadsheet name is: " +  sheet.getName());
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
         int widthCol = sheet.getColWidth();
@@ -205,7 +203,27 @@ public class ConsoleUI {
         System.out.println("Version | Changed Cells Count");
         System.out.println("----------------------------");
         for (int i = 1; i <= engine.getCurrentSheetVersion(); i++) {
-            System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i));
+            System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i).getCellsThatHaveChanged().size());
+        }
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Enter the version number to view, or 'q' to quit:");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("q")) {
+                break;
+            }
+
+            try {
+                int versionNumber = Integer.parseInt(input);
+                if (versionNumber > 0 && versionNumber < engine.getCurrentSheetVersion()) {
+                    printSpreadSheet(engine.getSheetByVersion(versionNumber));
+                } else {
+                    System.out.println("Invalid version number. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid version number or 'q' to quit.");
+            }
         }
     }
 
