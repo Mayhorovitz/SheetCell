@@ -30,10 +30,10 @@ public class EngineImpl implements Engine {
 
     public static final int MAX_ROWS = 50;
     public static final int MAX_COLS = 20;
-    public static final int LOAD_VERSION = 0;
+    public static final int LOAD_VERSION = 1;
 
     private Map<Integer, Sheet> allSheets;
-    int currentSheetVersion = LOAD_VERSION;
+    int currentSheetVersion;
 
     @Override
     public void loadFile(String filePath) throws Exception {
@@ -41,9 +41,13 @@ public class EngineImpl implements Engine {
         allSheets = new HashMap<>();
         Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML);
         currentSheet.setSheetVersion(LOAD_VERSION);
-
+        currentSheetVersion = LOAD_VERSION;
 
         allSheets.put(LOAD_VERSION, currentSheet);
+    }
+
+    public int getCurrentSheetVersion() {
+        return currentSheetVersion;
     }
 
     public STLSheet loadXMLFile(String filePath) throws Exception {
@@ -152,18 +156,24 @@ public class EngineImpl implements Engine {
     public void updateCell(String cellId, String newValue){
         Sheet sheet = getCurrentSpreadSheet();
         Sheet newSheet =  sheet.updateCellValueAndCalculate(cellId, newValue);
-        allSheets.put(LOAD_VERSION, newSheet);
+        currentSheetVersion = newSheet.getVersion();
+        allSheets.put(currentSheetVersion, newSheet);
 
     }
     @Override
     public Sheet getCurrentSpreadSheet(){
-        return allSheets.get(LOAD_VERSION);
+        return allSheets.get(currentSheetVersion);
     }
     @Override
     public Cell getCellInfo(String cellIdentifier){
         Coordinate cellCoordinate = createCoordinate(cellIdentifier);
         Cell cell = allSheets.get(currentSheetVersion).getCell(cellCoordinate);
         return cell;
+    }
+
+
+    public int getSheetByVersion(int version) {
+        return allSheets.get(version).getCellsThatHaveChanged().size();
     }
     @Override
     public void exit() {

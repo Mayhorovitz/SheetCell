@@ -32,6 +32,7 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     int getCols();
 
     int getColWidth();
+    List<Coordinate> getCellsThatHaveChanged();
 
     int getRowHeight();
     void addCellThatChanged(Coordinate coordinate);

@@ -16,4 +16,8 @@ public interface Engine {
     public Cell getCellInfo(String cellIdentifier);
 
     void updateCell(String cellId, String newValue);
+
+    int getCurrentSheetVersion();
+
+    int getSheetByVersion(int version);
 }

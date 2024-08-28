@@ -55,6 +55,10 @@ public class ConsoleUI {
                 handleUpdateCell();
                 break;
 
+            case "5":
+                handleDisplayVersions();
+                break;
+
             case "6":
                 engine.exit();
                 System.exit(0);
@@ -63,6 +67,7 @@ public class ConsoleUI {
                 System.out.println("Invalid command");
         }
     }
+
 
     public void handleLoadFile() {
         System.out.println("Enter file path:");
@@ -194,9 +199,14 @@ public class ConsoleUI {
         engine.updateCell(cellId,newValue);
 
 
+    }
+    private void handleDisplayVersions() {
 
-
-
+        System.out.println("Version | Changed Cells Count");
+        System.out.println("----------------------------");
+        for (int i = 1; i <= engine.getCurrentSheetVersion(); i++) {
+            System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i));
+        }
     }
 
 }

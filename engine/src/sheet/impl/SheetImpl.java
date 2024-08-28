@@ -47,6 +47,10 @@ public class SheetImpl implements Sheet , Serializable {
         this.rows = rows;
     }
 
+    public List<Coordinate> getCellsThatHaveChanged() {
+        return cellsThatHaveChanged;
+    }
+
     @Override
     public void setCols(int cols) {
         this.cols = cols;
