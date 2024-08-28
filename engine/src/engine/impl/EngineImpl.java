@@ -135,19 +135,25 @@ public class EngineImpl implements Engine {
 
             Coordinate coordinate = createCoordinate(row, col);
             Cell cell = new CellImpl(row, col, originalValue, 0, newSheet);
-            Expression expression;
-
-                expression = parseExpression(stlCell.getSTLOriginalValue());
-
-            EffectiveValue effectiveValue = expression.eval(newSheet);
-            cell.setEffectiveValue(effectiveValue);
-            newSheet.addCellThatChanged(cell.getCoordinate());
             newSheet.addCell(coordinate, cell);
-            newSheet.updateDependenciesAndInfluences();
 
         }
+    // עדכון תלויות והשפעות אחרי שכל התאים נוספו
+    newSheet.updateDependenciesAndInfluences();
 
+    // חישוב הערכים האפקטיביים לפי סדר החישוב הנכון
+    for (Cell cell : newSheet.orderCellsForCalculation()) {
+        cell.calculateEffectiveValue();
+        newSheet.addCellThatChanged(cell.getCoordinate());
+    }
         return newSheet;
+    }
+
+    public void updateCell(String cellId, String newValue){
+        Sheet sheet = getCurrentSpreadSheet();
+        Sheet newSheet =  sheet.updateCellValueAndCalculate(cellId, newValue);
+        allSheets.put(LOAD_VERSION, newSheet);
+
     }
     @Override
     public Sheet getCurrentSpreadSheet(){

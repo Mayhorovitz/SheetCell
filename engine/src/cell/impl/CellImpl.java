@@ -10,10 +10,11 @@ import sheet.api.Sheet;
 import sheet.api.SheetReadActions;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CellImpl implements Cell {
+public class CellImpl implements Cell , Serializable {
 
     private final Coordinate coordinate;
     private String originalValue;
@@ -26,6 +27,15 @@ public class CellImpl implements Cell {
 
     public CellImpl(int row, int column, String originalValue, int version, SheetReadActions sheet )  {
         this.coordinate = new CoordinateImpl(row, column);
+        this.originalValue = originalValue;
+        this.version = version;
+        this.dependsOn = new ArrayList<>();
+        this.influencingOn = new ArrayList<>();
+        this.sheet = sheet;
+    }
+
+    public CellImpl(Coordinate coordinate, String originalValue, int version, SheetReadActions sheet )  {
+        this.coordinate = coordinate;
         this.originalValue = originalValue;
         this.version = version;
         this.dependsOn = new ArrayList<>();
@@ -81,27 +91,24 @@ public class CellImpl implements Cell {
 
     @Override
     public boolean calculateEffectiveValue() {
-        // build the expression object out of the original value...
-        // it can be {PLUS, 4, 5} OR {CONCAT, {ref, A4}, world}
         Expression expression = FunctionParser.parseExpression(originalValue);
-
         EffectiveValue newEffectiveValue = expression.eval(sheet);
 
-        if (newEffectiveValue.equals(effectiveValue)) {
-            return false;
-        } else {
+        if (!newEffectiveValue.equals(effectiveValue)) {
             effectiveValue = newEffectiveValue;
             return true;
         }
+        return false;
     }
+
 
     @Override
     public void resetDependencies() {
-
+        dependsOn.clear();
     }
 
     @Override
     public void resetInfluences() {
-
+        influencingOn.clear();
     }
 }

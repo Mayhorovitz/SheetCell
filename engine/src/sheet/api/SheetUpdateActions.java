@@ -1,5 +1,5 @@
 package sheet.api;
 
 public interface SheetUpdateActions {
-    Sheet updateCellValueAndCalculate(int row, int column, String value);
+    Sheet updateCellValueAndCalculate(String cellId, String value);
 }

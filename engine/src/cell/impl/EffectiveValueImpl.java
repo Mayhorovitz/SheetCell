@@ -4,9 +4,10 @@ package cell.impl;
 import cell.api.EffectiveValue;
 import cell.api.CellType;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class EffectiveValueImpl implements EffectiveValue {
+public class EffectiveValueImpl implements EffectiveValue , Serializable {
 
     private CellType cellType;
     private Object value;

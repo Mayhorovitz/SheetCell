@@ -111,12 +111,13 @@ public class SheetImpl implements Sheet , Serializable {
     public void addCellThatChanged(Coordinate coordinate) {
         cellsThatHaveChanged.add(coordinate);
     }
-
-    public Sheet updateCellValueAndCalculate(int row, int column, String value) {
-        Coordinate coordinate = createCoordinate(row, column);
+@Override
+    public Sheet updateCellValueAndCalculate(String cellId ,String value) {
+        Coordinate coordinate = createCoordinate(cellId);
 
         SheetImpl newSheetVersion = copySheet();
-        Cell newCell = new CellImpl(row, column, value, newSheetVersion.getVersion() + 1, newSheetVersion);
+        newSheetVersion.updateDependenciesAndInfluences();
+        Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         try {
@@ -130,6 +131,10 @@ public class SheetImpl implements Sheet , Serializable {
             // חישוב מוצלח. עדכון הגרסה של הגיליון ושל התאים הרלוונטיים
             int newVersion = newSheetVersion.increaseVersion();
             cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
+            newSheetVersion.updateDependenciesAndInfluences();
+            for (Cell cell : newSheetVersion.activeCells.values()) {
+                cell.calculateEffectiveValue();
+            }
 
             return newSheetVersion;
         } catch (Exception e) {
@@ -138,16 +143,19 @@ public class SheetImpl implements Sheet , Serializable {
         }
     }
 
-    // פונקציה שממיינת תאים לחישוב
-    private List<Cell> orderCellsForCalculation() {
-
+    public List<Cell> orderCellsForCalculation() {
         List<Cell> orderedCells = new ArrayList<>();
         Map<Cell, Boolean> visited = new HashMap<>();
 
-        for (Cell cell : activeCells.values()) {
-            if (!visited.containsKey(cell)) {
-                topologicalSort(cell, visited, orderedCells);
+        try {
+            for (Cell cell : activeCells.values()) {
+                if (!visited.containsKey(cell)) {
+                    topologicalSort(cell, visited, orderedCells);
+                }
             }
+        } catch (RuntimeException e) {
+            System.err.println("Error during cell calculation order: " + e.getMessage());
+            throw e;  // Re-throw the exception after logging
         }
 
         Collections.reverse(orderedCells); // התוצאה הסופית של המיון הטופולוגי
@@ -161,7 +169,7 @@ public class SheetImpl implements Sheet , Serializable {
             if (!visited.containsKey(neighbor)) {
                 topologicalSort(neighbor, visited, orderedCells);
             } else if (visited.get(neighbor)) {
-                throw new RuntimeException("Circular dependency detected");
+                throw new RuntimeException("Circular dependency detected involving cell: " + cell.getCoordinate().toString());
             }
         }
 
@@ -169,8 +177,8 @@ public class SheetImpl implements Sheet , Serializable {
         orderedCells.add(cell);
     }
 
-    private SheetImpl copySheet() {
 
+    private SheetImpl copySheet() {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -179,12 +187,17 @@ public class SheetImpl implements Sheet , Serializable {
 
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
             return (SheetImpl) ois.readObject();
-        } catch (Exception e) {
-            // התמודדות עם שגיאות בזמן ריצה שזוהו במהלך הקריאה
+        } catch (NotSerializableException e) {
+            System.err.println("Serialization error: A class does not implement Serializable. " + e.getMessage());
+            e.printStackTrace();
+            return this;
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error during sheet copy: " + e.getMessage());
             e.printStackTrace();
             return this;
         }
     }
+
 
     // פונקציה שמעלה את גרסת הגיליון
     private int increaseVersion() {
@@ -263,6 +276,7 @@ public class SheetImpl implements Sheet , Serializable {
 
         return references;
     }
+
 
 }
 

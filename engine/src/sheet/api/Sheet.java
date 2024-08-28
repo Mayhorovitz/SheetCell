@@ -35,8 +35,7 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
 
     int getRowHeight();
     void addCellThatChanged(Coordinate coordinate);
-
-    Sheet updateCellValueAndCalculate(int row, int column, String value);
+    List<Cell> orderCellsForCalculation();
     Map<Coordinate, Cell> getActiveCells();
     void updateDependenciesAndInfluences();
 }
