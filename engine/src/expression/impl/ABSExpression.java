@@ -17,15 +17,16 @@ public class ABSExpression implements Expression {
     @Override
     public EffectiveValue eval(SheetReadActions sheet) {
         EffectiveValue expressionEffectiveValue = exp.eval(sheet);
-        Double valueToAbs = expressionEffectiveValue.extractValueWithExpectation(Double.class);
+        // Extract numeric value from the operand
+        Double val = expressionEffectiveValue.extractValueWithExpectation(Double.class);
 
-        if(valueToAbs == null) {
+        if(val == null) {
             throw new IllegalArgumentException("Invalid argument in function " + this.getClass().getSimpleName() + ".\n"
                     + "the argument expected is from type " + Number.class.getSimpleName() + " but the argument is from type - " + expressionEffectiveValue.getCellType() + ".");
         }
 
-        double result = Math.abs(valueToAbs);
-
+        double result = Math.abs(val);
+        // Return the result as an EffectiveValue
         return new EffectiveValueImpl(CellType.NUMERIC, result);
     }
 

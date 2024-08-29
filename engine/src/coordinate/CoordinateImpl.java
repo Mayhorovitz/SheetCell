@@ -6,11 +6,12 @@ public class CoordinateImpl implements Coordinate  , Serializable  {
     private final int row;
     private final int column;
 
+//constructors
     public CoordinateImpl(int row, int column) {
         this.row = row;
         this.column = column;
     }
-
+    //getters
     @Override
     public int getRow() {
         return row;
@@ -20,20 +21,19 @@ public class CoordinateImpl implements Coordinate  , Serializable  {
     public int getColumn() {
         return column;
     }
+    //Converts the column number to its corresponding letter
     @Override
     public String toString() {
-        // המרה של אינדקס העמודה לאות גדולה באנגלית
         StringBuilder columnLetter = new StringBuilder();
         int tempColumn = column;
 
         while (tempColumn > 0) {
-            tempColumn--; // כדי להתאים למיקום האותיות (A=1, B=2,...)
+            tempColumn--;
             char letter = (char) ('A' + (tempColumn % 26));
-            columnLetter.insert(0, letter); // מוסיפים את האות ההתחלתית להתחלה
+            columnLetter.insert(0, letter);
             tempColumn = tempColumn / 26;
         }
 
-        // החזרת המחרוזת עם האות הגדולה של העמודה ומספר השורה
         return columnLetter.toString() + row;
     }
     @Override

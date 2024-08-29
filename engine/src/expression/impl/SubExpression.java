@@ -5,8 +5,7 @@ import expression.api.Expression;
 import cell.api.CellType;
 import cell.api.EffectiveValue;
 import cell.impl.EffectiveValueImpl;
-import sheet.api.Sheet;
-import sheet.api.SheetReadActions;
+
 public class SubExpression extends TernaryExpression {
 
     public SubExpression(Expression source, Expression startIndex, Expression endIndex) {
@@ -18,25 +17,28 @@ public class SubExpression extends TernaryExpression {
         if (source == null && startIndex == null && endIndex == null) {
             return new EffectiveValueImpl(CellType.UNKNOWN, "!UNDEFINED!");
         }
-        String sourceStr = source.extractValueWithExpectation(String.class);
-        Double startIdx = startIndex.extractValueWithExpectation(Double.class);
-        Double endIdx = endIndex.extractValueWithExpectation(Double.class);
+        // extract the strings from the operands
+        String extractSource = source.extractValueWithExpectation(String.class);
+        Double extractStartIndex = startIndex.extractValueWithExpectation(Double.class);
+        Double extractEndIndex = endIndex.extractValueWithExpectation(Double.class);
 
-        if (sourceStr == null || startIdx == null || endIdx == null ||
-                startIdx < 0 || endIdx >= sourceStr.length() || startIdx > endIdx ||
-                !isInteger(startIdx) || !isInteger(endIdx)) {
+        // validate inputs
+        if (extractSource == null || extractStartIndex == null || extractEndIndex == null ||
+                extractStartIndex < 0 || extractEndIndex >= extractSource.length() || extractStartIndex > extractEndIndex ||
+                !isInteger(extractStartIndex) || !isInteger(extractEndIndex)) {
             return new EffectiveValueImpl(CellType.UNKNOWN, "!UNDEFINED!");
         }
 
-        int start = (int) Math.floor(startIdx);
-        int end = (int) Math.floor(endIdx);
-        String result = sourceStr.substring(start, end +1);
-        return new EffectiveValueImpl(CellType.STRING, result);
+        // Convert indices to integers and perform the substring operation
+        int start = (int) Math.floor(extractStartIndex);
+        int end = (int) Math.floor(extractEndIndex);
+        String result = extractSource.substring(start, end + 1);
 
+        // Return the result as an EffectiveValue
+        return new EffectiveValueImpl(CellType.STRING, result);
     }
 
     public static boolean isInteger(double number) {
-        // Check if the number is an integer
         return number == Math.floor(number);
     }
 

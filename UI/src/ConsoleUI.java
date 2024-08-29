@@ -8,11 +8,11 @@ import engine.exceptions.*;
 import engine.impl.EngineImpl;
 import sheet.api.Sheet;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-import static coordinate.CoordinateFactory.createCoordinate;
 
 public class ConsoleUI {
     private Engine engine;
@@ -38,6 +38,8 @@ public class ConsoleUI {
         System.out.println("4. Update Cell");
         System.out.println("5. Display Versions");
         System.out.println("6. Exit");
+        System.out.println("7. Save System State");
+        System.out.println("8. Load System State");
     }
 
     public void processCommand(String command) {
@@ -47,7 +49,7 @@ public class ConsoleUI {
                 handleLoadFile();
                 break;
             case "2":
-                displaySpreadSheet();
+                handleDisplaySheet();
                 break;
             case "3":
                 handleDisplayCell();
@@ -62,8 +64,16 @@ public class ConsoleUI {
                 engine.exit();
                 System.exit(0);
                 break;
+            case "7":
+                handleSaveSystemState();
+                break;
+
+            case "8":
+                handleLoadSystemState();
+                break;
+
             default:
-                System.out.println("Invalid command");
+                System.out.println("Please enter a number between 1 and 6");
         }
     } catch (NoFileLoadedException e) {
         System.out.println("Error: " + e.getMessage());
@@ -86,18 +96,19 @@ public class ConsoleUI {
         }
     }
 
-    public void displaySpreadSheet() {
-        printSpreadSheet(engine.getCurrentSpreadSheet());
-    }
-
-    public void handleDisplayCell() {
-        System.out.println("Enter cell identifier (e.g., A1):");
-        String cellId = scanner.nextLine();
+    private void handleDisplaySheet() {
         try {
-            Cell currentCell = engine.getCellInfo(cellId);
-            System.out.println("Cell ID: " + cellId);
-            System.out.println("Original Value: " + currentCell.getOriginalValue());
-            System.out.println("Effective Value: " + currentCell.getEffectiveValue().toString());
+            printSheet(engine.getCurrentSheet());
+        } catch (IllegalStateException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    private void handleDisplayCell() {
+        System.out.println("Enter cell identifier (e.g., A1):");
+        String coordinate = scanner.nextLine().toUpperCase();
+        try {
+            Cell currentCell = engine.getCellInfo(coordinate);
+            printGenerlCellInformation(currentCell);
             System.out.println("The last modified version of the cell is: " + currentCell.getVersion());
 
             System.out.print("Dependents on: ");
@@ -118,21 +129,29 @@ public class ConsoleUI {
                     : "None";
             System.out.println(referencesOutput);
 
-        } catch (Exception e) {
-            System.out.println("Error retrieving cell: " + e.getMessage());
-        }
-    }
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            System.out.println(e.getMessage());
 
-    private void printSpreadSheet(Sheet sheet) {
-        System.out.println("Spreadsheet version is: " + sheet.getVersion());
-        System.out.println("Spreadsheet name is: " + sheet.getName());
+        } catch (Exception e) {
+            System.out.println("Error display cell: " + e.getMessage());
+        }
+
+    }
+    private void printGenerlCellInformation(Cell cell){
+
+        System.out.println("Cell ID: " + cell.getCoordinate());
+        System.out.println("Original Value: " + cell.getOriginalValue());
+        System.out.println("Effective Value: " + cell.getEffectiveValue().toString());
+    }
+    private void printSheet(Sheet sheet) {
+        System.out.println("Sheet version is: " + sheet.getVersion());
+        System.out.println("Sheet name is: " + sheet.getName());
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
         int widthCol = sheet.getColWidth();
         int heightRow = sheet.getRowHeight();
 
-        // Print column headers with centered letters
-        System.out.print("  "); // Initial space for row numbers
+        System.out.print("  ");
         System.out.print("|");
         for (int col = 0; col < numCols; col++) {
             String header = String.valueOf((char) ('A' + col));
@@ -165,11 +184,11 @@ public class ConsoleUI {
                     System.out.print("|");
                 }
             }
-            System.out.println("|"); // Add separator after last column
+            System.out.println("|");
 
-            // Print additional empty lines for row height
+
             for (int h = 1; h < heightRow; h++) {
-                System.out.print("  "); // Initial space for row numbers
+                System.out.print("  ");
                 System.out.print("|");
                 for (int col = 0; col < numCols; col++) {
                     System.out.print(" ".repeat(widthCol));
@@ -177,37 +196,42 @@ public class ConsoleUI {
                         System.out.print("|");
                     }
                 }
-                System.out.println("|"); // Add separator after last column
+                System.out.println("|");
             }
         }
     }
 
     private void handleUpdateCell() {
         System.out.println("Enter cell identifier (e.g., A1):");
-        String cellId = scanner.nextLine();
-        Cell currentCell = engine.getCellInfo(cellId);
-        if (currentCell != null) {
-            System.out.println("Cell ID: " + cellId);
-            System.out.println("Original Value: " + currentCell.getOriginalValue());
-            System.out.println("Effective Value: " + currentCell.getEffectiveValue().toString());
-        }
-        System.out.print("Enter new value: ");
-        String newValue = scanner.nextLine().trim();
+        String coordinate = scanner.nextLine().toUpperCase();
 
         try {
-            engine.updateCell(cellId, newValue);
+            Cell currentCell = engine.getCellInfo(coordinate);
+            if (currentCell != null) {
+                printGenerlCellInformation(currentCell);
+            }
+            System.out.print("Enter new value: ");
+            String newValue = scanner.nextLine().trim();
+            engine.updateCell(coordinate, newValue);
             System.out.println("Cell updated successfully.");
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println(e.getMessage());
+
         } catch (Exception e) {
             System.out.println("Error updating cell: " + e.getMessage());
         }
     }
-
     private void handleDisplayVersions() {
         try {
             System.out.println("Version | Changed Cells Count");
             System.out.println("----------------------------");
             for (int i = 1; i <= engine.getCurrentSheetVersion(); i++) {
-                System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i).getCellsThatHaveChanged().size());
+                try {
+                    System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i).getCellsThatHaveChanged().size());
+                } catch (IllegalArgumentException e) {
+                    System.out.printf("%7d | %17s%n", i, "Invalid Version");
+                }
             }
             while (true) {
                 System.out.println("Enter the version number to view, or 'q' to quit:");
@@ -220,16 +244,39 @@ public class ConsoleUI {
                 try {
                     int versionNumber = Integer.parseInt(input);
                     if (versionNumber > 0 && versionNumber <= engine.getCurrentSheetVersion()) {
-                        printSpreadSheet(engine.getSheetByVersion(versionNumber));
+                        printSheet(engine.getSheetByVersion(versionNumber));
                     } else {
                         System.out.println("Invalid version number. Please try again.");
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid input. Please enter a valid version number or 'q' to quit.");
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Error: " + e.getMessage());
                 }
             }
-        } catch (InvalidVersionException e) {
-            System.out.println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
         }
     }
+    private void handleSaveSystemState() {
+        System.out.println("Enter the file path to save the system state:");
+        String filePath = scanner.nextLine().trim();
+        try {
+            engine.saveSystemState(filePath);
+            System.out.println("System state saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Error saving system state: " + e.getMessage());
+        }
+    }
+    private void handleLoadSystemState() {
+        System.out.println("Enter the file path to load the system state from:");
+        String filePath = scanner.nextLine().trim();
+        try {
+            engine.loadSystemState(filePath);
+            System.out.println("System state loaded successfully.");
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error loading system state: " + e.getMessage());
+        }
+    }
+
 }

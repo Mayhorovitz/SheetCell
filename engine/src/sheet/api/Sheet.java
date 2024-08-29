@@ -19,9 +19,7 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
 
     void setColWidth(int columnWidthUnits);
 
-    void setVersion(int version);
-
-    public void addCell(Coordinate coordinate, Cell cell);
+    void addCell(Coordinate coordinate, Cell cell);
 
     void setSheetVersion(int loadVersion);
 

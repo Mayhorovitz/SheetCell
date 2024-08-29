@@ -15,9 +15,9 @@ public abstract class BinaryExpression implements Expression {
     }
     @Override
     public EffectiveValue eval(SheetReadActions sheet) {
-        EffectiveValue value1 = left.eval(sheet);
-        EffectiveValue value2 = right.eval(sheet);
-        return eval( value1, value2);
+        EffectiveValue leftValue  = left.eval(sheet);
+        EffectiveValue rightValue = right.eval(sheet);
+        return eval( leftValue , rightValue);
     }
 
     protected abstract EffectiveValue eval(EffectiveValue arg1, EffectiveValue arg2);

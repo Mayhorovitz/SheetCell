@@ -12,11 +12,12 @@ public class EffectiveValueImpl implements EffectiveValue , Serializable {
     private CellType cellType;
     private Object value;
 
+    //constructors
     public EffectiveValueImpl(CellType cellType, Object value) {
         this.cellType = cellType;
         this.value = value;
     }
-
+    //getters
     @Override
     public CellType getCellType() {
         return cellType;
@@ -34,7 +35,7 @@ public class EffectiveValueImpl implements EffectiveValue , Serializable {
         }
         return null;
     }
-
+    //check if two effective values equals
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

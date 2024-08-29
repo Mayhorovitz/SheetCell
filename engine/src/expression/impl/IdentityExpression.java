@@ -5,7 +5,6 @@ import expression.api.Expression;
 import cell.api.CellType;
 import cell.api.EffectiveValue;
 import cell.impl.EffectiveValueImpl;
-import sheet.api.Sheet;
 import sheet.api.SheetReadActions;
 
 public class IdentityExpression implements Expression {

@@ -1,9 +1,8 @@
 package expression.impl;
+import cell.api.Cell;
 import expression.api.Expression;
 import cell.api.CellType;
 import cell.api.EffectiveValue;
-import cell.impl.EffectiveValueImpl;
-import sheet.api.Sheet;
 import sheet.api.SheetReadActions;
 import coordinate.Coordinate;
 
@@ -18,7 +17,10 @@ import coordinate.Coordinate;
 
         @Override
         public EffectiveValue eval(SheetReadActions sheet) {
-            // error handling if the cell is empty or not found
+            Cell cell = sheet.getCell(coordinate);
+            if (cell == null || cell.getEffectiveValue() == null) {
+                throw new IllegalArgumentException("The cell " + coordinate.toString() + " is empty or does not exist.");
+            }
             return sheet.getCell(coordinate).getEffectiveValue();
         }
 

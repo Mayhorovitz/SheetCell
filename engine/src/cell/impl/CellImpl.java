@@ -6,9 +6,7 @@ import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
 import expression.api.Expression;
 import expression.parser.FunctionParser;
-import sheet.api.Sheet;
 import sheet.api.SheetReadActions;
-
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,7 +22,7 @@ public class CellImpl implements Cell , Serializable {
     private final List<Cell> influencingOn;
     private SheetReadActions sheet;
 
-
+//constructors
     public CellImpl(int row, int column, String originalValue, int version, SheetReadActions sheet )  {
         this.coordinate = new CoordinateImpl(row, column);
         this.originalValue = originalValue;
@@ -42,6 +40,8 @@ public class CellImpl implements Cell , Serializable {
         this.influencingOn = new ArrayList<>();
         this.sheet = sheet;
     }
+
+    //getters
     @Override
     public Coordinate getCoordinate() {
         return coordinate;
@@ -53,16 +53,6 @@ public class CellImpl implements Cell , Serializable {
     }
 
     @Override
-    public void setCellOriginalValue(String value) {
-        this.originalValue = value;
-    }
-
-    @Override
-    public void setEffectiveValue(EffectiveValue effectiveValue) {
-        this.effectiveValue = effectiveValue;
-    }
-
-    @Override
     public EffectiveValue getEffectiveValue() {
         return effectiveValue;
     }
@@ -71,7 +61,6 @@ public class CellImpl implements Cell , Serializable {
     public void updateVersion(int newVersion){
         this.version = newVersion;
     }
-
 
     @Override
     public int getVersion() {
@@ -88,18 +77,21 @@ public class CellImpl implements Cell , Serializable {
         return influencingOn;
     }
 
-
+    // calculates and updates the effective value of a cell based on its original value
     @Override
     public boolean calculateEffectiveValue() {
         Expression expression = FunctionParser.parseExpression(originalValue);
+        // get the new effective value
         EffectiveValue newEffectiveValue = expression.eval(sheet);
-
         if (!newEffectiveValue.equals(effectiveValue)) {
+            //update the effective value to the new one if they are different
             effectiveValue = newEffectiveValue;
             return true;
         }
+
         return false;
     }
+
 
 
     @Override
