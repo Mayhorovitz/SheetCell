@@ -256,9 +256,9 @@ public class SheetImpl implements Sheet , Serializable {
             }
 
             // Move the index to where the cell ID should start
-            int cellIdStart = start + 5; // Move past "{REF,"
+            int cellIdStart = start + 5;
 
-            // Skip any whitespace after "{REF,"
+            // Skip any whitespace after
             while (cellIdStart < upperValue.length() && upperValue.charAt(cellIdStart) == ' ') {
                 cellIdStart++;
             }

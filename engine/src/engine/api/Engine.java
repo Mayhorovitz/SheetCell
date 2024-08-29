@@ -2,6 +2,7 @@ package engine.api;
 
 
 import cell.api.Cell;
+import engine.exceptions.InvalidVersionException;
 import sheet.api.Sheet;
 
 public interface Engine {
@@ -17,5 +18,5 @@ public interface Engine {
 
     int getCurrentSheetVersion();
 
-    Sheet getSheetByVersion(int version);
+    Sheet getSheetByVersion(int version) throws InvalidVersionException, InvalidVersionException;
 }

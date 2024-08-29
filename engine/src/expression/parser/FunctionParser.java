@@ -1,8 +1,6 @@
 package expression.parser;
 
 import coordinate.Coordinate;
-import coordinate.CoordinateFactory;
-import coordinate.CoordinateImpl;
 import expression.api.Expression;
 import expression.impl.*;
 import cell.api.CellType;
@@ -75,9 +73,9 @@ public enum FunctionParser {
     MINUS {
         @Override
         public Expression parse(List<String> arguments) {
-            // validations of the function. it should have exactly two arguments
+            // validations of the function (e.g. number of arguments)
             if (arguments.size() != 2) {
-                throw new IllegalArgumentException("Invalid number of arguments for MINUS function. Expected 2, but got " + arguments.size());
+                throw new IllegalArgumentException("Invalid number of arguments for PLUS function. Expected 2, but got " + arguments.size());
             }
 
             // structure is good. parse arguments
@@ -85,8 +83,12 @@ public enum FunctionParser {
             Expression right = parseExpression(arguments.get(1).trim());
 
             // more validations on the expected argument types
-            if (!left.getFunctionResultType().equals(CellType.NUMERIC) || !right.getFunctionResultType().equals(CellType.NUMERIC)) {
-                throw new IllegalArgumentException("Invalid argument types for MINUS function. Expected NUMERIC, but got " + left.getFunctionResultType() + " and " + right.getFunctionResultType());
+            CellType leftCellType = left.getFunctionResultType();
+            CellType rightCellType = right.getFunctionResultType();
+            // support UNKNOWN type as its value will be determined at runtime
+            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
+                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
+                throw new IllegalArgumentException("Invalid argument types for MINUS function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
             }
 
             // all is good. create the relevant function instance
@@ -105,6 +107,14 @@ public enum FunctionParser {
             Expression left = parseExpression(arguments.get(0));
             Expression right = parseExpression(arguments.get(1));
 
+            // more validations on the expected argument types
+            CellType leftCellType = left.getFunctionResultType();
+            CellType rightCellType = right.getFunctionResultType();
+            // support UNKNOWN type as its value will be determined at runtime
+            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
+                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
+                throw new IllegalArgumentException("Invalid argument types for TIMES function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
+            }
 
             // all is good. create the relevant function instance
             return new TimesExpression(left, right);
@@ -123,7 +133,14 @@ public enum FunctionParser {
             // structure is good. parse arguments
             Expression left = parseExpression(arguments.get(0));
             Expression right = parseExpression(arguments.get(1));
-
+            // more validations on the expected argument types
+            CellType leftCellType = left.getFunctionResultType();
+            CellType rightCellType = right.getFunctionResultType();
+            // support UNKNOWN type as its value will be determined at runtime
+            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
+                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
+                throw new IllegalArgumentException("Invalid argument types for DIVIDE function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
+            }
 
             // all is good. create the relevant function instance
             return new DivideExpression(left, right);
@@ -142,6 +159,15 @@ public enum FunctionParser {
             Expression left = parseExpression(arguments.get(0));
             Expression right = parseExpression(arguments.get(1));
 
+            // more validations on the expected argument types
+            CellType leftCellType = left.getFunctionResultType();
+            CellType rightCellType = right.getFunctionResultType();
+            // support UNKNOWN type as its value will be determined at runtime
+            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
+                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
+                throw new IllegalArgumentException("Invalid argument types for MOD function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
+            }
+
             // all is good. create the relevant function instance
             return new ModExpression(left, right);
         }
@@ -158,6 +184,16 @@ public enum FunctionParser {
             // structure is good. parse arguments
             Expression left = parseExpression(arguments.get(0));
             Expression right = parseExpression(arguments.get(1));
+
+
+            // more validations on the expected argument types
+            CellType leftCellType = left.getFunctionResultType();
+            CellType rightCellType = right.getFunctionResultType();
+            // support UNKNOWN type as its value will be determined at runtime
+            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
+                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
+                throw new IllegalArgumentException("Invalid argument types for POW function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
+            }
 
             // all is good. create the relevant function instance
             return new PowExpression(left, right);

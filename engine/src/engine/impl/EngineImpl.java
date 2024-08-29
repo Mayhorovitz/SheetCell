@@ -1,23 +1,23 @@
 package engine.impl;
 
-
-import cell.impl.CellImpl;
-import generated.*;
-import cell.api.Cell;
 import engine.api.Engine;
+import engine.exceptions.*;
+
 import sheet.api.Sheet;
+import sheet.impl.SheetImpl;
+import generated.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import coordinate.Coordinate;
-import sheet.impl.SheetImpl;
+import cell.impl.CellImpl;
+import cell.api.Cell;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 import static coordinate.CoordinateFactory.createCoordinate;
-
 
 public class EngineImpl implements Engine {
 
@@ -43,64 +43,51 @@ public class EngineImpl implements Engine {
         return currentSheetVersion;
     }
 
-    public STLSheet loadXMLFile(String filePath) throws Exception {
+    public STLSheet loadXMLFile(String filePath) throws InvalidFileFormatException, InvalidSheetLayoutException, InvalidCellLocationException {
         File xmlFile = new File(filePath);
-        //check if file exist
         if (!xmlFile.exists() || !xmlFile.isFile()) {
-            System.out.println("File does not exist or is not a valid file.");
-            return null;
+            throw new InvalidFileFormatException("File does not exist or is not a valid file.");
         }
-        //check if file is an XML file
         if (!filePath.endsWith(".xml")) {
-            System.out.println("The file is not an XML file.");
-            return null;
+            throw new InvalidFileFormatException("The file is not an XML file.");
         }
 
         try {
-
             JAXBContext context = JAXBContext.newInstance(STLSheet.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
 
             STLSheet sheet = (STLSheet) unmarshaller.unmarshal(xmlFile);
 
             if (!validateSheet(sheet)) {
-                System.out.println("The XML file is invalid according to the application's rules.");
-                return null;
+                throw new InvalidSheetLayoutException("The XML file is invalid according to the application's rules.");
             }
 
-            System.out.println("The XML file has been successfully loaded into the system.");
             return sheet;
 
         } catch (JAXBException e) {
-            System.out.println("An error occurred while loading the XML file.");
-            e.printStackTrace();
+            throw new InvalidFileFormatException("An error occurred while loading the XML file.");
         }
-        return null;
     }
 
-
-    private boolean validateSheet(STLSheet sheet) {
+    private boolean validateSheet(STLSheet sheet) throws InvalidSheetLayoutException, InvalidCellLocationException {
         STLLayout layout = sheet.getSTLLayout();
         if (layout.getRows() < 1 || layout.getRows() > MAX_ROWS ||
                 layout.getColumns() < 1 || layout.getColumns() > MAX_COLS) {
-            System.out.println("Invalid sheet layout: Rows and columns must be within allowed range.");
-            return false;
+            throw new InvalidSheetLayoutException("Invalid sheet layout: Rows and columns must be within allowed range.");
         }
+
         for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
             int row = cell.getRow();
             String column = cell.getColumn();
             int columnIndex = convertColumnToIndex(column);
 
             if (row < 1 || row > layout.getRows() || columnIndex < 1 || columnIndex > layout.getColumns()) {
-                System.out.println("Invalid cell location: Cell at row " + row + ", column " + column + " is out of bounds.");
-                return false;
+                throw new InvalidCellLocationException("Invalid cell location: Cell at row " + row + ", column " + column + " is out of bounds.");
             }
-
         }
 
         return true;
     }
-
 
     private int convertColumnToIndex(String column) {
         int result = 0;
@@ -109,7 +96,6 @@ public class EngineImpl implements Engine {
         }
         return result;
     }
-
 
     private Sheet STLSheetToSheet(STLSheet stlSheet) {
         Sheet newSheet = new SheetImpl();
@@ -122,9 +108,7 @@ public class EngineImpl implements Engine {
         newSheet.setRowHeight(size.getRowsHeightUnits());
         newSheet.setColWidth(size.getColumnWidthUnits());
 
-
         for (STLCell stlCell : stlSheet.getSTLCells().getSTLCell()) {
-
             String originalValue = stlCell.getSTLOriginalValue();
             int row = stlCell.getRow();
             String column = stlCell.getColumn();
@@ -133,44 +117,50 @@ public class EngineImpl implements Engine {
             Coordinate coordinate = createCoordinate(row, col);
             Cell cell = new CellImpl(row, col, originalValue, 0, newSheet);
             newSheet.addCell(coordinate, cell);
-
         }
-    // עדכון תלויות והשפעות אחרי שכל התאים נוספו
-    newSheet.updateDependenciesAndInfluences();
 
-    // חישוב הערכים האפקטיביים לפי סדר החישוב הנכון
-    for (Cell cell : newSheet.orderCellsForCalculation()) {
-        cell.calculateEffectiveValue();
-        newSheet.addCellThatChanged(cell);
-    }
+        newSheet.updateDependenciesAndInfluences();
+
+        for (Cell cell : newSheet.orderCellsForCalculation()) {
+            cell.calculateEffectiveValue();
+            newSheet.addCellThatChanged(cell);
+        }
+
         return newSheet;
     }
 
-    public void updateCell(String cellId, String newValue){
+    public void updateCell(String cellId, String newValue) {
         Sheet sheet = getCurrentSpreadSheet();
-        Sheet newSheet =  sheet.updateCellValueAndCalculate(cellId, newValue);
+        Sheet newSheet = sheet.updateCellValueAndCalculate(cellId, newValue);
         currentSheetVersion = newSheet.getVersion();
         allSheets.put(currentSheetVersion, newSheet);
-
     }
+
     @Override
-    public Sheet getCurrentSpreadSheet(){
+    public Sheet getCurrentSpreadSheet() {
+        if (allSheets == null || allSheets.isEmpty()) {
+            throw new NoFileLoadedException("No file has been loaded. Please load a file first.");
+        }
         return allSheets.get(currentSheetVersion);
     }
     @Override
-    public Cell getCellInfo(String cellIdentifier){
+    public Cell getCellInfo(String cellIdentifier) {
+        if (allSheets == null || allSheets.isEmpty()) {
+            throw new NoFileLoadedException("No file has been loaded. Please load a file first.");
+        }
         Coordinate cellCoordinate = createCoordinate(cellIdentifier);
-        Cell cell = allSheets.get(currentSheetVersion).getCell(cellCoordinate);
-        return cell;
+        return allSheets.get(currentSheetVersion).getCell(cellCoordinate);
     }
 
-
-    public Sheet getSheetByVersion(int version) {
+    public Sheet getSheetByVersion(int version) throws InvalidVersionException {
+        if (!allSheets.containsKey(version)) {
+            throw new InvalidVersionException("Invalid version number: " + version);
+        }
         return allSheets.get(version);
     }
+
     @Override
     public void exit() {
         System.exit(0);
     }
 }
-

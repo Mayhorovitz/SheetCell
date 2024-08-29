@@ -4,6 +4,7 @@ import cell.api.EffectiveValue;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
 import engine.api.Engine;
+import engine.exceptions.*;
 import engine.impl.EngineImpl;
 import sheet.api.Sheet;
 
@@ -21,7 +22,6 @@ public class ConsoleUI {
         this.engine = new EngineImpl();
         this.scanner = new Scanner(System.in);
     }
-
 
     public void start() {
         while (true) {
@@ -41,6 +41,7 @@ public class ConsoleUI {
     }
 
     public void processCommand(String command) {
+        try {
         switch (command) {
             case "1":
                 handleLoadFile();
@@ -54,11 +55,9 @@ public class ConsoleUI {
             case "4":
                 handleUpdateCell();
                 break;
-
             case "5":
                 handleDisplayVersions();
                 break;
-
             case "6":
                 engine.exit();
                 System.exit(0);
@@ -66,58 +65,67 @@ public class ConsoleUI {
             default:
                 System.out.println("Invalid command");
         }
+    } catch (NoFileLoadedException e) {
+        System.out.println("Error: " + e.getMessage());
+            handleLoadFile();
+        } catch (Exception e) {
+        System.out.println("An unexpected error occurred: " + e.getMessage());
     }
-
+    }
 
     public void handleLoadFile() {
         System.out.println("Enter file path:");
         String filePath = scanner.nextLine();
         try {
             engine.loadFile(filePath);
-        } catch (Exception e) {
+            System.out.println("File loaded successfully.");
+        } catch (InvalidFileFormatException | InvalidSheetLayoutException e) {
             System.out.println("Error loading file: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
         }
     }
 
     public void displaySpreadSheet() {
-
         printSpreadSheet(engine.getCurrentSpreadSheet());
     }
-
 
     public void handleDisplayCell() {
         System.out.println("Enter cell identifier (e.g., A1):");
         String cellId = scanner.nextLine();
-        Cell currentCell = engine.getCellInfo(cellId);
-        System.out.println("Cell ID: " + cellId);
-        System.out.println("Original Value: " + currentCell.getOriginalValue());
-        System.out.println("Effective Value: " + currentCell.getEffectiveValue().toString());
-        System.out.println("The last modified version of the cell is: " + currentCell.getVersion());
+        try {
+            Cell currentCell = engine.getCellInfo(cellId);
+            System.out.println("Cell ID: " + cellId);
+            System.out.println("Original Value: " + currentCell.getOriginalValue());
+            System.out.println("Effective Value: " + currentCell.getEffectiveValue().toString());
+            System.out.println("The last modified version of the cell is: " + currentCell.getVersion());
 
-        System.out.print("The dependents are: ");
-        List<Cell> dependents = currentCell.getDependsOn();
-        String dependentsOutput = (dependents != null && !dependents.isEmpty())
-                ? dependents.stream()
-                .map(cell -> cell.getCoordinate().toString())
-                .collect(Collectors.joining(", "))
-                : "None";
-        System.out.println(dependentsOutput);
+            System.out.print("Dependents on: ");
+            List<Cell> dependents = currentCell.getDependsOn();
+            String dependentsOutput = (dependents != null && !dependents.isEmpty())
+                    ? dependents.stream()
+                    .map(cell -> cell.getCoordinate().toString())
+                    .collect(Collectors.joining(", "))
+                    : "None";
+            System.out.println(dependentsOutput);
 
-        System.out.print("The references are: ");
-        List<Cell> references = currentCell.getInfluencingOn();
-        String referencesOutput = (references != null && !references.isEmpty())
-                ? references.stream()
-                .map(cell -> cell.getCoordinate().toString())
-                .collect(Collectors.joining(", "))
-                : "None";
-        System.out.println(referencesOutput);
+            System.out.print("Influencing on: ");
+            List<Cell> references = currentCell.getInfluencingOn();
+            String referencesOutput = (references != null && !references.isEmpty())
+                    ? references.stream()
+                    .map(cell -> cell.getCoordinate().toString())
+                    .collect(Collectors.joining(", "))
+                    : "None";
+            System.out.println(referencesOutput);
+
+        } catch (Exception e) {
+            System.out.println("Error retrieving cell: " + e.getMessage());
+        }
     }
-
-
 
     private void printSpreadSheet(Sheet sheet) {
         System.out.println("Spreadsheet version is: " + sheet.getVersion());
-        System.out.println("Spreadsheet name is: " +  sheet.getName());
+        System.out.println("Spreadsheet name is: " + sheet.getName());
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
         int widthCol = sheet.getColWidth();
@@ -144,7 +152,7 @@ public class ConsoleUI {
             System.out.print("|");
 
             for (int col = 0; col < numCols; col++) {
-                Coordinate cellID = new CoordinateImpl(row, col+1);
+                Coordinate cellID = new CoordinateImpl(row, col + 1);
                 Cell currentCell = sheet.getActiveCells().get(cellID);
                 if (currentCell == null) {
                     System.out.printf("%-" + widthCol + "s", ' ');
@@ -174,19 +182,11 @@ public class ConsoleUI {
         }
     }
 
-    private String getColumnHeader(int col) {
-        StringBuilder sb = new StringBuilder();
-        while (col >= 0) {
-            sb.insert(0, (char) ('A' + (col % 26)));
-            col = col / 26 - 1;
-        }
-        return sb.toString();
-    }
     private void handleUpdateCell() {
         System.out.println("Enter cell identifier (e.g., A1):");
         String cellId = scanner.nextLine();
         Cell currentCell = engine.getCellInfo(cellId);
-        if(currentCell != null) {
+        if (currentCell != null) {
             System.out.println("Cell ID: " + cellId);
             System.out.println("Original Value: " + currentCell.getOriginalValue());
             System.out.println("Effective Value: " + currentCell.getEffectiveValue().toString());
@@ -194,37 +194,42 @@ public class ConsoleUI {
         System.out.print("Enter new value: ");
         String newValue = scanner.nextLine().trim();
 
-        engine.updateCell(cellId,newValue);
-
-
+        try {
+            engine.updateCell(cellId, newValue);
+            System.out.println("Cell updated successfully.");
+        } catch (Exception e) {
+            System.out.println("Error updating cell: " + e.getMessage());
+        }
     }
+
     private void handleDisplayVersions() {
-
-        System.out.println("Version | Changed Cells Count");
-        System.out.println("----------------------------");
-        for (int i = 1; i <= engine.getCurrentSheetVersion(); i++) {
-            System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i).getCellsThatHaveChanged().size());
-        }
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.println("Enter the version number to view, or 'q' to quit:");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("q")) {
-                break;
+        try {
+            System.out.println("Version | Changed Cells Count");
+            System.out.println("----------------------------");
+            for (int i = 1; i <= engine.getCurrentSheetVersion(); i++) {
+                System.out.printf("%7d | %17d%n", i, engine.getSheetByVersion(i).getCellsThatHaveChanged().size());
             }
+            while (true) {
+                System.out.println("Enter the version number to view, or 'q' to quit:");
+                String input = scanner.nextLine().trim();
 
-            try {
-                int versionNumber = Integer.parseInt(input);
-                if (versionNumber > 0 && versionNumber < engine.getCurrentSheetVersion()) {
-                    printSpreadSheet(engine.getSheetByVersion(versionNumber));
-                } else {
-                    System.out.println("Invalid version number. Please try again.");
+                if (input.equalsIgnoreCase("q")) {
+                    break;
                 }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid version number or 'q' to quit.");
+
+                try {
+                    int versionNumber = Integer.parseInt(input);
+                    if (versionNumber > 0 && versionNumber <= engine.getCurrentSheetVersion()) {
+                        printSpreadSheet(engine.getSheetByVersion(versionNumber));
+                    } else {
+                        System.out.println("Invalid version number. Please try again.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input. Please enter a valid version number or 'q' to quit.");
+                }
             }
+        } catch (InvalidVersionException e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
-
 }
