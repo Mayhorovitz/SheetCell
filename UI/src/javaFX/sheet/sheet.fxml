@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="javaFX.sheet.SheetController">
+    <TableView fx:id="spreadsheetTable" prefHeight="400" prefWidth="600">
+        <!-- Columns will be dynamically created -->
+    </TableView>
+</AnchorPane>

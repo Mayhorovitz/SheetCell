@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" spacing="10" alignment="CENTER" style="-fx-background-color: #90C3D4;" prefWidth="150">
+    <Label text="Commands" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+</VBox>

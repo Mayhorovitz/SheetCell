@@ -20,10 +20,6 @@ public class ABSExpression implements Expression {
         // Extract numeric value from the operand
         Double val = expressionEffectiveValue.extractValueWithExpectation(Double.class);
 
-        if(val == null) {
-            throw new IllegalArgumentException("Invalid argument in function " + this.getClass().getSimpleName() + ".\n"
-                    + "the argument expected is from type " + Number.class.getSimpleName() + " but the argument is from type - " + expressionEffectiveValue.getCellType() + ".");
-        }
 
         double result = Math.abs(val);
         // Return the result as an EffectiveValue

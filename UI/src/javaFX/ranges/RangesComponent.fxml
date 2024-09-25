@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml/1" spacing="10" alignment="CENTER" style="-fx-background-color: #FFD700;" prefWidth="150">
+    <Label text="Ranges" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+    <TextField fx:id="rangeNameField" promptText="Range Name"/>
+    <TextField fx:id="rangeCellsField" promptText="Range Cells (e.g., A1:B3)"/>
+
+</VBox>

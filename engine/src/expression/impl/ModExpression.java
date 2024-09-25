@@ -8,9 +8,6 @@ import cell.impl.EffectiveValueImpl;
 
 public class ModExpression  extends BinaryExpression{
 
-    private Expression left;
-    private Expression right;
-
     public ModExpression(Expression left, Expression right) {
         super(left, right);
     }

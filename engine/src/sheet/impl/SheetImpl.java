@@ -1,19 +1,21 @@
 package sheet.impl;
 
 import cell.impl.CellImpl;
-import coordinate.CoordinateImpl;
 import sheet.api.Sheet;
 import cell.api.Cell;
 import coordinate.Coordinate;
-import coordinate.CoordinateFactory;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static coordinate.CoordinateFactory.createCoordinate;
 
-public class SheetImpl implements Sheet , Serializable {
+
+
+public class SheetImpl implements Sheet, Serializable {
     private String name;
     private int version;
     private int rows;
@@ -22,58 +24,71 @@ public class SheetImpl implements Sheet , Serializable {
     private int colWidth;
     private Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
-
-
+    //constructors
     public SheetImpl() {
         this.activeCells = new HashMap<>();
         this.cellsThatHaveChanged = new ArrayList<>();
     }
-
+//setters
     @Override
     public void setName(String name) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Sheet name cannot be null or empty.");
+        }
         this.name = name;
     }
-
-    public Map<Coordinate, Cell> getActiveCells() {
-        return activeCells;
-    }
-
     public void setSheetVersion(int loadVersion) {
+        if (loadVersion < 1) {
+            throw new IllegalArgumentException("Sheet version must be at least 1.");
+        }
         this.version = loadVersion;
     }
 
     @Override
     public void setRows(int rows) {
+        if (rows < 1) {
+            throw new IllegalArgumentException("Number of rows must be at least 1.");
+        }
         this.rows = rows;
     }
-
-    public List<Cell> getCellsThatHaveChanged() {
-        return cellsThatHaveChanged;
-    }
-
     @Override
     public void setCols(int cols) {
+        if (cols < 1) {
+            throw new IllegalArgumentException("Number of columns must be at least 1.");
+        }
         this.cols = cols;
     }
 
     @Override
     public void setRowHeight(int rowHeight) {
+        if (rowHeight < 1) {
+            throw new IllegalArgumentException("Row height must be at least 1.");
+        }
         this.rowHeight = rowHeight;
     }
 
     @Override
     public void setColWidth(int colWidth) {
+        if (colWidth < 1) {
+            throw new IllegalArgumentException("Column width must be at least 1.");
+        }
         this.colWidth = colWidth;
     }
 
-    @Override
-    public void setVersion(int version) {
-        this.version = version;
+
+    //getters
+    public Map<Coordinate, Cell> getActiveCells() {
+        return activeCells;
     }
+
+
+    public List<Cell> getCellsThatHaveChanged() {
+        return cellsThatHaveChanged;
+    }
+
 
     @Override
     public int getVersion() {
-
         return this.version;
     }
 
@@ -99,90 +114,97 @@ public class SheetImpl implements Sheet , Serializable {
 
     @Override
     public String getName() {
-
         return this.name;
     }
 
     @Override
     public Cell getCell(Coordinate coordinate) {
+        if (coordinate == null) {
+            throw new IllegalArgumentException("Coordinate cannot be null.");
+        }
         return activeCells.get(coordinate);
     }
 
     public void addCell(Coordinate coordinate, Cell cell) {
+        if (coordinate == null || cell == null) {
+            throw new IllegalArgumentException("Coordinate and Cell cannot be null.");
+        }
         activeCells.put(coordinate, cell);
     }
 
     public void addCellThatChanged(Cell cell) {
+        if (cell == null) {
+            throw new IllegalArgumentException("Cell cannot be null.");
+        }
         cellsThatHaveChanged.add(cell);
     }
-@Override
-    public Sheet updateCellValueAndCalculate(String cellId ,String value) {
-        Coordinate coordinate = createCoordinate(cellId);
 
-        SheetImpl newSheetVersion = copySheet();
-        newSheetVersion.updateDependenciesAndInfluences();
-        Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
-        newSheetVersion.activeCells.put(coordinate, newCell);
-        newSheetVersion.cellsThatHaveChanged.clear();
-        try {
-            List<Cell> cellsThatHaveChanged =
-                    newSheetVersion
-                            .orderCellsForCalculation()
-                            .stream()
-                            .filter(Cell::calculateEffectiveValue)
-                            .collect(Collectors.toList());
-
-            newSheetVersion.cellsThatHaveChanged = cellsThatHaveChanged;
-
-            int newVersion = newSheetVersion.increaseVersion();
-            cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
-            newSheetVersion.updateDependenciesAndInfluences();
-            for (Cell cell : newSheetVersion.activeCells.values()) {
-                cell.calculateEffectiveValue();
-            }
-
-            return newSheetVersion;
-        } catch (Exception e) {
-            // התמודדות עם שגיאות בזמן ריצה שזוהו במהלך הקריאה
-            return this;
+    @Override
+    public Sheet updateCellValueAndCalculate(String cellId, String value) {
+        if (cellId == null || value == null) {
+            throw new IllegalArgumentException("Cell ID and value cannot be null.");
         }
-    }
 
-    public List<Cell> orderCellsForCalculation() {
-        List<Cell> orderedCells = new ArrayList<>();
-        Map<Cell, Boolean> visited = new HashMap<>();
+        Coordinate coordinate = createCoordinate(cellId);
+        SheetImpl updatedSheet = copySheet();
+        updatedSheet.cellsThatHaveChanged.clear();
+
+        Cell updatedCell = new CellImpl(coordinate, value, updatedSheet.getVersion() + 1, updatedSheet);
+        updatedSheet.activeCells.put(coordinate, updatedCell);
 
         try {
-            for (Cell cell : activeCells.values()) {
-                if (!visited.containsKey(cell)) {
-                    topologicalSort(cell, visited, orderedCells);
+            // Calculate the effective values for the cells in the correct order
+            List<Cell> orderedCells = updatedSheet.calculateInPlace();
+            List<Cell> changedCells = new ArrayList<>();
+
+            for (Cell cell : orderedCells) {
+                if (cell.calculateEffectiveValue()) {
+                    changedCells.add(cell);
                 }
             }
-        } catch (RuntimeException e) {
-            System.err.println("Error during cell calculation order: " + e.getMessage());
-            throw e;  // Re-throw the exception after logging
+
+            updatedSheet.cellsThatHaveChanged = changedCells;
+            int newVersion = updatedSheet.increaseVersion();
+            changedCells.forEach(cell -> cell.updateVersion(newVersion));
+
+            return updatedSheet;
+        } catch (Exception e) {
+            throw new IllegalStateException("Error updating cell value: " + e.getMessage());
+        }
+    }
+    //calculates the effective values  and orders the cells based on their dependencies
+    public List<Cell> calculateInPlace() {
+        List<Cell> orderedCells = new ArrayList<>();
+        Set<Coordinate> processedCoordinates = new HashSet<>();
+        // Evaluate dependencies for each cell and order them
+        for (Cell cell : activeCells.values()) {
+            evaluateDependencies(cell, orderedCells, processedCoordinates);
         }
 
-        Collections.reverse(orderedCells); // התוצאה הסופית של המיון הטופולוגי
         return orderedCells;
     }
+    //evaluates the dependencies of a cell
+    private void evaluateDependencies(Cell cell, List<Cell> orderedCells, Set<Coordinate> processedCoordinates) {
+        if (processedCoordinates.contains(cell.getCoordinate())) {
+            return;
+        }
 
-    private void topologicalSort(Cell cell, Map<Cell, Boolean> visited, List<Cell> orderedCells) {
-        visited.put(cell, true);
+        String value = cell.getOriginalValue();
+        List<Coordinate> referencedCoords = findReferences(value);
 
-        for (Cell neighbor : cell.getInfluencingOn()) {
-            if (!visited.containsKey(neighbor)) {
-                topologicalSort(neighbor, visited, orderedCells);
-            } else if (visited.get(neighbor)) {
-                throw new RuntimeException("Circular dependency detected involving cell: " + cell.getCoordinate().toString());
+        for (Coordinate coord : referencedCoords) {
+            Cell referencedCell = activeCells.get(coord);
+            if (referencedCell != null && !processedCoordinates.contains(coord)) {
+                evaluateDependencies(referencedCell, orderedCells, processedCoordinates);
             }
         }
 
-        visited.put(cell, false);
         orderedCells.add(cell);
+        processedCoordinates.add(cell.getCoordinate());
     }
 
 
+    //copy sheet to create new version
     private SheetImpl copySheet() {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -192,97 +214,28 @@ public class SheetImpl implements Sheet , Serializable {
 
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
             return (SheetImpl) ois.readObject();
-        } catch (NotSerializableException e) {
-            System.err.println("Serialization error: A class does not implement Serializable. " + e.getMessage());
-            e.printStackTrace();
-            return this;
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Error during sheet copy: " + e.getMessage());
-            e.printStackTrace();
-            return this;
+            throw new IllegalStateException("Error during sheet copy: " + e.getMessage(), e);
         }
     }
 
-
-    // פונקציה שמעלה את גרסת הגיליון
     private int increaseVersion() {
         return ++this.version;
     }
 
-    @Override
-    public void updateDependenciesAndInfluences() {
-        for (Cell cell : activeCells.values()) {
-            cell.resetDependencies();
-            cell.resetInfluences();
-        }
-        for (Cell cell : activeCells.values()) {
-            // Parse the cell's value to find references
-            String originalValue = cell.getOriginalValue();
-            List<Coordinate> referencedCellIds = extractReferences(originalValue);
-
-            for (Coordinate referencedCellId : referencedCellIds) {
-                Cell referencedCell = activeCells.get(referencedCellId);
-
-                if (referencedCell != null) {
-                    // Add current cell as a dependency for the referenced cell
-                    referencedCell.getInfluencingOn().add(cell);
-
-                    // Add current cell to the influences of the referenced cell
-                    cell.getDependsOn().add(referencedCell);
-                }
-
-            }
-        }
-
-        // Check for cycles immediately after updating dependencies and influences
-        try {
-            orderCellsForCalculation();  // If this method fails, it means a cycle exists.
-        } catch (IllegalStateException e) {
-            throw new IllegalStateException(e.getMessage());
-        }
-    }
-    private List<Coordinate> extractReferences(String value) {
+    // Extract references from the cell's value
+    private List<Coordinate> findReferences(String value) {
         List<Coordinate> references = new ArrayList<>();
-        int i = 0;
-        String upperValue = value.toUpperCase();
+        String valueUpperCase = value.toUpperCase();
 
-        while (i < upperValue.length()) {
-            // Find the start of a REF command
-            int start = upperValue.indexOf("{REF,", i);
+        Pattern refPattern = Pattern.compile("\\{REF,\\s*([^,\\s}]+)\\s*}");
+        Matcher matcher = refPattern.matcher(valueUpperCase);
 
-            // If no more REF commands are found, break the loop
-            if (start == -1) {
-                break;
-            }
-
-            // Move the index to where the cell ID should start
-            int cellIdStart = start + 5;
-
-            // Skip any whitespace after
-            while (cellIdStart < upperValue.length() && upperValue.charAt(cellIdStart) == ' ') {
-                cellIdStart++;
-            }
-
-            // Find the end of the cell ID (it's before the next comma or closing brace)
-            int cellIdEnd = cellIdStart;
-            while (cellIdEnd < upperValue.length() && upperValue.charAt(cellIdEnd) != ',' && upperValue.charAt(cellIdEnd) != '}') {
-                cellIdEnd++;
-            }
-
-            // Extract and add the cell ID if it's valid
-            if (cellIdEnd > cellIdStart) {
-                String cellId = upperValue.substring(cellIdStart, cellIdEnd).trim();
-                references.add(createCoordinate(cellId)); // Assuming CellIdentifierImpl has this constructor
-            }
-
-            // Move the index to continue searching
-            i = cellIdEnd;
+        while (matcher.find()) {
+            String cellId = matcher.group(1).trim();
+            references.add(createCoordinate(cellId));
         }
 
         return references;
     }
-
-
 }
-
-

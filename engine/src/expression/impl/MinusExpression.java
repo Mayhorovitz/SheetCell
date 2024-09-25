@@ -9,9 +9,6 @@ import cell.impl.EffectiveValueImpl;
 
 public class MinusExpression extends BinaryExpression{
 
-    private Expression left;
-    private Expression right;
-
     public MinusExpression(Expression left, Expression right) {
         super(left, right);
     }

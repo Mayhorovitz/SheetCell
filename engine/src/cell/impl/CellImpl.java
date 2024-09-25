@@ -92,15 +92,4 @@ public class CellImpl implements Cell , Serializable {
         return false;
     }
 
-
-
-    @Override
-    public void resetDependencies() {
-        dependsOn.clear();
-    }
-
-    @Override
-    public void resetInfluences() {
-        influencingOn.clear();
-    }
 }
