@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 
 import static coordinate.CoordinateFactory.createCoordinate;
 
-
-
 public class SheetImpl implements Sheet, Serializable {
     private String name;
     private int version;
@@ -24,12 +22,14 @@ public class SheetImpl implements Sheet, Serializable {
     private int colWidth;
     private Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
-    //constructors
+
+    // Constructors
     public SheetImpl() {
         this.activeCells = new HashMap<>();
         this.cellsThatHaveChanged = new ArrayList<>();
     }
-//setters
+
+    // Setters
     @Override
     public void setName(String name) {
         if (name == null || name.isEmpty()) {
@@ -37,6 +37,7 @@ public class SheetImpl implements Sheet, Serializable {
         }
         this.name = name;
     }
+
     public void setSheetVersion(int loadVersion) {
         if (loadVersion < 1) {
             throw new IllegalArgumentException("Sheet version must be at least 1.");
@@ -51,6 +52,7 @@ public class SheetImpl implements Sheet, Serializable {
         }
         this.rows = rows;
     }
+
     @Override
     public void setCols(int cols) {
         if (cols < 1) {
@@ -75,17 +77,14 @@ public class SheetImpl implements Sheet, Serializable {
         this.colWidth = colWidth;
     }
 
-
-    //getters
+    // Getters
     public Map<Coordinate, Cell> getActiveCells() {
         return activeCells;
     }
 
-
     public List<Cell> getCellsThatHaveChanged() {
         return cellsThatHaveChanged;
     }
-
 
     @Override
     public int getVersion() {
@@ -146,65 +145,88 @@ public class SheetImpl implements Sheet, Serializable {
         }
 
         Coordinate coordinate = createCoordinate(cellId);
-        SheetImpl updatedSheet = copySheet();
-        updatedSheet.cellsThatHaveChanged.clear();
+        SheetImpl newSheetVersion = copySheet();
+        newSheetVersion.cellsThatHaveChanged.clear();
 
-        Cell updatedCell = new CellImpl(coordinate, value, updatedSheet.getVersion() + 1, updatedSheet);
-        updatedSheet.activeCells.put(coordinate, updatedCell);
+        // add new cell or update existing one
+        Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
+        newSheetVersion.activeCells.put(coordinate, newCell);
+
+        boolean dependenciesNeedUpdate = true;  // Flag to determine if dependencies should be updated
 
         try {
-            // Calculate the effective values for the cells in the correct order
-            List<Cell> orderedCells = updatedSheet.calculateInPlace();
-            List<Cell> changedCells = new ArrayList<>();
-
-            for (Cell cell : orderedCells) {
-                if (cell.calculateEffectiveValue()) {
-                    changedCells.add(cell);
-                }
+            if (dependenciesNeedUpdate) {
+                newSheetVersion.updateDependenciesAndInfluences();
             }
+            // calculate effective values for cells that changed and update their versions
+            List<Cell> cellsThatHaveChanged = newSheetVersion.orderCellsForCalculation()
+                    .stream()
+                    .filter(Cell::calculateEffectiveValue)
+                    .collect(Collectors.toList());
 
-            updatedSheet.cellsThatHaveChanged = changedCells;
-            int newVersion = updatedSheet.increaseVersion();
-            changedCells.forEach(cell -> cell.updateVersion(newVersion));
+            newSheetVersion.cellsThatHaveChanged = cellsThatHaveChanged;
+            int newVersion = newSheetVersion.increaseVersion();
+            cellsThatHaveChanged.forEach(cell -> cell.updateVersion(newVersion));
 
-            return updatedSheet;
+            return newSheetVersion;
         } catch (Exception e) {
             throw new IllegalStateException("Error updating cell value: " + e.getMessage());
         }
     }
-    //calculates the effective values  and orders the cells based on their dependencies
-    public List<Cell> calculateInPlace() {
+
+
+    //order the cells to calculate the new effective values
+    public List<Cell> orderCellsForCalculation() {
         List<Cell> orderedCells = new ArrayList<>();
-        Set<Coordinate> processedCoordinates = new HashSet<>();
-        // Evaluate dependencies for each cell and order them
-        for (Cell cell : activeCells.values()) {
-            evaluateDependencies(cell, orderedCells, processedCoordinates);
+        Map<Cell, Boolean> visited = new HashMap<>();
+
+        try {
+            // perform topological sort to order cells
+            for (Cell cell : activeCells.values()) {
+                if (!visited.containsKey(cell)) {
+                    topologicalSort(cell, visited, orderedCells);
+                }
+            }
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Error during cell calculation order: " + e.getMessage(), e);
         }
 
+        Collections.reverse(orderedCells);
         return orderedCells;
     }
-    //evaluates the dependencies of a cell
-    private void evaluateDependencies(Cell cell, List<Cell> orderedCells, Set<Coordinate> processedCoordinates) {
-        if (processedCoordinates.contains(cell.getCoordinate())) {
-            return;
-        }
 
-        String value = cell.getOriginalValue();
-        List<Coordinate> referencedCoords = findReferences(value);
+    private void topologicalSort(Cell cell, Map<Cell, Boolean> visited, List<Cell> orderedCells) {
+        visited.put(cell, true); // mark cell as visited
 
-        for (Coordinate coord : referencedCoords) {
-            Cell referencedCell = activeCells.get(coord);
-            if (referencedCell != null && !processedCoordinates.contains(coord)) {
-                evaluateDependencies(referencedCell, orderedCells, processedCoordinates);
+        // recursively sort the influencing cells
+        for (Cell neighbor : cell.getInfluencingOn()) {
+            if (!visited.containsKey(neighbor)) {
+                topologicalSort(neighbor, visited, orderedCells);
+            } else if (visited.get(neighbor)) {
+                throw new IllegalStateException("Circular dependency detected involving cell: " + cell.getCoordinate().toString());
             }
         }
 
-        orderedCells.add(cell);
-        processedCoordinates.add(cell.getCoordinate());
+        visited.put(cell, false); // mark cell as processed
+        orderedCells.add(cell); // add cell to the ordered list
+    }
+    private List<Coordinate> extractRefs(String value) {
+        List<Coordinate> references = new ArrayList<>();
+        String upperValue = value.toUpperCase();
+
+        // Regular expression to match {REF,<cellId>}
+        Pattern pattern = Pattern.compile("\\{REF,\\s*([^,\\s}]+)\\s*}");
+        Matcher matcher = pattern.matcher(upperValue);
+
+        while (matcher.find()) {
+            String cellId = matcher.group(1).trim();
+            references.add(createCoordinate(cellId));
+        }
+
+        return references;
     }
 
-
-    //copy sheet to create new version
+    // Copy sheet to create a new version
     private SheetImpl copySheet() {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -223,19 +245,26 @@ public class SheetImpl implements Sheet, Serializable {
         return ++this.version;
     }
 
-    // Extract references from the cell's value
-    private List<Coordinate> findReferences(String value) {
-        List<Coordinate> references = new ArrayList<>();
-        String valueUpperCase = value.toUpperCase();
-
-        Pattern refPattern = Pattern.compile("\\{REF,\\s*([^,\\s}]+)\\s*}");
-        Matcher matcher = refPattern.matcher(valueUpperCase);
-
-        while (matcher.find()) {
-            String cellId = matcher.group(1).trim();
-            references.add(createCoordinate(cellId));
+    public void updateDependenciesAndInfluences() {
+        //rest lists
+        for (Cell cell : activeCells.values()) {
+            cell.resetDependencies();
+            cell.resetInfluences();
         }
+        //get all cells with refs
+        for (Cell cell : activeCells.values()) {
+            String originalValue = cell.getOriginalValue();
+            List<Coordinate> influences = extractRefs(originalValue);
 
-        return references;
+            for (Coordinate influencesCoordinate : influences) {
+                Cell influenceCell = activeCells.get(influencesCoordinate);
+
+                if (influenceCell != null) {
+                    influenceCell.getInfluencingOn().add(cell);
+                    cell.getDependsOn().add(influenceCell);
+                }
+            }
+        }
     }
+
 }

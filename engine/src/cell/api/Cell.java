@@ -14,4 +14,6 @@ public interface Cell {
     List<Cell> getInfluencingOn();
     void updateVersion(int newVersion);
     boolean calculateEffectiveValue();
+    void resetDependencies();
+    void resetInfluences();
 }

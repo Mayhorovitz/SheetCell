@@ -1,11 +1,12 @@
 package cell.impl;
 
-import cell.api.EffectiveValue;
 import cell.api.Cell;
+import cell.api.EffectiveValue;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
 import expression.api.Expression;
 import expression.parser.FunctionParser;
+import javafx.scene.paint.Color;
 import sheet.api.SheetReadActions;
 
 import java.io.Serializable;
@@ -20,6 +21,8 @@ public class CellImpl implements Cell , Serializable {
     private int version;
     private final List<Cell> dependsOn;
     private final List<Cell> influencingOn;
+    private Color backgroundColor; // Default white background
+    private Color textColor;       // Default black text
     private SheetReadActions sheet;
 
 //constructors
@@ -38,10 +41,12 @@ public class CellImpl implements Cell , Serializable {
         this.version = version;
         this.dependsOn = new ArrayList<>();
         this.influencingOn = new ArrayList<>();
+
         this.sheet = sheet;
     }
 
     //getters
+
     @Override
     public Coordinate getCoordinate() {
         return coordinate;
@@ -91,5 +96,17 @@ public class CellImpl implements Cell , Serializable {
 
         return false;
     }
+
+
+    @Override
+    public void resetDependencies() {
+        this.dependsOn.clear(); // איפוס רשימת התאים שהתא תלוי בהם
+    }
+
+    @Override
+    public void resetInfluences() {
+        this.influencingOn.clear(); // איפוס רשימת התאים שהתא משפיע עליהם
+    }
+
 
 }

@@ -276,7 +276,98 @@ public enum FunctionParser {
             return new SubExpression(left, middle, right);
         }
     },
+    EQUAL {
+        @Override
+        public Expression parse(List<String> arguments){
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for EQUAL function. Expected 2, but got " + arguments.size());
+            }
 
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            return new EqualExpression(left, right);
+        }
+    },
+
+    AND {
+        @Override
+        public Expression parse(List<String> arguments){
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for AND function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            return new AndExpression(left, right);
+        }
+    },
+
+    BIGGER{
+        @Override
+        public Expression parse(List<String> arguments){
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for BIGGER function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            return new BiggerExpression(left, right);
+        }
+    },
+
+    LESS{
+        @Override
+        public Expression parse(List<String> arguments){
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for LESS function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            return new LessExpression(left, right);
+        }
+    },
+
+    NOT{
+        @Override
+        public Expression parse(List<String> arguments){
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for NOT function. Expected 1, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression exp = parseExpression(arguments.get(0));
+
+            return new NotExpression(exp);
+        }
+    },
+
+    OR{
+        @Override
+        public Expression parse(List<String> arguments){
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for OR function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+            return new OrExpression(left, right);
+        }
+    },
     REF {
         @Override
         public Expression parse(List<String> arguments) {

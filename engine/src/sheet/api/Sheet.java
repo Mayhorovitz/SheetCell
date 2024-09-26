@@ -31,9 +31,9 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
 
     int getColWidth();
     List<Cell> getCellsThatHaveChanged();
-
     int getRowHeight();
     void addCellThatChanged(Cell cell);
+    List<Cell> orderCellsForCalculation();
     Map<Coordinate, Cell> getActiveCells();
-    List<Cell> calculateInPlace();
+    void updateDependenciesAndInfluences();
 }

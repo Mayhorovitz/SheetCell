@@ -149,16 +149,16 @@ public class EngineImpl implements Engine {
             newSheet.addCell(coordinate, cell);
         }
 
-        List<Cell> calculationOrder = newSheet.calculateInPlace();
-        for (Cell cell : calculationOrder) {
-            if (cell.calculateEffectiveValue()) {
-                newSheet.addCellThatChanged(cell);
-            }
+        newSheet.updateDependenciesAndInfluences();
+        // Calculate the effective values for each cell in the correct order
+        for (Cell cell : newSheet.orderCellsForCalculation()) {
+            cell.calculateEffectiveValue();
+            newSheet.addCellThatChanged(cell);
         }
-
         return newSheet;
     }
 
+    //handle update cell request update the cell value
     //handle update cell request update the cell value
     public void updateCell(String coordinate, String newValue) {
         if (coordinate == null || newValue == null) {
@@ -170,6 +170,7 @@ public class EngineImpl implements Engine {
         currentSheetVersion = newSheet.getVersion();
         allSheets.put(currentSheetVersion, newSheet);
     }
+
 
     @Override
     public Sheet getCurrentSheet() {
