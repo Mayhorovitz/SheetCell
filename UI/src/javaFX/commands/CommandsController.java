@@ -23,7 +23,6 @@ public class CommandsController {
         this.sheetController = sheetController;
     }
 
-    // Apply background color to the selected cell
     @FXML
     private void handleApplyBackgroundColor() {
         Color selectedColor = bgColorPicker.getValue();
@@ -32,7 +31,6 @@ public class CommandsController {
         }
     }
 
-    // Apply text color to the selected cell
     @FXML
     private void handleApplyTextColor() {
         Color selectedTextColor = textColorPicker.getValue();

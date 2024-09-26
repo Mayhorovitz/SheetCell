@@ -6,7 +6,6 @@ import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
 import expression.api.Expression;
 import expression.parser.FunctionParser;
-import javafx.scene.paint.Color;
 import sheet.api.SheetReadActions;
 
 import java.io.Serializable;
@@ -21,8 +20,8 @@ public class CellImpl implements Cell , Serializable {
     private int version;
     private final List<Cell> dependsOn;
     private final List<Cell> influencingOn;
-    private Color backgroundColor; // Default white background
-    private Color textColor;       // Default black text
+    private String backgroundColor; // Store as String
+    private String textColor;     // Default black text
     private SheetReadActions sheet;
 
 //constructors
@@ -30,8 +29,11 @@ public class CellImpl implements Cell , Serializable {
         this.coordinate = new CoordinateImpl(row, column);
         this.originalValue = originalValue;
         this.version = version;
+        this.backgroundColor = "#FFFFFF"; // Default white background
+        this.textColor = "#000000";
         this.dependsOn = new ArrayList<>();
         this.influencingOn = new ArrayList<>();
+
         this.sheet = sheet;
     }
 
@@ -41,12 +43,31 @@ public class CellImpl implements Cell , Serializable {
         this.version = version;
         this.dependsOn = new ArrayList<>();
         this.influencingOn = new ArrayList<>();
-
+        this.backgroundColor = "#FFFFFF"; // Default white background
+        this.textColor = "#000000";
         this.sheet = sheet;
     }
 
     //getters
+    @Override
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
 
+    @Override
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    @Override
+    public String getTextColor() {
+        return textColor;
+    }
+
+    @Override
+    public void setTextColor(String textColor) {
+        this.textColor = textColor;
+    }
     @Override
     public Coordinate getCoordinate() {
         return coordinate;

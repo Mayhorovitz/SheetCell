@@ -124,10 +124,19 @@ public class SheetImpl implements Sheet, Serializable {
         return activeCells.get(coordinate);
     }
 
+    @Override
     public void addCell(Coordinate coordinate, Cell cell) {
         if (coordinate == null || cell == null) {
             throw new IllegalArgumentException("Coordinate and Cell cannot be null.");
         }
+
+        // שמירה על צבע הרקע וצבע הטקסט בתא הנוכחי
+        if (activeCells.containsKey(coordinate)) {
+            Cell existingCell = activeCells.get(coordinate);
+            cell.setBackgroundColor(existingCell.getBackgroundColor());
+            cell.setTextColor(existingCell.getTextColor());
+        }
+
         activeCells.put(coordinate, cell);
     }
 

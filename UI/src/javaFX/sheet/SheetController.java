@@ -34,6 +34,9 @@ public class SheetController {
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
     }
+    public void setEngine(Engine engine) {
+        this.engine = engine;
+    }
 
     // Function to display the sheet in the GridPane
     public void displaySheet(Sheet sheet) {
@@ -42,7 +45,6 @@ public class SheetController {
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
 
-        // Adding row numbers on the first column and column headers
         for (int row = 0; row <= numRows; row++) {
             for (int col = 0; col <= numCols; col++) {
                 if (row == 0 && col == 0) {
@@ -52,44 +54,37 @@ public class SheetController {
                     Label colHeader = new Label(getColumnName(col));
                     colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0;");
                     colHeader.setMinWidth(colWidth);
-                    final int finalCol = col;
-                    colHeader.setOnMouseClicked(event -> {
-                        isColumnSelected = true;
-                        isRowSelected = false;
-                        selectedCol = finalCol;
-                        selectedRow = -1;
-                    });
                     spreadsheetGrid.add(colHeader, col, 0);
                 } else if (col == 0) {
                     // Add row headers (1, 2, 3, ...)
                     Label rowHeader = new Label(String.valueOf(row));
                     rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0;");
                     rowHeader.setMinHeight(rowHeight);
-                    final int finalRow = row;
-                    rowHeader.setOnMouseClicked(event -> {
-                        isRowSelected = true;
-                        isColumnSelected = false;
-                        selectedRow = finalRow;
-                        selectedCol = -1;
-                    });
                     spreadsheetGrid.add(rowHeader, 0, row);
                 } else {
                     // Add data cells
                     Coordinate coordinate = createCoordinate(row, col);
                     Cell cell = sheet.getCell(coordinate);
 
-                    StackPane cellPane = createCellPane(cell != null ? cell.getEffectiveValue().toString() : "", colWidth, rowHeight);
+                    // Pass the entire cell object to createCellPane so colors are applied
+                    StackPane cellPane = createCellPane(
+                            cell != null ? cell.getEffectiveValue().toString() : "",
+                            colWidth,
+                            rowHeight,
+                            cell // <-- pass the Cell object so colors can be applied
+                    );
 
+                    // Add event to handle cell clicks
                     final int finalRow = row;
                     final int finalCol = col;
                     cellPane.setOnMouseClicked(event -> {
-                        isRowSelected = false;
-                        isColumnSelected = false;
                         selectedRow = finalRow;
                         selectedCol = finalCol;
-                        // Handle cell selection in MainController if needed
                         String cellId = getColumnName(finalCol) + finalRow;
                         mainController.handleCellSelection(cellId);
+
+                        // Highlight dependencies and influences
+                        highlightDependenciesAndInfluences(cell);
                     });
 
                     spreadsheetGrid.add(cellPane, col, row);
@@ -101,18 +96,29 @@ public class SheetController {
         spreadsheetScrollPane.setPannable(true);  // Allows panning with mouse drag
     }
 
-    // Function to create a cell pane with a value, width and height
-    private StackPane createCellPane(String value, int colWidth, int rowHeight) {
+
+    // Use this method when creating cell panes to apply colors
+    private StackPane createCellPane(String value, int colWidth, int rowHeight, Cell cell) {
         StackPane cellPane = new StackPane();
         Label cellLabel = new Label(value);
-        cellLabel.setStyle("-fx-padding: 5px; -fx-alignment: center; -fx-wrap-text: true;");  // Default center alignment with wrap
+        cellLabel.setStyle("-fx-padding: 5px; -fx-alignment: center; -fx-wrap-text: true;");
+
+        if (cell != null) {
+            String backgroundColor = cell.getBackgroundColor(); // Now this is a string
+            String textColor = cell.getTextColor(); // Now this is a string
+
+            cellPane.setStyle("-fx-background-color: " + backgroundColor + ";");
+            cellLabel.setStyle("-fx-text-fill: " + textColor + "; -fx-padding: 5px; -fx-alignment: center; -fx-wrap-text: true;");
+        } else {
+            cellPane.setStyle("-fx-background-color: white; -fx-text-fill: black;");
+        }
 
         cellPane.getChildren().add(cellLabel);
         cellPane.setMinWidth(colWidth);
         cellPane.setMinHeight(rowHeight);
-        cellPane.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px;");
-        GridPane.setHgrow(cellPane, Priority.ALWAYS);  // Allow the cell to grow horizontally
-        GridPane.setVgrow(cellPane, Priority.ALWAYS);  // Allow the cell to grow vertically
+        cellPane.setStyle(cellPane.getStyle() + "; -fx-border-color: lightgray; -fx-border-width: 1px;");
+        GridPane.setHgrow(cellPane, Priority.ALWAYS);
+        GridPane.setVgrow(cellPane, Priority.ALWAYS);
         return cellPane;
     }
 
@@ -129,22 +135,43 @@ public class SheetController {
 
     // Highlight dependencies and influences of a selected cell
     public void highlightDependenciesAndInfluences(Cell selectedCell) {
-        // Clear previous highlights
-        spreadsheetGrid.getChildren().forEach(node -> node.setStyle("-fx-border-color: lightgray;"));
+        // Clear previous highlights and restore their original styles
+        spreadsheetGrid.getChildren().forEach(node -> {
+            int row = GridPane.getRowIndex(node);
+            int col = GridPane.getColumnIndex(node);
+            Coordinate coordinate = createCoordinate(row, col);
+            Cell cell = engine.getCurrentSheet().getCell(coordinate);
 
-        // Highlight the cells that the selected cell depends on (light blue)
+            // Restore original colors for each cell
+            if (cell != null) {
+                node.setStyle("-fx-background-color: " + cell.getBackgroundColor() + ";" + // Use string directly
+                        "-fx-text-fill: " + cell.getTextColor() + ";" + // Use string directly
+                        "-fx-border-color: lightgray; -fx-border-width: 1px;");
+            }
+        });
+
+        // Highlight the cells that the selected cell depends on (light blue dashed border)
         for (Cell dependentCell : selectedCell.getDependsOn()) {
-            highlightCell(dependentCell, "-fx-background-color: lightblue;");
+            highlightCell(dependentCell, "-fx-border-color: lightblue; -fx-border-width: 5px; -fx-border-style: dashed;");
         }
 
-        // Highlight the cells that the selected cell influences (light green)
+        // Highlight the cells that the selected cell influences (light green dashed border)
         for (Cell influencingCell : selectedCell.getInfluencingOn()) {
-            highlightCell(influencingCell, "-fx-background-color: lightgreen;");
+            highlightCell(influencingCell, "-fx-border-color: lightgreen; -fx-border-width: 5px; -fx-border-style: dashed;");
         }
 
-        // Highlight the selected cell itself
-        highlightCell(selectedCell, "-fx-background-color: yellow;");
+        // Add solid blue border to the selected cell
+        int selectedRow = selectedCell.getCoordinate().getRow();
+        int selectedCol = selectedCell.getCoordinate().getColumn();
+
+        spreadsheetGrid.getChildren().stream()
+                .filter(node -> GridPane.getRowIndex(node) == selectedRow && GridPane.getColumnIndex(node) == selectedCol)
+                .findFirst()
+                .ifPresent(node -> {
+                    node.setStyle(node.getStyle() + "; -fx-border-color: blue; -fx-border-width: 3px;");
+                });
     }
+
 
     // Highlight a specific cell
     private void highlightCell(Cell cell, String style) {
@@ -158,14 +185,32 @@ public class SheetController {
                 .ifPresent(node -> node.setStyle(style));
     }
 
-    // Apply background color to selected cell
     public void applyBackgroundColorToSelectedCell(Color color) {
-        applyStyleToSelectedCell("-fx-background-color: " + toRgbString(color) + ";");
+        if (selectedRow != -1 && selectedCol != -1) {
+            Coordinate coordinate = createCoordinate(selectedRow, selectedCol);
+            Cell selectedCell = engine.getCurrentSheet().getCell(coordinate);
+
+            selectedCell.setBackgroundColor(toHexString(color)); // Convert Color to hex string
+            displaySheet(engine.getCurrentSheet());
+        }
     }
 
-    // Apply text color to selected cell
     public void applyTextColorToSelectedCell(Color color) {
-        applyStyleToSelectedCell("-fx-text-fill: " + toRgbString(color) + ";");
+        if (selectedRow != -1 && selectedCol != -1) {
+            Coordinate coordinate = createCoordinate(selectedRow, selectedCol);
+            Cell selectedCell = engine.getCurrentSheet().getCell(coordinate);
+
+            selectedCell.setTextColor(toHexString(color)); // Convert Color to hex string
+            displaySheet(engine.getCurrentSheet());
+        }
+    }
+
+
+    private String toHexString(Color color) {
+        return String.format("#%02X%02X%02X",
+                (int) (color.getRed() * 255),
+                (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255));
     }
 
     // Apply custom style to the selected cell
@@ -214,5 +259,9 @@ public class SheetController {
     // Reset the design of the selected cell
     public void resetCellDesign() {
         applyStyleToSelectedCell("-fx-background-color: white; -fx-text-fill: black;");
+    }
+
+    private Color stringToColor(String colorString) {
+        return Color.web(colorString); // Convert from hex string to Color object
     }
 }
