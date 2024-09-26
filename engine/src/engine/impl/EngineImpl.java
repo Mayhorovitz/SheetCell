@@ -145,7 +145,7 @@ public class EngineImpl implements Engine {
             int col = convertColumnToIndex(column);
 
             Coordinate coordinate = new CoordinateImpl(row, col); // Use CoordinateImpl here
-            Cell cell = new CellImpl(row, col, originalValue, 0, newSheet);
+            Cell cell = new CellImpl(row, col, originalValue, 1, newSheet);
             newSheet.addCell(coordinate, cell);
         }
 

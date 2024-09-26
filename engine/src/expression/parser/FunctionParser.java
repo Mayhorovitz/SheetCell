@@ -199,6 +199,32 @@ public enum FunctionParser {
             return new PowExpression(left, right);
         }
     },
+    PERCENT{
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 2) {
+                throw new IllegalArgumentException("Invalid number of arguments for PERCENT function. Expected 2, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression right = parseExpression(arguments.get(1));
+
+
+            // more validations on the expected argument types
+            CellType leftCellType = left.getFunctionResultType();
+            CellType rightCellType = right.getFunctionResultType();
+            // support UNKNOWN type as its value will be determined at runtime
+            if ( (!leftCellType.equals(CellType.NUMERIC) && !leftCellType.equals(CellType.UNKNOWN)) ||
+                    (!rightCellType.equals(CellType.NUMERIC) && !rightCellType.equals(CellType.UNKNOWN)) ) {
+                throw new IllegalArgumentException("Invalid argument types for POW function. Expected NUMERIC, but got " + leftCellType + " and " + rightCellType);
+            }
+
+            // all is good. create the relevant function instance
+            return new PercentExpression(left, right);
+        }
+    },
 
     ABS {
         @Override
