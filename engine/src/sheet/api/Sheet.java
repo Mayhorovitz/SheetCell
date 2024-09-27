@@ -3,7 +3,9 @@ package sheet.api;
 
 import cell.api.Cell;
 import coordinate.Coordinate;
+import range.api.Range;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -36,4 +38,12 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     List<Cell> orderCellsForCalculation();
     Map<Coordinate, Cell> getActiveCells();
     void updateDependenciesAndInfluences();
+
+    void addRange(String name, String startCell, String endCell);
+
+    void deleteRange(String name);
+
+    Range getRange(String name);
+
+    Collection<Range> getAllRanges();
 }

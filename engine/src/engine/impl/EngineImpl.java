@@ -5,6 +5,7 @@ import cell.impl.CellImpl;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
 import engine.api.Engine;
+import range.api.Range;
 import sheet.api.Sheet;
 import sheet.impl.SheetImpl;
 import generated.*;
@@ -14,6 +15,7 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,7 +111,7 @@ public class EngineImpl implements Engine {
         return convertColumnToIndex(columnPart); // Convert it to column index
     }
 
-    private int convertColumnToIndex(String column) {
+    public int convertColumnToIndex(String column) {
         int result = 0;
         for (char c : column.toUpperCase().toCharArray()) {
             result = result * 26 + (c - 'A' + 1);
@@ -225,5 +227,26 @@ public class EngineImpl implements Engine {
     @Override
     public void exit() {
         System.exit(0);
+    }
+
+    @Override
+    public void addRangeToSheet(String name, String startCell, String endCell) {
+        Sheet currentSheet = getCurrentSheet();
+        currentSheet.addRange(name, startCell, endCell);
+    }
+    @Override
+    public void deleteRangeFromSheet(String name) {
+        Sheet currentSheet = getCurrentSheet();
+        currentSheet.deleteRange(name);
+    }
+    @Override
+    public Range getRangeFromSheet(String name) {
+        Sheet currentSheet = getCurrentSheet();
+        return currentSheet.getRange(name);
+    }
+    @Override
+    public Collection<Range> getAllRangesFromSheet() {
+        Sheet currentSheet = getCurrentSheet();
+        return currentSheet.getAllRanges();
     }
 }

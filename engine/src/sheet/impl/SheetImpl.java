@@ -1,9 +1,11 @@
 package sheet.impl;
 
-import cell.impl.CellImpl;
-import sheet.api.Sheet;
 import cell.api.Cell;
+import cell.impl.CellImpl;
 import coordinate.Coordinate;
+import range.api.Range;
+import range.impl.RangeImpl;
+import sheet.api.Sheet;
 
 import java.io.*;
 import java.util.*;
@@ -22,11 +24,14 @@ public class SheetImpl implements Sheet, Serializable {
     private int colWidth;
     private Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
+    private Map<String, Range> ranges;
 
     // Constructors
     public SheetImpl() {
         this.activeCells = new HashMap<>();
         this.cellsThatHaveChanged = new ArrayList<>();
+        this.ranges = new HashMap<>();
+
     }
 
     // Setters
@@ -274,6 +279,32 @@ public class SheetImpl implements Sheet, Serializable {
                 }
             }
         }
+    }
+
+    @Override
+    public void addRange(String name, String startCell, String endCell) {
+        if (ranges.containsKey(name)) {
+            throw new IllegalArgumentException("Range with this name already exists.");
+        }
+        ranges.put(name, new RangeImpl(name, startCell, endCell, this));
+    }
+
+    @Override
+    public void deleteRange(String name) {
+        if (!ranges.containsKey(name)) {
+            throw new IllegalArgumentException("Range not found.");
+        }
+        ranges.remove(name);
+    }
+
+    @Override
+    public Range getRange(String name) {
+        return ranges.get(name);
+    }
+
+    @Override
+    public Collection<Range> getAllRanges() {
+        return ranges.values();
     }
 
 }

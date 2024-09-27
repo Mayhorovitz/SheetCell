@@ -3,7 +3,8 @@ package javaFX.commands;
 import javaFX.sheet.SheetController;
 import javafx.fxml.FXML;
 import javafx.scene.control.ColorPicker;
-import javafx.scene.control.TextField;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.paint.Color;
 
 public class CommandsController {
@@ -13,14 +14,38 @@ public class CommandsController {
     @FXML
     private ColorPicker textColorPicker;  // Text color picker
     @FXML
-    private TextField columnWidthInput;  // Column width input
+    private Spinner<Integer> columnWidthSpinner;  // Column width spinner
     @FXML
-    private TextField rowHeightInput;  // Row height input
+    private Spinner<Integer> rowHeightSpinner;  // Row height spinner
 
     private SheetController sheetController;
 
     public void setSheetController(SheetController sheetController) {
         this.sheetController = sheetController;
+    }
+
+    @FXML
+    private void initialize() {
+        // Update Spinner ranges for column width (up to 100) and row height (up to 100)
+        columnWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 10));
+        rowHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 10));
+
+        // Disable direct text input to make it strictly spinner-based
+        columnWidthSpinner.setEditable(false);
+        rowHeightSpinner.setEditable(false);
+
+        // Add listeners to update size when the spinner value changes
+        columnWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue != null) {
+                sheetController.setColumnWidth(newValue);
+            }
+        });
+
+        rowHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue != null) {
+                sheetController.setRowHeight(newValue);
+            }
+        });
     }
 
     @FXML
@@ -39,30 +64,27 @@ public class CommandsController {
         }
     }
 
-    // Set column width
+    // Set column width when user selects a value from spinner
     @FXML
     private void handleSetColumnWidth() {
-        try {
-            int colWidth = Integer.parseInt(columnWidthInput.getText());
+        Integer colWidth = columnWidthSpinner.getValue();
+        if (colWidth != null) {
             sheetController.setColumnWidth(colWidth);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid column width input.");
         }
     }
 
-    // Set row height
+    // Set row height when user selects a value from spinner
     @FXML
     private void handleSetRowHeight() {
-        try {
-            int rowHeight = Integer.parseInt(rowHeightInput.getText());
+        Integer rowHeight = rowHeightSpinner.getValue();
+        if (rowHeight != null) {
             sheetController.setRowHeight(rowHeight);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid row height input.");
         }
     }
 
     // Reset the design of the selected cell
     @FXML
     private void handleResetCellDesign() {
+        sheetController.resetCellDesign();
     }
 }
