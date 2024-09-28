@@ -162,8 +162,19 @@ public class SheetImpl implements Sheet, Serializable {
         SheetImpl newSheetVersion = copySheet();
         newSheetVersion.cellsThatHaveChanged.clear();
 
-        // add new cell or update existing one
+        // שמירת העיצוב הקיים של התא, אם קיים תא כזה
+        Cell existingCell = newSheetVersion.getCell(coordinate);
+        String existingBackgroundColor = existingCell != null ? existingCell.getBackgroundColor() : "#FFFFFF"; // ברירת מחדל: לבן
+        String existingTextColor = existingCell != null ? existingCell.getTextColor() : "#000000"; // ברירת מחדל: שחור
+
+        // יצירת תא חדש עם הערך המעודכן ושמירת גרסה חדשה
         Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
+
+        // שמירת צבעי התא הקיימים בתא החדש
+        newCell.setBackgroundColor(existingBackgroundColor);
+        newCell.setTextColor(existingTextColor);
+
+        // הוספת התא המעודכן למפה
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         boolean dependenciesNeedUpdate = true;  // Flag to determine if dependencies should be updated
@@ -172,7 +183,7 @@ public class SheetImpl implements Sheet, Serializable {
             if (dependenciesNeedUpdate) {
                 newSheetVersion.updateDependenciesAndInfluences();
             }
-            // calculate effective values for cells that changed and update their versions
+            // Calculate effective values for cells that changed and update their versions
             List<Cell> cellsThatHaveChanged = newSheetVersion.orderCellsForCalculation()
                     .stream()
                     .filter(Cell::calculateEffectiveValue)
