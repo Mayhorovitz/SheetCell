@@ -6,15 +6,14 @@ import cell.api.EffectiveValue;
 import cell.impl.EffectiveValueImpl;
 import expression.api.Expression;
 import range.api.Range;
-import range.impl.RangeImpl;
 import sheet.api.SheetReadActions;
-import java.util.*;
 
+import java.util.List;
 
-public class SumExpression implements Expression {
+public class AverageExpression implements Expression {
     private String range;
 
-    public SumExpression(String range) {
+    public AverageExpression(String range) {
         this.range = range;
     }
 
@@ -26,7 +25,6 @@ public class SumExpression implements Expression {
         }
         double sum = 0;
         List<Cell> cellsInRange = sheet.getCellsInRange(range);
-
         for (Cell cell : cellsInRange) {
             EffectiveValue cellValue = cell.getEffectiveValue();
             // Extract numeric value
@@ -40,7 +38,8 @@ public class SumExpression implements Expression {
             }
 
         }
-        return new EffectiveValueImpl(CellType.NUMERIC, sum);
+        double res = sum / range.getCells().size();
+        return new EffectiveValueImpl(CellType.NUMERIC, res);
 
     }
 

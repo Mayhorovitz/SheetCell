@@ -131,7 +131,14 @@ public class EngineImpl implements Engine {
         newSheet.setRowHeight(size.getRowsHeightUnits());
         newSheet.setColWidth(size.getColumnWidthUnits());
 
+        // Process the new ranges
+        for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
+            String name = range.getName();
+            String from =  range.getSTLBoundaries().getFrom();
+            String to = range.getSTLBoundaries().getTo();
+            newSheet.addRange(name, from, to);
 
+        }
 
         // Existing logic for processing cells
         for (STLCell stlCell : stlSheet.getSTLCells().getSTLCell()) {
@@ -151,18 +158,10 @@ public class EngineImpl implements Engine {
             cell.calculateEffectiveValue();
             newSheet.addCellThatChanged(cell);
         }
-        // Process the new ranges
-        for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
-            String name = range.getName();
-            String from =  range.getSTLBoundaries().getFrom();
-            String to = range.getSTLBoundaries().getTo();
-            newSheet.addRange(name, from, to);
 
-        }
         return newSheet;
     }
 
-    //handle update cell request update the cell value
     //handle update cell request update the cell value
     public void updateCell(String coordinate, String newValue) {
         if (coordinate == null || newValue == null) {

@@ -1,10 +1,10 @@
 package expression.parser;
 
+import cell.api.CellType;
 import coordinate.Coordinate;
 import expression.api.Expression;
 import expression.impl.*;
-import cell.api.CellType;
-import cell.api.EffectiveValue;
+import range.impl.RangeImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -383,6 +383,30 @@ public enum FunctionParser {
 
             // create the relevant Ref function instance
             return new RefExpression(cellIdentifier);
+        }
+    },
+    AVERAGE{
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for AVERAGE function. Expected 1, but got " + arguments.size());
+            }
+
+            String rangeName = arguments.get(0);
+
+            return new AverageExpression(rangeName);
+        }
+    },
+    SUM {
+        @Override
+        public Expression parse(List<String> arguments) {
+            if (arguments.size() != 1) {
+                throw new IllegalArgumentException("Invalid number of arguments for SUM function. Expected 1, but got " + arguments.size());
+            }
+
+            String rangeName = arguments.get(0);
+
+            return new SumExpression(rangeName);
         }
     };
 

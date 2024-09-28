@@ -41,9 +41,8 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
 
     void addRange(String name, String startCell, String endCell);
 
-    void deleteRange(String name);
 
-    Range getRange(String name);
+    void deleteRange(String name);
 
     Collection<Range> getAllRanges();
 }

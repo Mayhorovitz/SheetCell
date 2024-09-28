@@ -271,33 +271,98 @@ public class SheetImpl implements Sheet, Serializable {
     }
 
     public void updateDependenciesAndInfluences() {
-        //rest lists
+        // איפוס התלויות וההשפעות עבור כל התאים
         for (Cell cell : activeCells.values()) {
             cell.resetDependencies();
             cell.resetInfluences();
         }
-        //get all cells with refs
+
+        // חישוב התלויות וההשפעות מחדש
         for (Cell cell : activeCells.values()) {
             String originalValue = cell.getOriginalValue();
+
+            // תחילה, נתחיל עם ה-references לתאים בודדים
             List<Coordinate> influences = extractRefs(originalValue);
 
-            for (Coordinate influencesCoordinate : influences) {
-                Cell influenceCell = activeCells.get(influencesCoordinate);
+            // לאחר מכן, נבדוק אם יש references ל-range-ים (לדוגמה: SUM או AVERAGE)
+            List<String> rangeNames = extractRangeRefs(originalValue);
+            for (String rangeName : rangeNames) {
+                Range range = getRange(rangeName);
+                if (range != null) {
+                    // הוספת כל התאים שנמצאים בתוך ה-range כתלויות (influences)
+                    List<Coordinate> rangeCoordinates = getRangeCoordinates(range);
+                    influences.addAll(rangeCoordinates);
+                } else {
+                    // במקרה שבו ה-range לא נמצא, ניתן לזרוק שגיאה או להתעלם לפי הצורך
+                    throw new IllegalArgumentException("Range " + rangeName + " not found.");
+                }
+            }
+
+            // כל תא בתלויות יהפוך להיות השפעה על התא הנוכחי (influences)
+            for (Coordinate influenceCoordinate : influences) {
+                Cell influenceCell = activeCells.get(influenceCoordinate);
 
                 if (influenceCell != null) {
+                    // הוספת התא הנוכחי כתלוי על התא שמשפיע עליו
                     influenceCell.getInfluencingOn().add(cell);
+                    // הוספת התא המשפיע לרשימת התלויות של התא הנוכחי
                     cell.getDependsOn().add(influenceCell);
                 }
             }
         }
     }
+    // Helper function to extract range references from cell value
+    private List<String> extractRangeRefs(String value) {
+        List<String> rangeRefs = new ArrayList<>();
 
+        // Regular expression to match functions like {AVERAGE,rangeName} or {SUM,rangeName}
+        Pattern pattern = Pattern.compile("\\{(AVERAGE|SUM),\\s*([^,\\s}]+)\\s*}");
+        Matcher matcher = pattern.matcher(value);
+
+        while (matcher.find()) {
+            String rangeName = matcher.group(2).trim();
+            rangeRefs.add(rangeName);
+        }
+
+        return rangeRefs;
+    }
+
+    // Helper function to get all coordinates of cells within a range
+    private List<Coordinate> getRangeCoordinates(Range range) {
+        List<Coordinate> coordinates = new ArrayList<>();
+        Coordinate start = createCoordinate(range.getFrom());
+        Coordinate end = createCoordinate(range.getTo());
+
+        for (int row = start.getRow(); row <= end.getRow(); row++) {
+            for (int col = start.getColumn(); col <= end.getColumn(); col++) {
+                coordinates.add(createCoordinate(row, col));
+            }
+        }
+
+        return coordinates;
+    }
     @Override
     public void addRange(String name, String startCell, String endCell) {
         if (ranges.containsKey(name)) {
-            throw new IllegalArgumentException("Range with this name already exists.");
+            throw new IllegalArgumentException("Range with name" + name + "already exists.");
         }
         ranges.put(name, new RangeImpl(name, startCell, endCell, this));
+    }
+    @Override
+    public List<Cell> getCellsInRange(Range range) {
+        List<Cell> cellsInRange = new ArrayList<>();
+        Coordinate start = createCoordinate(range.getFrom());
+        Coordinate end = createCoordinate(range.getTo());
+
+        for (int row = start.getRow(); row <= end.getRow(); row++) {
+            for (int col = start.getColumn(); col <= end.getColumn(); col++) {
+                Cell cell = getCell(createCoordinate(row, col));
+                if (cell != null) {
+                    cellsInRange.add(cell);
+                }
+            }
+        }
+        return cellsInRange;
     }
 
     @Override

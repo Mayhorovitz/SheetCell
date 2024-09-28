@@ -1,6 +1,7 @@
 package range.impl;
 
 import cell.api.Cell;
+import cell.impl.CellImpl;
 import coordinate.Coordinate;
 import coordinate.CoordinateFactory;
 import range.api.Range;
@@ -41,7 +42,8 @@ public class RangeImpl implements Range, Serializable {
                 Cell cell = sheet.getCell(coordinate);
 
                 if (cell == null) {
-                    throw new IllegalArgumentException("Invalid range: Empty cells within the specified range");
+                    cell = new CellImpl(row, col, "", sheet.getVersion(), sheet);
+                    sheet.addCell(coordinate, cell);
                 }
                 cells.add(cell);
             }

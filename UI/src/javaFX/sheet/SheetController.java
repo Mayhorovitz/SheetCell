@@ -237,7 +237,20 @@ public class SheetController {
         if (spreadsheetGrid.getColumnConstraints().size() > columnIndex) {
             ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(columnIndex);
             colConstraints.setPrefWidth(width);
+            colConstraints.setMinWidth(width);  // Ensure minimum width is set as well
+            colConstraints.setMaxWidth(Double.MAX_VALUE);  // Allow it to expand
+
+            // עדכון התאים בעמודה עם הרוחב החדש
+            spreadsheetGrid.getChildren().forEach(node -> {
+                if (GridPane.getColumnIndex(node) == columnIndex && node instanceof Label) {
+                    ((Label) node).setPrefWidth(width);
+                    ((Label) node).setMinWidth(width);
+                }
+            });
         }
+
+        // בקשת רענון תצוגה כדי לוודא שכל העמודה מתעדכנת
+        spreadsheetGrid.requestLayout();
     }
 
     // Set row height
@@ -245,8 +258,22 @@ public class SheetController {
         if (spreadsheetGrid.getRowConstraints().size() > rowIndex) {
             RowConstraints rowConstraints = spreadsheetGrid.getRowConstraints().get(rowIndex);
             rowConstraints.setPrefHeight(height);
+            rowConstraints.setMinHeight(height);  // Ensure minimum height is set as well
+            rowConstraints.setMaxHeight(Double.MAX_VALUE);  // Allow it to expand
+
+            // עדכון התאים בשורה עם הגובה החדש
+            spreadsheetGrid.getChildren().forEach(node -> {
+                if (GridPane.getRowIndex(node) == rowIndex && node instanceof Label) {
+                    ((Label) node).setPrefHeight(height);
+                    ((Label) node).setMinHeight(height);
+                }
+            });
         }
+
+        // בקשת רענון תצוגה כדי לוודא שכל השורה מתעדכנת
+        spreadsheetGrid.requestLayout();
     }
+
 
     public void setColumnAlignment(int colIndex, String alignment) {
         Pos pos;
