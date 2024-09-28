@@ -131,13 +131,7 @@ public class EngineImpl implements Engine {
         newSheet.setRowHeight(size.getRowsHeightUnits());
         newSheet.setColWidth(size.getColumnWidthUnits());
 
-        // Process the new ranges
-        for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
-            // Handle ranges like grades, effective-grades, weights, etc.
-            if (range.getName().equals("grades")) {
-                // Add your logic for handling ranges here
-            }
-        }
+
 
         // Existing logic for processing cells
         for (STLCell stlCell : stlSheet.getSTLCells().getSTLCell()) {
@@ -156,6 +150,14 @@ public class EngineImpl implements Engine {
         for (Cell cell : newSheet.orderCellsForCalculation()) {
             cell.calculateEffectiveValue();
             newSheet.addCellThatChanged(cell);
+        }
+        // Process the new ranges
+        for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
+            String name = range.getName();
+            String from =  range.getSTLBoundaries().getFrom();
+            String to = range.getSTLBoundaries().getTo();
+            newSheet.addRange(name, from, to);
+
         }
         return newSheet;
     }
