@@ -16,13 +16,13 @@ public class PercentExpression  extends BinaryExpression{
         public EffectiveValue eval(EffectiveValue left, EffectiveValue right) {
             // Check for null or unknown values
             if (left == null || right == null || left.getCellType() == CellType.UNKNOWN || right.getCellType() == CellType.UNKNOWN) {
-                return new EffectiveValueImpl(CellType.NUMERIC, Double.NaN);
+                return new EffectiveValueImpl(CellType.INVALID, Double.NaN);
             }
             // Extract numeric values from the operands
             Double leftValue = left.extractValueWithExpectation(Double.class);
             Double rightValue = right.extractValueWithExpectation(Double.class);
             if (leftValue == null || rightValue == null) {
-                return new EffectiveValueImpl(CellType.NUMERIC, Double.NaN);
+                return new EffectiveValueImpl(CellType.INVALID, Double.NaN);
             }
             Double result = (leftValue * rightValue) / 100;
             return new EffectiveValueImpl(CellType.NUMERIC, result);

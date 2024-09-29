@@ -19,6 +19,7 @@ public class AverageExpression implements Expression {
 
     @Override
     public EffectiveValue eval(SheetReadActions sheet) {
+        int counter = 0;
         Range range = sheet.getRange(this.range);
         if (range == null) {
             return new EffectiveValueImpl(CellType.INVALID, Double.NaN);
@@ -31,14 +32,16 @@ public class AverageExpression implements Expression {
             if (cellValue == null) {
                 sum += 0;
             } else {
-                Double numericValue = cellValue.extractValueWithExpectation(Double.class);
-                if (numericValue != null) {
-                    sum += numericValue; // Add to sum if it's a valid number
+                if(cellValue.getCellType() == CellType.NUMERIC) {
+                    counter++;
+                    Double numericValue = cellValue.extractValueWithExpectation(Double.class);
+                        sum += numericValue; // Add to sum if it's a valid number
+
                 }
             }
 
         }
-        double res = sum / range.getCells().size();
+        double res = sum /counter;
         return new EffectiveValueImpl(CellType.NUMERIC, res);
 
     }

@@ -33,9 +33,10 @@ public class SumExpression implements Expression {
             if (cellValue == null) {
                 sum += 0;
             } else {
-                Double numericValue = cellValue.extractValueWithExpectation(Double.class);
-                if (numericValue != null) {
+                if(cellValue.getCellType() == CellType.NUMERIC) {
+                    Double numericValue = cellValue.extractValueWithExpectation(Double.class);
                     sum += numericValue; // Add to sum if it's a valid number
+
                 }
             }
 

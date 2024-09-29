@@ -216,16 +216,17 @@ public class SheetController {
     public void highlightDependenciesAndInfluences(Cell selectedCell) {
 
         resetCellBorders();  // איפוס כל הגבולות וההדגשות הקודמות
-
-        lastSelectedCell = selectedCell;
-        highlightCells(selectedCell.getDependsOn(), "lightblue");
-        highlightCells(selectedCell.getInfluencingOn(), "lightgreen");
-        // הדגשת התא הנבחר עצמו
-        Label selectedLabel = celltoLabel.get(getColumnName(selectedCol) + selectedRow);
-        if (selectedLabel != null) {
-            String currentStyle = selectedLabel.getStyle();
-            selectedLabel.setStyle(currentStyle + "; -fx-border-color: blue; -fx-border-width: 3px;");
+        if (selectedCell != null) {
+            lastSelectedCell = selectedCell;
+            highlightCells(selectedCell.getDependsOn(), "lightblue");
+            highlightCells(selectedCell.getInfluencingOn(), "lightgreen");
+            // הדגשת התא הנבחר עצמו
         }
+            Label selectedLabel = celltoLabel.get(getColumnName(selectedCol) + selectedRow);
+                String currentStyle = selectedLabel.getStyle();
+                selectedLabel.setStyle(currentStyle + "; -fx-border-color: blue; -fx-border-width: 3px;");
+
+
     }
 
 
