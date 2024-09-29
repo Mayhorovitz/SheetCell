@@ -85,9 +85,6 @@ public class SheetController {
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
 
-        // עדכון המידות של ה־UIModel לפי המידות מהקובץ החדש
-        uiModel.setRowHeight(sheet.getRowHeight());
-        uiModel.setColWidth(sheet.getColWidth());
 
         // הסרת רווחים בין תאים
         spreadsheetGrid.setHgap(0);
@@ -97,13 +94,13 @@ public class SheetController {
         spreadsheetGrid.setPadding(Insets.EMPTY);
         spreadsheetGrid.setStyle("-fx-border-color: transparent;");
 
-        // יצירת השורות והעמודות לפי המידות החדשות
-        addColumnAndRowConstraints(numCols, sheet.getColWidth(), numRows, sheet.getRowHeight());
+        // קח את גובה השורה ורוחב העמודה מתוך הדף (Sheet)
+        int rowHeightFromSheet = sheet.getRowHeight();  // הגובה של השורות לפי ה-Sheet
+        int colWidthFromSheet = sheet.getColWidth();    // הרוחב של העמודות לפי ה-Sheet
 
-        // הוספת כותרות עמודות ושורות
+        // Initialize rows and columns based on values from the sheet
+        addColumnAndRowConstraints(numCols, colWidthFromSheet, numRows, rowHeightFromSheet);
         addColumnsAndRowHeaders(numCols, numRows);
-
-        // מילוי הגריד בתאים לפי הקובץ החדש
         populateSheetGrid(sheet, numCols, numRows);
     }
 
@@ -250,7 +247,7 @@ public class SheetController {
             Label cellLabel = cellToLabel.get(getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow());
             if (cellLabel != null) {
                 String currentStyle = cellLabel.getStyle();
-                String newStyle = currentStyle + ";-fx-border-color:" + color + ";-fx-border-width: 3px;";
+                String newStyle = currentStyle + ";-fx-border-color:" + color + ";-fx-border-width: 4px;-fx-border-style: dashed;";
                 cellLabel.setStyle(newStyle); }
         }
     }
@@ -269,11 +266,17 @@ public class SheetController {
         for (Cell cell : cellIds) {
             Label cellLabel = cellToLabel.get(getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow());
             if (cellLabel != null) {
-                String currentStyle = cellLabel.getStyle().replaceAll("-fx-border-color:.*?;", "")
-                        .replaceAll("-fx-border-width:.*?;", "");
-                cellLabel.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px;");            }
+                String currentStyle = cellLabel.getStyle()
+                        .replaceAll("-fx-border-color:.*?;", "")
+                        .replaceAll("-fx-border-width:.*?;", "")
+                        .replaceAll("-fx-border-style:.*?;", ""); // הסרת הסגנון (מקווקו או מנוקד)
+
+                // החזרת גבול רגיל בצבע שחור עם עובי של 1 פיקסל
+                cellLabel.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px; ");
+            }
         }
     }
+
 
 
 
@@ -283,7 +286,7 @@ public class SheetController {
         cellToLabel.values().forEach(label -> {
             // איפוס הגבולות בלבד מבלי לשנות את שאר העיצוב
             String currentStyle = label.getStyle().replaceAll("-fx-border-color:.*?;", "")
-                    .replaceAll("-fx-border-width:.*?;", "");
+                    .replaceAll("-fx-border-width:.*?;", "")  .replaceAll("-fx-border-style:.*?;", "");
             label.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px;");
         });
     }
