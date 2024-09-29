@@ -4,7 +4,6 @@ import cell.api.CellType;
 import coordinate.Coordinate;
 import expression.api.Expression;
 import expression.impl.*;
-import range.impl.RangeImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,7 @@ public enum FunctionParser {
             }
 
             // all is good. create the relevant function instance
-            String actualValue = arguments.get(0).trim();
+            String actualValue = arguments.getFirst().trim();
             if (isBoolean(actualValue)) {
                 return new IdentityExpression(Boolean.parseBoolean(actualValue), CellType.BOOLEAN);
             } else if (isNumeric(actualValue)) {
@@ -347,7 +346,7 @@ public enum FunctionParser {
             }
 
             // structure is good. parse arguments
-            Expression exp = parseExpression(arguments.get(0));
+            Expression exp = parseExpression(arguments.getFirst());
 
             return new NotExpression(exp);
         }
@@ -392,7 +391,7 @@ public enum FunctionParser {
                 throw new IllegalArgumentException("Invalid number of arguments for AVERAGE function. Expected 1, but got " + arguments.size());
             }
 
-            String rangeName = arguments.get(0);
+            var rangeName = arguments.getFirst();
 
             return new AverageExpression(rangeName);
         }
@@ -404,9 +403,27 @@ public enum FunctionParser {
                 throw new IllegalArgumentException("Invalid number of arguments for SUM function. Expected 1, but got " + arguments.size());
             }
 
-            String rangeName = arguments.get(0);
+            String rangeName = arguments.getFirst();
 
             return new SumExpression(rangeName);
+        }
+    },
+
+    IF {
+        @Override
+        public Expression parse(List<String> arguments) {
+            // validations of the function. it should have exactly two arguments
+            if (arguments.size() != 3) {
+                throw new IllegalArgumentException("Invalid number of arguments for SUB function. Expected 3, but got " + arguments.size());
+            }
+
+            // structure is good. parse arguments
+            Expression left = parseExpression(arguments.get(0));
+            Expression middle = parseExpression(arguments.get(1));
+            Expression right = parseExpression(arguments.get(2));
+
+            // all is good. create the relevant function instance
+            return new IfExpression(left, middle, right);
         }
     };
 
@@ -420,10 +437,10 @@ public enum FunctionParser {
             List<String> topLevelParts = parseMainParts(functionContent);
 
 
-            String functionName = topLevelParts.get(0).trim().toUpperCase();
+            String functionName = topLevelParts.getFirst().trim().toUpperCase();
 
             //remove the first element from the array
-            topLevelParts.remove(0);
+            topLevelParts.removeFirst();
             return FunctionParser.valueOf(functionName).parse(topLevelParts);
         }
 
@@ -453,7 +470,7 @@ public enum FunctionParser {
         }
 
         // Add the last part
-        if (buffer.length() > 0) {
+        if (!buffer.isEmpty()) {
             parts.add(buffer.toString().trim());
         }
 

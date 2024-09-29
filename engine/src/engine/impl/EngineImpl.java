@@ -17,7 +17,6 @@ import jakarta.xml.bind.Unmarshaller;
 import java.io.*;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class EngineImpl implements Engine {
@@ -74,10 +73,6 @@ public class EngineImpl implements Engine {
             throw new IllegalArgumentException("Invalid sheet layout: Rows and columns must be within allowed range.");
         }
 
-        // Validate ranges
-        for (STLRange range : sheet.getSTLRanges().getSTLRange()) {
-            // Ensure that ranges are within bounds
-        }
 
         for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
             int row = cell.getRow();

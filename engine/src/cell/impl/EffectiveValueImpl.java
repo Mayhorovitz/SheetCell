@@ -9,8 +9,8 @@ import java.util.Objects;
 
 public class EffectiveValueImpl implements EffectiveValue , Serializable {
 
-    private CellType cellType;
-    private Object value;
+    private final CellType cellType;
+    private final Object value;
 
     //constructors
     public EffectiveValueImpl(CellType cellType, Object value) {
@@ -56,6 +56,9 @@ public class EffectiveValueImpl implements EffectiveValue , Serializable {
 
     @Override
     public String toString() {
+        if(cellType == CellType.BOOLEAN){
+            return value.toString().toUpperCase();
+        }
         return value.toString();
     }
 }
