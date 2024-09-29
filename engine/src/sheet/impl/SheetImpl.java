@@ -25,12 +25,15 @@ public class SheetImpl implements Sheet, Serializable {
     private Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
     private Map<String, Range> ranges;
+    private Map<String, List<Cell>> rangeUsageMap; // מפת טווחים לתאים המשתמשים בהם
 
     // Constructors
     public SheetImpl() {
         this.activeCells = new HashMap<>();
         this.cellsThatHaveChanged = new ArrayList<>();
         this.ranges = new HashMap<>();
+        this.rangeUsageMap = new HashMap<>(); // אתחול המפה
+
 
     }
 
@@ -277,6 +280,9 @@ public class SheetImpl implements Sheet, Serializable {
             cell.resetInfluences();
         }
 
+        // איפוס המפה
+        rangeUsageMap.clear();
+
         // חישוב התלויות וההשפעות מחדש
         for (Cell cell : activeCells.values()) {
             String originalValue = cell.getOriginalValue();
@@ -284,16 +290,18 @@ public class SheetImpl implements Sheet, Serializable {
             // תחילה, נתחיל עם ה-references לתאים בודדים
             List<Coordinate> influences = extractRefs(originalValue);
 
-            // לאחר מכן, נבדוק אם יש references ל-range-ים (לדוגמה: SUM או AVERAGE)
+            // נבדוק אם יש references ל-range-ים (לדוגמה: SUM או AVERAGE)
             List<String> rangeNames = extractRangeRefs(originalValue);
             for (String rangeName : rangeNames) {
                 Range range = getRange(rangeName);
                 if (range != null) {
+                    // הוספת התא הנוכחי לרשימת התאים שמשתמשים בטווח הזה
+                    rangeUsageMap.computeIfAbsent(rangeName, k -> new ArrayList<>()).add(cell);
+
                     // הוספת כל התאים שנמצאים בתוך ה-range כתלויות (influences)
                     List<Coordinate> rangeCoordinates = getRangeCoordinates(range);
                     influences.addAll(rangeCoordinates);
                 } else {
-                    // במקרה שבו ה-range לא נמצא, ניתן לזרוק שגיאה או להתעלם לפי הצורך
                     throw new IllegalArgumentException("Range " + rangeName + " not found.");
                 }
             }
@@ -301,11 +309,8 @@ public class SheetImpl implements Sheet, Serializable {
             // כל תא בתלויות יהפוך להיות השפעה על התא הנוכחי (influences)
             for (Coordinate influenceCoordinate : influences) {
                 Cell influenceCell = activeCells.get(influenceCoordinate);
-
                 if (influenceCell != null) {
-                    // הוספת התא הנוכחי כתלוי על התא שמשפיע עליו
                     influenceCell.getInfluencingOn().add(cell);
-                    // הוספת התא המשפיע לרשימת התלויות של התא הנוכחי
                     cell.getDependsOn().add(influenceCell);
                 }
             }
@@ -341,11 +346,28 @@ public class SheetImpl implements Sheet, Serializable {
 
         return coordinates;
     }
+    private boolean isRangeWithinSheetBounds(String startCell, String endCell) {
+        Coordinate start = createCoordinate(startCell);
+        Coordinate end = createCoordinate(endCell);
+
+        // בדיקה האם השורות והעמודות בטווח נמצאות בגבולות הגיליון
+        return start.getRow() >= 1 && start.getRow() <= rows &&
+                end.getRow() >= 1 && end.getRow() <= rows &&
+                start.getColumn() >= 1 && start.getColumn() <= cols &&
+                end.getColumn() >= 1 && end.getColumn() <= cols;
+    }
+
     @Override
     public void addRange(String name, String startCell, String endCell) {
         if (ranges.containsKey(name)) {
-            throw new IllegalArgumentException("Range with name" + name + "already exists.");
+            throw new IllegalArgumentException("Range with name '" + name + "' already exists.");
         }
+
+        // בדוק אם הטווח נמצא בתוך גבולות הגיליון
+        if (!isRangeWithinSheetBounds(startCell, endCell)) {
+            throw new IllegalArgumentException("Range '" + name + "' is out of sheet bounds.");
+        }
+
         ranges.put(name, new RangeImpl(name, startCell, endCell, this));
     }
     @Override
@@ -370,8 +392,15 @@ public class SheetImpl implements Sheet, Serializable {
         if (!ranges.containsKey(name)) {
             throw new IllegalArgumentException("Range not found.");
         }
+
+        // בדוק אם יש תאים שמשתמשים בטווח במפה
+        if (rangeUsageMap.containsKey(name) && !rangeUsageMap.get(name).isEmpty()) {
+            throw new IllegalArgumentException("Cannot delete range '" + name + "' because it is in use.");
+        }
+
         ranges.remove(name);
     }
+
 
     @Override
     public Range getRange(String name) {

@@ -30,8 +30,8 @@ public class CommandsController {
     @FXML
     private void initialize() {
         // Update Spinner ranges for column width (up to 100) and row height (up to 100)
-        columnWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 10));
-        rowHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100, 10));
+        columnWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 200, 10));
+        rowHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 200, 10));
 
         // Disable direct text input to make it strictly spinner-based
         columnWidthSpinner.setEditable(false);

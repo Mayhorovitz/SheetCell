@@ -77,9 +77,6 @@ public class EngineImpl implements Engine {
         // Validate ranges
         for (STLRange range : sheet.getSTLRanges().getSTLRange()) {
             // Ensure that ranges are within bounds
-            if (!isRangeValid(range, layout)) {
-                throw new IllegalArgumentException("Invalid range: " + range.getName());
-            }
         }
 
         for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
@@ -93,13 +90,6 @@ public class EngineImpl implements Engine {
         }
     }
 
-    private boolean isRangeValid(STLRange range, STLLayout layout) {
-        STLBoundaries boundaries = range.getSTLBoundaries();
-        int fromRow = extractRowFromCoordinate(boundaries.getFrom());
-        int toRow = extractRowFromCoordinate(boundaries.getTo());
-
-        return fromRow >= 1 && toRow <= layout.getRows();
-    }
 
     private int extractRowFromCoordinate(String coordinateString) {
         String rowPart = coordinateString.replaceAll("[^0-9]", ""); // Extract the numeric part for row
