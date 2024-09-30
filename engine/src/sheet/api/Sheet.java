@@ -39,10 +39,12 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     Map<Coordinate, Cell> getActiveCells();
     void updateDependenciesAndInfluences();
 
-    void addRange(String name, String startCell, String endCell);
-
+    void addRange(String name, String range);
 
     void deleteRange(String name);
 
     Collection<Range> getAllRanges();
+
+
+    Sheet sortSheet(String range, String[] columns);
 }

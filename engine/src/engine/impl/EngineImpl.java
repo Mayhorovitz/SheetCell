@@ -121,7 +121,7 @@ public class EngineImpl implements Engine {
             String name = range.getName();
             String from =  range.getSTLBoundaries().getFrom();
             String to = range.getSTLBoundaries().getTo();
-            newSheet.addRange(name, from, to);
+            newSheet.addRange(name, from + ".." + to);
 
         }
 
@@ -216,9 +216,9 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-    public void addRangeToSheet(String name, String startCell, String endCell) {
+    public void addRangeToSheet(String name, String range) {
         Sheet currentSheet = getCurrentSheet();
-        currentSheet.addRange(name, startCell, endCell);
+        currentSheet.addRange(name, range);
     }
     @Override
     public void deleteRangeFromSheet(String name) {
@@ -235,4 +235,15 @@ public class EngineImpl implements Engine {
         Sheet currentSheet = getCurrentSheet();
         return currentSheet.getAllRanges();
     }
+
+    @Override
+    public Sheet sortSheetRangeByColumns(String range, String[] columns) {
+        Sheet currentSheet = getCurrentSheet();
+
+        Sheet sortSheet = currentSheet.sortSheet(range, columns);
+
+        return sortSheet;
+    }
+
+
 }

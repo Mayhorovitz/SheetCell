@@ -27,8 +27,15 @@ public class RangeImpl implements Range, Serializable {
         // Validate range and load cells
         validateAndLoadRange(sheet);
     }
+    public RangeImpl(String name, Coordinate startCellId, Coordinate endCellId, Sheet sheet) {
+        this.name = name;
+        this.fromCoordinate = startCellId;
+        this.toCoordinate = endCellId;
+        this.cells = new ArrayList<>();
+}
 
-    private void validateAndLoadRange(Sheet sheet) {
+
+        private void validateAndLoadRange(Sheet sheet) {
         // Get row and column limits of the range
         int startRow = Math.min(fromCoordinate.getRow(), toCoordinate.getRow());
         int endRow = Math.max(fromCoordinate.getRow(), toCoordinate.getRow());

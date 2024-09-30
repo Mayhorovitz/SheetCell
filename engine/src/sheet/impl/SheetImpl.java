@@ -138,12 +138,6 @@ public class SheetImpl implements Sheet, Serializable {
             throw new IllegalArgumentException("Coordinate and Cell cannot be null.");
         }
 
-        // שמירה על צבע הרקע וצבע הטקסט בתא הנוכחי
-        if (activeCells.containsKey(coordinate)) {
-            Cell existingCell = activeCells.get(coordinate);
-            cell.setBackgroundColor(existingCell.getBackgroundColor());
-            cell.setTextColor(existingCell.getTextColor());
-        }
 
         activeCells.put(coordinate, cell);
     }
@@ -346,24 +340,25 @@ public class SheetImpl implements Sheet, Serializable {
 
         return coordinates;
     }
-    private boolean isRangeWithinSheetBounds(String startCell, String endCell) {
-        Coordinate start = createCoordinate(startCell);
-        Coordinate end = createCoordinate(endCell);
+    // Checking whether the rows and columns in the range are within the sheet boundaries
+    private boolean isRangeWithinSheetBounds(Coordinate startCell, Coordinate endCell) {
 
-        // בדיקה האם השורות והעמודות בטווח נמצאות בגבולות הגיליון
-        return start.getRow() >= 1 && start.getRow() <= rows &&
-                end.getRow() >= 1 && end.getRow() <= rows &&
-                start.getColumn() >= 1 && start.getColumn() <= cols &&
-                end.getColumn() >= 1 && end.getColumn() <= cols;
+        return startCell.getRow() >= 1 && startCell.getRow() <= rows &&
+                endCell.getRow() >= 1 && endCell.getRow() <= rows &&
+                startCell.getColumn() >= 1 && startCell.getColumn() <= cols &&
+                endCell.getColumn() >= 1 && endCell.getColumn() <= cols;
     }
 
     @Override
-    public void addRange(String name, String startCell, String endCell) {
+    public void addRange(String name, String range) {
         if (ranges.containsKey(name)) {
             throw new IllegalArgumentException("Range with name '" + name + "' already exists.");
         }
+        List <Coordinate> coordinates= extractCells(range);
 
-        // בדוק אם הטווח נמצא בתוך גבולות הגיליון
+        Coordinate startCell = coordinates.get(0);
+        Coordinate endCell = coordinates.get(1);
+
         if (!isRangeWithinSheetBounds(startCell, endCell)) {
             throw new IllegalArgumentException("Range '" + name + "' is out of sheet bounds.");
         }
@@ -392,8 +387,7 @@ public class SheetImpl implements Sheet, Serializable {
         if (!ranges.containsKey(name)) {
             throw new IllegalArgumentException("Range not found.");
         }
-
-        // בדוק אם יש תאים שמשתמשים בטווח במפה
+        // Check if there are cells that use the range in the map
         if (rangeUsageMap.containsKey(name) && !rangeUsageMap.get(name).isEmpty()) {
             throw new IllegalArgumentException("Cannot delete range '" + name + "' because it is in use.");
         }
@@ -410,6 +404,96 @@ public class SheetImpl implements Sheet, Serializable {
     @Override
     public Collection<Range> getAllRanges() {
         return ranges.values();
+    }
+    // Extract the start and end cells
+    private List<Coordinate> extractCells( String rangeCells) {
+
+        String[] cellRange = rangeCells.split("\\.\\."); // Using regex to split by ".."
+            if (cellRange.length != 2) {
+                throw new IllegalArgumentException("Please specify the range in the format 'A1:B3'.");
+            }
+
+
+            String startCell = cellRange[0].trim();
+            String endCell = cellRange[1].trim();
+
+            List<Coordinate> coordinates = new ArrayList<>();
+            coordinates.add(createCoordinate((startCell)));
+            coordinates.add(createCoordinate((endCell)));
+
+            return coordinates;
+    }
+
+    @Override
+    public Sheet sortSheet(String range, String[] columnsToSort) {
+        SheetImpl sortedSheet = copySheet();
+
+        List<Coordinate> coordinates = extractCells(range);
+        Coordinate startCell = coordinates.get(0);
+        Coordinate endCell = coordinates.get(1);
+
+        int startRow = startCell.getRow();
+        int endRow = endCell.getRow();
+        int startCol = startCell.getColumn();
+        int endCol = endCell.getColumn();
+
+        List<List<Cell>> rowsInRange = new ArrayList<>();
+        for (int row = startRow; row <= endRow; row++) {
+            List<Cell> rowCells = new ArrayList<>();
+            for (int col = startCol; col <= endCol; col++) {
+                Coordinate coordinate = createCoordinate(row, col);
+                Cell cell = this.getCell(coordinate);
+                rowCells.add(cell); // הוספת התאים בשורה זו לרשימה
+            }
+            rowsInRange.add(rowCells); // הוספת השורה לרשימת השורות
+        }
+
+        // מיון השורות לפי העמודות שנבחרו
+        rowsInRange.sort((row1, row2) -> {
+            // לולאה על עמודות המיון לפי סדר
+            for (String colToSort : columnsToSort) {
+                int colIndex = getColumnIndexFromName(colToSort) - startCol;  // המרת שם העמודה לאינדקס יחסית לעמודה הראשונה בטווח
+
+                if (colIndex >= 0 && colIndex < row1.size()) {
+                    Cell cell1 = row1.get(colIndex);
+                    Cell cell2 = row2.get(colIndex);
+
+                    try {
+                        // מיון על בסיס ערך מספרי בלבד
+                        Double value1 = cell1 != null ? Double.parseDouble(cell1.getEffectiveValue().toString()) : Double.MAX_VALUE; // אם התא ריק
+                        Double value2 = cell2 != null ? Double.parseDouble(cell2.getEffectiveValue().toString()) : Double.MAX_VALUE;
+
+                        int comparison = value1.compareTo(value2);
+                        if (comparison != 0) {
+                            return comparison; // אם יש הבדל בין הערכים המספריים, מחזירים את תוצאת ההשוואה
+                        }
+                    } catch (NumberFormatException e) {
+                        // אם הערכים אינם מספריים, מחשיבים אותם כזהים וממשיכים לעמודה הבאה
+                        continue;
+                    }
+                }
+            }
+            return 0; // אם כל הערכים שווים או אינם מספריים, משאירים את הסדר המקורי
+        });
+
+        // עדכון הגיליון הממוין עם התאים החדשים
+        for (int row = startRow; row <= endRow; row++) {
+            List<Cell> sortedRow = rowsInRange.get(row - startRow);
+            for (int col = startCol; col <= endCol; col++) {
+                Coordinate coordinate = createCoordinate(row, col);
+                sortedSheet.addCell(coordinate, sortedRow.get(col - startCol)); // הוספת התאים הממוינים לעותק החדש של הגיליון
+            }
+        }
+
+        return sortedSheet;  // החזרת הגיליון הממוין
+    }
+
+    private int getColumnIndexFromName(String columnName) {
+        int index = 0;
+        for (char c : columnName.toUpperCase().toCharArray()) {
+            index = index * 26 + (c - 'A' + 1);
+        }
+        return index;  // אינדקס מתחיל ב-0
     }
 
 }

@@ -1,12 +1,20 @@
 package javaFX.commands;
 
 import javaFX.sheet.SheetController;
+import javaFX.sortAndFilter.SortPopupController;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 public class CommandsController {
 
@@ -108,5 +116,30 @@ public class CommandsController {
     @FXML
     private void handleResetCellDesign() {
         sheetController.resetCellDesign();
+    }
+
+    @FXML
+    public void handleSortButton(ActionEvent actionEvent) {
+        try {
+            // Load the FXML for the sort popup
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/sortAndFilter/SortPopup.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and pass the SheetController to it
+            SortPopupController sortPopupController = loader.getController();
+            sortPopupController.setSheetController(sheetController);
+
+            // Create a new stage for the popup
+            Stage stage = new Stage();
+            stage.setTitle("Sort Data");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void handleFilterButton(ActionEvent actionEvent) {
     }
 }
