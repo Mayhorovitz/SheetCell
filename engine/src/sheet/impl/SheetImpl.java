@@ -22,7 +22,7 @@ public class SheetImpl implements Sheet, Serializable {
     private int cols;
     private int rowHeight;
     private int colWidth;
-    private Map<Coordinate, Cell> activeCells;
+    private final Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
     private Map<String, Range> ranges;
     private Map<String, List<Cell>> rangeUsageMap; // מפת טווחים לתאים המשתמשים בהם
@@ -159,19 +159,19 @@ public class SheetImpl implements Sheet, Serializable {
         SheetImpl newSheetVersion = copySheet();
         newSheetVersion.cellsThatHaveChanged.clear();
 
-        // שמירת העיצוב הקיים של התא, אם קיים תא כזה
+        // Preserve existing cell styling if the cell already exists
         Cell existingCell = newSheetVersion.getCell(coordinate);
-        String existingBackgroundColor = existingCell != null ? existingCell.getBackgroundColor() : "#FFFFFF"; // ברירת מחדל: לבן
-        String existingTextColor = existingCell != null ? existingCell.getTextColor() : "#000000"; // ברירת מחדל: שחור
+        String existingBackgroundColor = existingCell != null ? existingCell.getBackgroundColor() : "#FFFFFF"; // Default: white
+        String existingTextColor = existingCell != null ? existingCell.getTextColor() : "#000000"; // Default: black
 
-        // יצירת תא חדש עם הערך המעודכן ושמירת גרסה חדשה
+        // Create a new cell with the updated value and increment the version
         Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
 
-        // שמירת צבעי התא הקיימים בתא החדש
+        // Preserve the existing cell colors in the new cell
         newCell.setBackgroundColor(existingBackgroundColor);
         newCell.setTextColor(existingTextColor);
 
-        // הוספת התא המעודכן למפה
+        // Add the updated cell to the activeCells map
         newSheetVersion.activeCells.put(coordinate, newCell);
 
         boolean dependenciesNeedUpdate = true;  // Flag to determine if dependencies should be updated
@@ -180,6 +180,7 @@ public class SheetImpl implements Sheet, Serializable {
             if (dependenciesNeedUpdate) {
                 newSheetVersion.updateDependenciesAndInfluences();
             }
+
             // Calculate effective values for cells that changed and update their versions
             List<Cell> cellsThatHaveChanged = newSheetVersion.orderCellsForCalculation()
                     .stream()
@@ -195,6 +196,7 @@ public class SheetImpl implements Sheet, Serializable {
             throw new IllegalStateException("Error updating cell value: " + e.getMessage());
         }
     }
+
 
 
     //order the cells to calculate the new effective values
@@ -268,31 +270,31 @@ public class SheetImpl implements Sheet, Serializable {
     }
 
     public void updateDependenciesAndInfluences() {
-        // איפוס התלויות וההשפעות עבור כל התאים
+        // Reset dependencies and influences for all cells
         for (Cell cell : activeCells.values()) {
             cell.resetDependencies();
             cell.resetInfluences();
         }
 
-        // איפוס המפה
+        // Clear the range usage map
         rangeUsageMap.clear();
 
-        // חישוב התלויות וההשפעות מחדש
+        // Recalculate dependencies and influences
         for (Cell cell : activeCells.values()) {
             String originalValue = cell.getOriginalValue();
 
-            // תחילה, נתחיל עם ה-references לתאים בודדים
+            // Extract individual cell references
             List<Coordinate> influences = extractRefs(originalValue);
 
-            // נבדוק אם יש references ל-range-ים (לדוגמה: SUM או AVERAGE)
+            // Check for references to ranges (e.g., SUM or AVERAGE)
             List<String> rangeNames = extractRangeRefs(originalValue);
             for (String rangeName : rangeNames) {
                 Range range = getRange(rangeName);
                 if (range != null) {
-                    // הוספת התא הנוכחי לרשימת התאים שמשתמשים בטווח הזה
+                    // Add the current cell to the list of cells using this range
                     rangeUsageMap.computeIfAbsent(rangeName, k -> new ArrayList<>()).add(cell);
 
-                    // הוספת כל התאים שנמצאים בתוך ה-range כתלויות (influences)
+                    // Add all cells within the range as dependencies (influences)
                     List<Coordinate> rangeCoordinates = getRangeCoordinates(range);
                     influences.addAll(rangeCoordinates);
                 } else {
@@ -300,7 +302,7 @@ public class SheetImpl implements Sheet, Serializable {
                 }
             }
 
-            // כל תא בתלויות יהפוך להיות השפעה על התא הנוכחי (influences)
+            // Every dependent cell becomes an influence on the current cell
             for (Coordinate influenceCoordinate : influences) {
                 Cell influenceCell = activeCells.get(influenceCoordinate);
                 if (influenceCell != null) {

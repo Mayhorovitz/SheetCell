@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.GridPane?>
+
+<VBox xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="javaFX.readOnlyPopup.ReadOnlyPopupController">
+
+    <!-- Include actionLine -->
+    <fx:include fx:id="actionLine" source="../actionLine/actionLine.fxml" />
+
+    <!-- GridPane for the sheet -->
+    <GridPane fx:id="versionGridPane">
+        <!-- The sheet will be added dynamically in the code -->
+    </GridPane>
+
+</VBox>

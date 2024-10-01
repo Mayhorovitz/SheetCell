@@ -10,9 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import range.api.Range;
 import sheet.api.Sheet;
@@ -20,6 +18,7 @@ import sheet.api.Sheet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static coordinate.CoordinateFactory.createCoordinate;
 
@@ -38,6 +37,9 @@ public class SheetController {
 
     private final Map<String, Label> cellToLabel = new HashMap<>();  // Map to store cell labels for easy access
 
+    private Consumer<String> onCellSelected;  // Listener for cell selection
+
+    private boolean isReadOnly = false;  // Flag to indicate read-only mode
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
@@ -66,6 +68,18 @@ public class SheetController {
         });
     }
 
+    public void setOnCellSelected(Consumer<String> onCellSelected) {
+        this.onCellSelected = onCellSelected;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.isReadOnly = readOnly;
+    }
+
+    public void setSpreadsheetGrid(GridPane gridPane) {
+        this.spreadsheetGrid = gridPane;
+    }
+
     public void displaySheet(Sheet sheet) {
         if (spreadsheetGrid.getChildren().isEmpty()) {
             // Only initialize if the grid is empty
@@ -80,24 +94,23 @@ public class SheetController {
 
     public void initializeSheet(Sheet sheet) {
         cellToLabel.clear();
-        // איפוס ה־GridPane לפני טעינת הקובץ החדש
+        // Clear the GridPane before loading the new file
         clearGridPane();
 
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
 
-
-        // הסרת רווחים בין תאים
+        // Remove gaps between cells
         spreadsheetGrid.setHgap(0);
         spreadsheetGrid.setVgap(0);
 
-        // הסרת Padding ו-Border מה־GridPane
+        // Remove padding and border from the GridPane
         spreadsheetGrid.setPadding(Insets.EMPTY);
         spreadsheetGrid.setStyle("-fx-border-color: transparent;");
 
-        // קח את גובה השורה ורוחב העמודה מתוך הדף (Sheet)
-        int rowHeightFromSheet = sheet.getRowHeight();  // הגובה של השורות לפי ה-Sheet
-        int colWidthFromSheet = sheet.getColWidth();    // הרוחב של העמודות לפי ה-Sheet
+        // Get row height and column width from the sheet
+        int rowHeightFromSheet = sheet.getRowHeight();
+        int colWidthFromSheet = sheet.getColWidth();
 
         // Initialize rows and columns based on values from the sheet
         addColumnAndRowConstraints(numCols, colWidthFromSheet, numRows, rowHeightFromSheet);
@@ -105,12 +118,11 @@ public class SheetController {
         populateSheetGrid(sheet, numCols, numRows);
     }
 
-
     private void clearGridPane() {
-        // ניקוי התאים הקיימים ב-GridPane
+        // Clear existing cells in the GridPane
         spreadsheetGrid.getChildren().clear();
 
-        // איפוס הקונפיגורציות של העמודות והשורות
+        // Reset column and row constraints
         spreadsheetGrid.getColumnConstraints().clear();
         spreadsheetGrid.getRowConstraints().clear();
     }
@@ -119,21 +131,20 @@ public class SheetController {
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
 
-        // Here we only update rows, columns, or specific cells that have changed.
-        // For example, we can update new rows/columns or update cell content based on changes.
+        // Update cells that have changed
         populateSheetGrid(sheet, numCols, numRows);
     }
 
     private void addColumnAndRowConstraints(int numCols, double colWidth, int numRows, double rowHeight) {
         for (int i = 0; i <= numCols; i++) {
             ColumnConstraints colConstraints = new ColumnConstraints();
-            colConstraints.setPrefWidth(colWidth);  // Bind to UIModel
+            colConstraints.setPrefWidth(colWidth);  // Set preferred width
             spreadsheetGrid.getColumnConstraints().add(colConstraints);
         }
 
         for (int i = 0; i <= numRows; i++) {
             RowConstraints rowConstraints = new RowConstraints();
-            rowConstraints.setPrefHeight(rowHeight);  // Bind to UIModel
+            rowConstraints.setPrefHeight(rowHeight);  // Set preferred height
             spreadsheetGrid.getRowConstraints().add(rowConstraints);
         }
     }
@@ -142,10 +153,9 @@ public class SheetController {
         // Adding column headers (A, B, C, etc.)
         for (int col = 1; col <= numCols; col++) {
             Label colHeader = new Label(getColumnName(col));
-            // Border and background style with padding removed to fit tightly with grid
             colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setPrefWidth(spreadsheetGrid.getColumnConstraints().get(col - 1).getPrefWidth()); // Match the width of the columns
-            colHeader.setPrefHeight(uiModel.getRowHeight()); // Set height to match the row height
+            colHeader.setPrefWidth(spreadsheetGrid.getColumnConstraints().get(col - 1).getPrefWidth()); // Match column width
+            colHeader.setPrefHeight(uiModel.getRowHeight()); // Match row height
             colHeader.setAlignment(Pos.CENTER); // Center the text
             spreadsheetGrid.add(colHeader, col, 0);  // Add column headers at the top (row 0)
         }
@@ -153,10 +163,9 @@ public class SheetController {
         // Adding row headers (1, 2, 3, etc.)
         for (int row = 1; row <= numRows; row++) {
             Label rowHeader = new Label(String.valueOf(row));
-            // Border and background style with padding removed to fit tightly with grid
             rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setPrefWidth(uiModel.getColWidth()); // Set width to match the column width
-            rowHeader.setPrefHeight(spreadsheetGrid.getRowConstraints().get(row - 1).getPrefHeight()); // Match the height of the rows
+            rowHeader.setPrefWidth(uiModel.getColWidth()); // Match column width
+            rowHeader.setPrefHeight(spreadsheetGrid.getRowConstraints().get(row - 1).getPrefHeight()); // Match row height
             rowHeader.setAlignment(Pos.CENTER); // Center the text
             spreadsheetGrid.add(rowHeader, 0, row);  // Add row headers on the left (column 0)
         }
@@ -172,32 +181,40 @@ public class SheetController {
                 if (cellToLabel.containsKey(cellID)) {
                     Label existingLabel = cellToLabel.get(cellID);
 
-                    // עדכון הערך והסגנון מחדש
+                    // Update the value and reapply style
                     existingLabel.setText(cell != null ? cell.getEffectiveValue().toString() : "");
                     applyCellStyle(cell, existingLabel);
 
                 } else {
-                    // יצירת תא חדש אם התא לא קיים
+                    // Create a new label if it doesn't exist
                     Label cellLabel = new Label(cell != null ? cell.getEffectiveValue().toString() : "");
                     cellLabel.setAlignment(Pos.CENTER);
 
-                    // הגדרת גובה ורוחב תא לפי הדגם (UIModel)
+                    // Set cell dimensions based on the UI model
                     cellLabel.setPrefHeight(uiModel.getRowHeight());
                     cellLabel.setPrefWidth(uiModel.getColWidth());
                     cellLabel.getStyleClass().add("cell");
                     applyCellStyle(cell, cellLabel);  // Apply styles like background and text color
 
-                    cellToLabel.put(cellID, cellLabel);  // שמירה במפה לגישה נוחה
+                    cellToLabel.put(cellID, cellLabel);  // Store label in map for easy access
 
                     spreadsheetGrid.add(cellLabel, col, row);
 
-                    // הוספת האזנה ללחיצות על תא גם אם הוא לא מאותחל
+                    // Add listener for clicks on the cell
                     final int finalRow = row;
                     final int finalCol = col;
                     cellLabel.setOnMouseClicked(event -> {
                         selectedRow = finalRow;
                         selectedCol = finalCol;
-                        mainController.handleCellSelection(cellID);
+                        String selectedCellId = getColumnName(selectedCol) + selectedRow;
+
+                        if (isReadOnly && onCellSelected != null) {
+                            // In read-only mode, use the provided listener
+                            onCellSelected.accept(selectedCellId);
+                        } else if (mainController != null) {
+                            // In normal mode, notify the main controller
+                            mainController.handleCellSelection(selectedCellId);
+                        }
                     });
                 }
             }
@@ -220,7 +237,6 @@ public class SheetController {
         }
     }
 
-
     // Convert column index to name (A, B, C, etc.)
     private String getColumnName(int colIndex) {
         StringBuilder columnName = new StringBuilder();
@@ -232,26 +248,22 @@ public class SheetController {
         return columnName.toString();
     }
 
-
     public void highlightDependenciesAndInfluences(Cell selectedCell) {
-
-        resetCellBorders();  // איפוס כל הגבולות וההדגשות הקודמות
+        resetCellBorders();  // Reset previous highlights
         if (selectedCell != null) {
             lastSelectedCell = selectedCell;
             highlightCells(selectedCell.getDependsOn(), "lightblue");
             highlightCells(selectedCell.getInfluencingOn(), "lightgreen");
-            // הדגשת התא הנבחר עצמו
         }
         Label selectedLabel = cellToLabel.get(getColumnName(selectedCol) + selectedRow);
-        String currentStyle = selectedLabel.getStyle();
-        selectedLabel.setStyle(currentStyle + "; -fx-border-color: blue; -fx-border-width: 3px;");
-
-
+        if (selectedLabel != null) {
+            String currentStyle = selectedLabel.getStyle();
+            selectedLabel.setStyle(currentStyle + "; -fx-border-color: blue; -fx-border-width: 3px;");
+        }
     }
 
-
-    private void highlightCells(List<Cell> cellIds, String color) {
-        for (Cell cell : cellIds) {
+    private void highlightCells(List<Cell> cells, String color) {
+        for (Cell cell : cells) {
             Label cellLabel = cellToLabel.get(getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow());
             if (cellLabel != null) {
                 String currentStyle = cellLabel.getStyle();
@@ -263,43 +275,38 @@ public class SheetController {
 
     public void clearPreviousHighlights() {
         if (lastSelectedCell != null) {
-
             clearHighlights(lastSelectedCell.getDependsOn());
             clearHighlights(lastSelectedCell.getInfluencingOn());
-
         }
     }
 
-
-    public void clearHighlights(List<Cell> cellIds) {
-        for (Cell cell : cellIds) {
+    public void clearHighlights(List<Cell> cells) {
+        for (Cell cell : cells) {
             Label cellLabel = cellToLabel.get(getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow());
             if (cellLabel != null) {
                 String currentStyle = cellLabel.getStyle()
                         .replaceAll("-fx-border-color:.*?;", "")
                         .replaceAll("-fx-border-width:.*?;", "")
-                        .replaceAll("-fx-border-style:.*?;", ""); // הסרת הסגנון (מקווקו או מנוקד)
+                        .replaceAll("-fx-border-style:.*?;", "");
 
-                // החזרת גבול רגיל בצבע שחור עם עובי של 1 פיקסל
+                // Restore default border
                 cellLabel.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px; ");
             }
         }
     }
 
-
     private void resetCellBorders() {
         cellToLabel.values().forEach(label -> {
-            // איפוס הגבולות בלבד מבלי לשנות את שאר העיצוב
+            // Reset borders without changing other styles
             String currentStyle = label.getStyle().replaceAll("-fx-border-color:.*?;", "")
                     .replaceAll("-fx-border-width:.*?;", "").replaceAll("-fx-border-style:.*?;", "");
             label.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px;");
         });
     }
 
-
     // Highlight a specific cell with a style
-    private void highlightCell(Cell cell, String style) {
-        String cellID = getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow();
+    private void highlightCell(Coordinate cell, String style) {
+        String cellID = getColumnName(cell.getColumn()) + cell.getRow();
         Label cellLabel = cellToLabel.get(cellID);
         if (cellLabel != null) {
             cellLabel.setStyle(cellLabel.getStyle() + style);
@@ -336,7 +343,6 @@ public class SheetController {
         }
     }
 
-
     // Convert Color to hex string
     private String toHexString(Color color) {
         return String.format("#%02X%02X%02X",
@@ -348,17 +354,14 @@ public class SheetController {
     public void setColumnWidth(int columnIndex, double width) {
         if (spreadsheetGrid.getColumnConstraints().size() > columnIndex) {
             ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(columnIndex);
-            colConstraints.setPrefWidth(width);  // שמירת הגדרה רק עם PrefWidth
-
+            colConstraints.setPrefWidth(width);  // Set preferred width
         }
     }
 
     public void setRowHeight(int rowIndex, double height) {
         if (spreadsheetGrid.getRowConstraints().size() > rowIndex) {
             RowConstraints rowConstraints = spreadsheetGrid.getRowConstraints().get(rowIndex);
-            rowConstraints.setPrefHeight(height);  // הגדרת גובה השורה כגובה המועדף
-
-
+            rowConstraints.setPrefHeight(height);  // Set preferred height
         }
     }
 
@@ -412,7 +415,7 @@ public class SheetController {
     }
 
     public void highlightRange(Range range) {
-        // קודם נוודא שאם יש טווח שהיה מודגש בעבר, נאפס אותו
+        // First, reset any previously highlighted range
         resetRangeHighlight();
 
         // Extract the start and end coordinates of the range
@@ -424,32 +427,28 @@ public class SheetController {
         int endRow = end.getRow();
         int endCol = end.getColumn();
 
-        // Loop through all the cells in the range and highlight them using highlightCell
+        // Loop through all the cells in the range and highlight them
         for (int row = startRow; row <= endRow; row++) {
             for (int col = startCol; col <= endCol; col++) {
                 Coordinate cellCoordinate = createCoordinate(row, col);
-                Cell cell = engine.getCurrentSheet().getCell(cellCoordinate);
 
-                if (cell != null) {
-                    // Use highlightCell to apply the highlight style
-                    highlightCell(cell, "-fx-border-color: #00ffcc; -fx-border-width: 2px; -fx-background-color: rgba(0,255,204,0.28);");
-                }
+                // Apply the highlight style
+                highlightCell(cellCoordinate, "-fx-border-color: #00ffcc; -fx-border-width: 2px; -fx-background-color: rgba(0,255,204,0.28);");
             }
         }
     }
 
     public void resetRangeHighlight() {
-        // איפוס הסטייל של כל התאים שהיו מסומנים כהדגשה של Range
+        // Reset the style of all cells that were highlighted as a range
         cellToLabel.values().forEach(label -> {
-            // ננקה רק את ההדגשה של ה-Range מבלי לפגוע בעיצוב הבסיסי
+            // Remove only the range highlight without affecting the base style
             String currentStyle = label.getStyle();
-            // מסירים רק את ההדגשה של ה-Range
+            // Remove the range highlight
             currentStyle = currentStyle.replaceAll("-fx-background-color: rgba\\(0,255,204,0.28\\);", "");
             currentStyle = currentStyle.replaceAll("-fx-border-color: #00ffcc; -fx-border-width: 2px;", "");
             label.setStyle(currentStyle);
         });
     }
-
 
     // Clear the sheet display
     public void clearSheet() {
@@ -458,13 +457,12 @@ public class SheetController {
         spreadsheetGrid.getRowConstraints().clear();
     }
 
-
     public int getSelectedColumnIndex() {
-        return selectedCol; // or any logic to fetch the currently selected column
+        return selectedCol; // Return the currently selected column
     }
 
     public int getSelectedRowIndex() {
-        return selectedRow; // or any logic to fetch the currently selected row
+        return selectedRow; // Return the currently selected row
     }
 
     public void displayRawSheet(GridPane gridPane, Sheet sheet) {
@@ -477,55 +475,67 @@ public class SheetController {
         int rowHeight = sheet.getRowHeight();
         int colWidth = sheet.getColWidth();
 
-        // הוספת כותרות לעמודות (A, B, C, וכו')
+        // Adding column headers (A, B, C, etc.)
         for (int col = 1; col <= numCols; col++) {
-            Label colHeader = new Label(getColumnName(col)); // הפונקציה getColumnName מחזירה את האותיות של העמודות
+            Label colHeader = new Label(getColumnName(col));
             colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setPrefWidth(colWidth);  // רוחב כותרת זהה לעמודות
+            colHeader.setPrefWidth(colWidth);  // Match column width
             colHeader.setAlignment(Pos.CENTER);
-            gridPane.add(colHeader, col, 0); // מוסיפים לכותרות העמודות בשורה העליונה
+            gridPane.add(colHeader, col, 0); // Add to column headers in the top row
         }
 
-        // הוספת כותרות לשורות (1, 2, 3, וכו')
+        // Adding row headers (1, 2, 3, etc.)
         for (int row = 1; row <= numRows; row++) {
             Label rowHeader = new Label(String.valueOf(row));
             rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setPrefHeight(rowHeight); // גובה כותרת זהה לשורות
+            rowHeader.setPrefHeight(rowHeight); // Match row height
             rowHeader.setAlignment(Pos.CENTER);
-            gridPane.add(rowHeader, 0, row); // מוסיפים לכותרות השורות בעמודה הראשונה
+            gridPane.add(rowHeader, 0, row); // Add to row headers in the first column
         }
 
-        // הצגת ערכים בתאים
+        // Display cell values
         for (int row = 1; row <= numRows; row++) {
             for (int col = 1; col <= numCols; col++) {
                 String cellID = getColumnName(col) + row;
                 Coordinate coordinate = createCoordinate(row, col);
                 Cell cell = sheet.getCell(coordinate);
 
-                // יצירת Label רק עם הערך, ללא סגנונות נוספים
+                // Create a label with the value, without additional styles
                 Label cellLabel = new Label(cell != null ? cell.getEffectiveValue().toString() : "");
                 cellLabel.setAlignment(Pos.CENTER);
 
-                // הגדרת גובה ורוחב תא פשוט, אך ברור
+                // Set simple cell dimensions
                 cellLabel.setPrefHeight(rowHeight);
                 cellLabel.setPrefWidth(colWidth);
 
-                // הוספת גבול כהה מסביב לכל תא כדי שייראה ברור
+                // Add a border around each cell
                 cellLabel.setStyle("-fx-border-color: black; -fx-border-width: 1px; -fx-text-fill: black;");
 
-                // הוספת ה־Label ל־Grid
+                // Add the label to the grid
                 gridPane.add(cellLabel, col, row);
+
+                final int finalRow = row;
+                final int finalCol = col;
+                cellLabel.setOnMouseClicked(event -> {
+                    selectedRow = finalRow;
+                    selectedCol = finalCol;
+                    String selectedCellId = getColumnName(selectedCol) + selectedRow;
+
+                    if (onCellSelected != null) {
+                        onCellSelected.accept(selectedCellId);
+                    }
+                });
+
             }
         }
+
     }
 
     public void sortRangeByColumns(String range, String columns) {
-        String[] columnArray = columns.split(",");  // המרה של רשימת העמודות למערך
-        Sheet sortedSheet = engine.sortSheetRangeByColumns(range, columnArray);  // קריאה למנוע לבצע מיון
+        String[] columnArray = columns.split(",");  // Convert column list to array
+        Sheet sortedSheet = engine.sortSheetRangeByColumns(range, columnArray);  // Call engine to sort
 
-        // רענון תצוגת הגיליון עם הנתונים הממוינים
+        // Refresh sheet display with sorted data
         updateSheet(sortedSheet);
     }
 }
-
-
