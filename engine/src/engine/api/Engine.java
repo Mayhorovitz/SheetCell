@@ -8,6 +8,7 @@ import sheet.api.Sheet;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 public interface Engine {
 
@@ -29,4 +30,9 @@ public interface Engine {
     int convertColumnToIndex(String colPart);
 
     Sheet sortSheetRangeByColumns(String range, String[] columns);
+
+
+    List<String> getUniqueValuesInRangeColumn(String range, String column);
+
+    Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers);
 }

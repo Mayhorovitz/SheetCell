@@ -528,14 +528,14 @@ public class SheetController {
 
             }
         }
-
     }
 
-    public void sortRangeByColumns(String range, String columns) {
-        String[] columnArray = columns.split(",");  // Convert column list to array
-        Sheet sortedSheet = engine.sortSheetRangeByColumns(range, columnArray);  // Call engine to sort
 
-        // Refresh sheet display with sorted data
-        updateSheet(sortedSheet);
+    public Engine getEngine() {
+        return this.engine;
+    }
+
+    public UIModel getUiModel() {
+        return this.uiModel;
     }
 }

@@ -5,17 +5,17 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="javaFX.sortAndFilter.SortPopupController" alignment="CENTER" spacing="10" style="-fx-padding: 10;">
+<VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="javaFX.sort.SortPopupController" alignment="CENTER" spacing="10" style="-fx-padding: 10;">
 
     <!-- Label and TextField for Range -->
     <Label text="Enter Range (e.g., A1..B10)" />
-    <TextField fx:id="rangeField" promptText="A1..B10" />
+    <TextField fx:id="rangeTextField" promptText="A1..B10" />
 
     <!-- Label and TextField for Columns to Sort -->
     <Label text="Enter Columns to Sort by(e.g., A, B)" />
-    <TextField fx:id="columnsField" promptText="A, B" />
+    <TextField fx:id="columnsTextField" promptText="A, B" />
 
     <!-- Sort Button -->
-    <Button text="Sort" onAction="#handleSortAction" />
+    <Button text="Sort" onAction="#handleSort" />
 
 </VBox>

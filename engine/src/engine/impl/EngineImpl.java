@@ -17,6 +17,7 @@ import jakarta.xml.bind.Unmarshaller;
 import java.io.*;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EngineImpl implements Engine {
@@ -244,6 +245,21 @@ public class EngineImpl implements Engine {
 
         return sortSheet;
     }
+
+    @Override
+    public List<String> getUniqueValuesInRangeColumn(String range, String column) {
+        Sheet currentSheet = getCurrentSheet();
+        return currentSheet.getUniqueValuesInRangeColumn(range, column);
+    }
+
+    @Override
+    public Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
+        Sheet currentSheet = getCurrentSheet();
+        return currentSheet.filterSheetByValues(range, column, selectedValues, originalRowNumbers);
+    }
+
+
+
 
 
 }

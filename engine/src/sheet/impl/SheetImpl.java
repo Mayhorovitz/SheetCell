@@ -26,6 +26,7 @@ public class SheetImpl implements Sheet, Serializable {
     private List<Cell> cellsThatHaveChanged;
     private Map<String, Range> ranges;
     private Map<String, List<Cell>> rangeUsageMap; // מפת טווחים לתאים המשתמשים בהם
+    private List<Integer> originalRowNumbers;
 
     // Constructors
     public SheetImpl() {
@@ -407,8 +408,9 @@ public class SheetImpl implements Sheet, Serializable {
     public Collection<Range> getAllRanges() {
         return ranges.values();
     }
+
     // Extract the start and end cells
-    private List<Coordinate> extractCells( String rangeCells) {
+    private List<Coordinate> extractCells(String rangeCells) {
 
         String[] cellRange = rangeCells.split("\\.\\."); // Using regex to split by ".."
             if (cellRange.length != 2) {
@@ -425,6 +427,60 @@ public class SheetImpl implements Sheet, Serializable {
 
             return coordinates;
     }
+    @Override
+
+    public Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
+        SheetImpl filteredSheet = new SheetImpl();
+        filteredSheet.setName(this.name + " - Filtered");
+        filteredSheet.setRowHeight(this.rowHeight);
+        filteredSheet.setColWidth(this.colWidth);
+        filteredSheet.setSheetVersion(this.version );
+
+        List<Coordinate> rangeCoordinates = extractCells(range);
+        Coordinate startCell = rangeCoordinates.get(0);
+        Coordinate endCell = rangeCoordinates.get(1);
+
+        int colIndex = getColumnIndexFromName(column);
+
+        int startCol = startCell.getColumn();
+        int endCol = endCell.getColumn();
+        int numCols = endCol - startCol + 1;
+        filteredSheet.setCols(numCols);
+
+        // לא נשתמש ברשימת originalRowNumbers בתוך ה-SheetImpl
+
+        for (int row = startCell.getRow(); row <= endCell.getRow(); row++) {
+            Coordinate coordinate = createCoordinate(row, colIndex);
+            Cell cell = getCell(coordinate);
+            if (cell != null) {
+                String value = cell.getEffectiveValue().toString();
+                if (selectedValues.contains(value)) {
+                    originalRowNumbers.add(row);  // שמירת מספר השורה המקורי ברשימה המועברת
+
+                    for (int col = startCol; col <= endCol; col++) {
+                        Coordinate cellCoordinate = createCoordinate(row, col);
+                        Cell originalCell = getCell(cellCoordinate);
+                        if (originalCell != null) {
+                            Cell newCell = originalCell;
+
+
+                            int newRowIndex = originalRowNumbers.size();  // השורה החדשה בגיליון המסונן
+                            int newColIndex = col - startCol + 1;
+                            Coordinate newCoordinate = createCoordinate(newRowIndex, newColIndex);
+
+                            filteredSheet.addCell(newCoordinate, newCell);
+                        }
+                    }
+                }
+            }
+        }
+
+        filteredSheet.setRows(originalRowNumbers.size());
+        filteredSheet.updateDependenciesAndInfluences();
+
+        return filteredSheet;
+    }
+
 
     @Override
     public Sheet sortSheet(String range, String[] columnsToSort) {
@@ -489,6 +545,36 @@ public class SheetImpl implements Sheet, Serializable {
 
         return sortedSheet;  // החזרת הגיליון הממוין
     }
+
+    @Override
+    public List<String> getUniqueValuesInRangeColumn(String range, String column) {
+        List<Coordinate> rangeCoordinates = extractCells(range);
+        Coordinate startCell = rangeCoordinates.get(0);
+        Coordinate endCell = rangeCoordinates.get(1);
+
+        int colIndex = getColumnIndexFromName(column);
+
+        // בדיקה שהעמודה נמצאת בטווח
+        if (colIndex < startCell.getColumn() || colIndex > endCell.getColumn()) {
+            throw new IllegalArgumentException("Column " + column + " is not within the specified range.");
+        }
+
+        Set<String> uniqueValues = new HashSet<>();
+
+        for (int row = startCell.getRow(); row <= endCell.getRow(); row++) {
+            Coordinate coordinate = createCoordinate(row, colIndex);
+            Cell cell = getCell(coordinate);
+            if (cell != null) {
+                String value = cell.getEffectiveValue().toString();
+                uniqueValues.add(value);
+            }
+        }
+
+        return new ArrayList<>(uniqueValues);
+    }
+
+
+
 
     private int getColumnIndexFromName(String columnName) {
         int index = 0;

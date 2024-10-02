@@ -1,6 +1,7 @@
 package javaFX.readOnlyPopup;
 
 import cell.api.Cell;
+import coordinate.Coordinate;
 import engine.api.Engine;
 import engine.exceptions.InvalidVersionException;
 import javaFX.actionLine.ActionLineController;
@@ -22,8 +23,10 @@ public class ReadOnlyPopupController {
 
     private Engine engine;
     private SheetController sheetController;
-    private int versionNumber;
     private UIModel uiModel;
+
+    private int versionNumber;
+    private Sheet sheetToDisplay;  // הוסף שדה זה כדי לאחסן את הגיליון להצגה
 
     public void setUiModel(UIModel uiModel) {
         this.uiModel = uiModel;
@@ -33,22 +36,36 @@ public class ReadOnlyPopupController {
         this.engine = engine;
     }
 
+    // מתודה להגדרת הגיליון להצגה
+    public void setSheetToDisplay(Sheet sheet) {
+        this.sheetToDisplay = sheet;
+    }
+
+    // מתודה להגדרת מספר גרסה
     public void setVersionNumber(int versionNumber) {
         this.versionNumber = versionNumber;
     }
 
-    public void displayVersionSheet() {
-        // עכשיו, כל הנתונים הוגדרו, נוכל לאתחל את ה-SheetController
+    // מתודה להצגת הגיליון
+    public void displaySheet() {
         initializeSheetController();
 
-        // הצגת הגיליון
-        Sheet selectedSheet = null;
-        try {
-            selectedSheet = engine.getSheetByVersion(versionNumber);
-        } catch (InvalidVersionException e) {
-            throw new RuntimeException(e);
+        // אם הגיליון להצגה עדיין לא הוגדר, קבל אותו לפי מספר גרסה
+        if (sheetToDisplay == null && versionNumber > 0) {
+            try {
+                sheetToDisplay = engine.getSheetByVersion(versionNumber);
+            } catch (InvalidVersionException e) {
+                throw new RuntimeException(e);
+            }
         }
-        sheetController.initializeSheet(selectedSheet);
+
+        // ודא שהגיליון להצגה לא null
+        if (sheetToDisplay != null) {
+            sheetController.initializeSheet(sheetToDisplay);
+        } else {
+            // טיפול בשגיאה במקרה שאין גיליון להצגה
+            throw new RuntimeException("No sheet to display.");
+        }
     }
 
     private void initializeSheetController() {
@@ -68,12 +85,8 @@ public class ReadOnlyPopupController {
 
         // Set cell selection behavior
         sheetController.setOnCellSelected(cellId -> {
-            Cell selectedCell = null;
-            try {
-                selectedCell = engine.getSheetByVersion(versionNumber).getCell(createCoordinate(cellId));
-            } catch (InvalidVersionException e) {
-                throw new RuntimeException(e);
-            }
+            Coordinate coordinate = createCoordinate(cellId);
+            Cell selectedCell = sheetToDisplay.getCell(coordinate);
             sheetController.highlightDependenciesAndInfluences(selectedCell);
             actionLineController.updateActionLine(selectedCell);
         });

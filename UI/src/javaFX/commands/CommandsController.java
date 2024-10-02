@@ -1,7 +1,8 @@
 package javaFX.commands;
 
+import javaFX.filter.FilterPopupController;
 import javaFX.sheet.SheetController;
-import javaFX.sortAndFilter.SortPopupController;
+import javaFX.sort.SortPopupController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -122,7 +123,7 @@ public class CommandsController {
     public void handleSortButton(ActionEvent actionEvent) {
         try {
             // Load the FXML for the sort popup
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/sortAndFilter/SortPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/sort/SortPopup.fxml"));
             Parent root = loader.load();
 
             // Get the controller and pass the SheetController to it
@@ -140,6 +141,25 @@ public class CommandsController {
     }
 
 
+    @FXML
     public void handleFilterButton(ActionEvent actionEvent) {
+        try {
+            // Load the FXML for the filter popup
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/filter/FilterPopup.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and pass the SheetController to it
+            FilterPopupController filterPopupController = loader.getController();
+            filterPopupController.setSheetController(sheetController);
+
+            // Create a new stage for the popup
+            Stage stage = new Stage();
+            stage.setTitle("Filter Data");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
 }
