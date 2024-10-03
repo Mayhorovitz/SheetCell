@@ -121,12 +121,12 @@ public class CellImpl implements Cell , Serializable {
 
     @Override
     public void resetDependencies() {
-        this.dependsOn.clear(); // איפוס רשימת התאים שהתא תלוי בהם
+        this.dependsOn.clear();
     }
 
     @Override
     public void resetInfluences() {
-        this.influencingOn.clear(); // איפוס רשימת התאים שהתא משפיע עליהם
+        this.influencingOn.clear();
     }
 
 

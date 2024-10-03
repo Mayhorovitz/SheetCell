@@ -48,8 +48,8 @@ public class FilterPopupController {
 
     @FXML
     private void handleLoadValues() {
-        selectedRange = rangeTextField.getText();
-        selectedColumn = columnTextField.getText();
+        selectedRange = rangeTextField.getText().toUpperCase();
+        selectedColumn = columnTextField.getText().toUpperCase();
 
         if (selectedRange == null || selectedRange.isEmpty() || selectedColumn == null || selectedColumn.isEmpty()) {
             showError("Please enter both range and column.");
@@ -104,7 +104,7 @@ public class FilterPopupController {
 
             // העברת originalRowNumbers ל-ReadOnlyPopupController
 
-            popupController.displaySheet();
+            popupController.displayFilterSheet();
 
 
 

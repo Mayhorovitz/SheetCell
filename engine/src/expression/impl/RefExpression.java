@@ -19,7 +19,7 @@ import coordinate.Coordinate;
         public EffectiveValue eval(SheetReadActions sheet) {
             Cell cell = sheet.getCell(coordinate);
             if (cell == null || cell.getEffectiveValue() == null) {
-                throw new IllegalArgumentException("The cell " + coordinate.toString() + " is empty or does not exist.");
+              return null;
             }
             return sheet.getCell(coordinate).getEffectiveValue();
         }

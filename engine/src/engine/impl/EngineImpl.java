@@ -236,7 +236,7 @@ public class EngineImpl implements Engine {
         Sheet currentSheet = getCurrentSheet();
         return currentSheet.getAllRanges();
     }
-
+     // Sorts a sheet range by specified columns.
     @Override
     public Sheet sortSheetRangeByColumns(String range, String[] columns) {
         Sheet currentSheet = getCurrentSheet();
@@ -245,7 +245,7 @@ public class EngineImpl implements Engine {
 
         return sortSheet;
     }
-
+//Gets unique values in a range column.
     @Override
     public List<String> getUniqueValuesInRangeColumn(String range, String column) {
         Sheet currentSheet = getCurrentSheet();
@@ -257,9 +257,6 @@ public class EngineImpl implements Engine {
         Sheet currentSheet = getCurrentSheet();
         return currentSheet.filterSheetByValues(range, column, selectedValues, originalRowNumbers);
     }
-
-
-
 
 
 }

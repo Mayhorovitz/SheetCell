@@ -12,10 +12,10 @@
     <TextField fx:id="rangeTextField" promptText="A1..B10" />
 
     <!-- Label and TextField for Columns to Sort -->
-    <Label text="Enter Columns to Sort by(e.g., A, B)" />
-    <TextField fx:id="columnsTextField" promptText="A, B" />
+    <Label text="Enter Columns to Sort by(e.g. A,B)" />
+    <TextField fx:id="columnsTextField" promptText="A,B" />
 
     <!-- Sort Button -->
-    <Button text="Sort" onAction="#handleSort" />
+    <Button fx:id="Sort" text="Sort" onAction="#handleSort" />
 
 </VBox>

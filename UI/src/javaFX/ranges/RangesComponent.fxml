@@ -8,23 +8,26 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="CENTER" prefWidth="250" spacing="10" style="-fx-background-color: #d0f3f7; -fx-border-color: #9bc0c4;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="javaFX.ranges.RangeController">
+<VBox alignment="CENTER" prefWidth="250" spacing="10" style="-fx-background-color: #d0f3f7; -fx-border-color: #9bc0c4;"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="javaFX.ranges.RangeController">
+
     <TextField fx:id="rangeNameField" promptText="Range Name" />
     <TextField fx:id="rangeCellsField" promptText="Range Cells (e.g., A1..B3)" />
-   <HBox prefHeight="0.0" prefWidth="250.0">
-      <children>
-          <Button onAction="#handleAddRange" prefHeight="25.0" prefWidth="93.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Add Range">
-            <HBox.margin>
-               <Insets left="10.0" />
-            </HBox.margin>
-         </Button>
-          <Button onAction="#handleDeleteRange" prefHeight="25.0" prefWidth="90.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Delete Range" textAlignment="CENTER">
-            <HBox.margin>
-               <Insets left="50.0" />
-            </HBox.margin>
-         </Button>
-      </children>
-   </HBox>
+    <HBox prefHeight="0.0" prefWidth="250.0">
+        <children>
+            <Button onAction="#handleAddRange" prefHeight="25.0" prefWidth="93.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Add Range">
+                <HBox.margin>
+                    <Insets left="10.0" />
+                </HBox.margin>
+            </Button>
+            <Button onAction="#handleDeleteRange" prefHeight="25.0" prefWidth="90.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Delete Range" textAlignment="CENTER">
+                <HBox.margin>
+                    <Insets left="50.0" />
+                </HBox.margin>
+            </Button>
+        </children>
+    </HBox>
 
     <Label text="Available Ranges:" />
     <ListView fx:id="rangeListView" prefHeight="200" />

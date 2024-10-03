@@ -26,7 +26,7 @@ public class ReadOnlyPopupController {
     private UIModel uiModel;
 
     private int versionNumber;
-    private Sheet sheetToDisplay;  // הוסף שדה זה כדי לאחסן את הגיליון להצגה
+    private Sheet sheetToDisplay;
 
     public void setUiModel(UIModel uiModel) {
         this.uiModel = uiModel;
@@ -36,21 +36,21 @@ public class ReadOnlyPopupController {
         this.engine = engine;
     }
 
-    // מתודה להגדרת הגיליון להצגה
+
     public void setSheetToDisplay(Sheet sheet) {
         this.sheetToDisplay = sheet;
     }
 
-    // מתודה להגדרת מספר גרסה
+
     public void setVersionNumber(int versionNumber) {
         this.versionNumber = versionNumber;
     }
 
-    // מתודה להצגת הגיליון
+
     public void displaySheet() {
         initializeSheetController();
 
-        // אם הגיליון להצגה עדיין לא הוגדר, קבל אותו לפי מספר גרסה
+
         if (sheetToDisplay == null && versionNumber > 0) {
             try {
                 sheetToDisplay = engine.getSheetByVersion(versionNumber);
@@ -59,11 +59,9 @@ public class ReadOnlyPopupController {
             }
         }
 
-        // ודא שהגיליון להצגה לא null
         if (sheetToDisplay != null) {
             sheetController.initializeSheet(sheetToDisplay);
         } else {
-            // טיפול בשגיאה במקרה שאין גיליון להצגה
             throw new RuntimeException("No sheet to display.");
         }
     }
@@ -74,7 +72,6 @@ public class ReadOnlyPopupController {
         sheetController.setEngine(engine);
         sheetController.setReadOnly(true);
 
-        // ודא שה-uiModel לא null
         if (uiModel == null) {
             uiModel = new UIModel();
         }
@@ -88,16 +85,34 @@ public class ReadOnlyPopupController {
             Coordinate coordinate = createCoordinate(cellId);
             Cell selectedCell = sheetToDisplay.getCell(coordinate);
             sheetController.highlightDependenciesAndInfluences(selectedCell);
-            actionLineController.updateActionLine(selectedCell);
+            actionLineController.updateActionLine(selectedCell, cellId);
         });
     }
 
     @FXML
     public void initialize() {
-        // כאן, ה-actionLineController כבר הוזרק
         if (actionLineController != null) {
             actionLineController.setEngine(engine);
             actionLineController.setReadOnly(true);
         }
     }
+
+    public void displayFilterSheet() {
+        initializeSheetController();
+
+        if (sheetToDisplay == null && versionNumber > 0) {
+            try {
+                sheetToDisplay = engine.getSheetByVersion(versionNumber);
+            } catch (InvalidVersionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (sheetToDisplay != null) {
+            sheetController.initializeFilterSheet(sheetToDisplay);
+        } else {
+            throw new RuntimeException("No sheet to display.");
+        }
+    }
+
 }

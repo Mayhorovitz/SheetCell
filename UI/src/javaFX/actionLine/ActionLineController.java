@@ -13,23 +13,23 @@ public class ActionLineController {
     private Engine engine;
 
     @FXML
-    private Label selectedCellId;  // Label to display selected cell ID
+    private Label selectedCellId;
 
     @FXML
-    private Label originalValueLabel;  // Label to display original value
+    private Label originalValueLabel;
 
     @FXML
-    private TextField newValueField;  // TextField for editing new value
+    private TextField newValueField;
 
     @FXML
-    private Label lastUpdateCellVersion;  // Label to display last update version
+    private Label lastUpdateCellVersion;
 
     @FXML
-    private Button updateButton;  // Update Cell button
+    private Button updateButton;
 
     private MainController mainController;
 
-    private boolean isReadOnly = false;  // Flag to indicate read-only mode
+    private boolean isReadOnly = false;
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
@@ -39,14 +39,14 @@ public class ActionLineController {
         this.engine = engine;
     }
 
-    public void updateActionLine(Cell selectedCell) {
+    public void updateActionLine(Cell selectedCell, String cellId) {
         if (selectedCell != null) {
             selectedCellId.setText(selectedCell.getCoordinate().toString());
             originalValueLabel.setText(selectedCell.getOriginalValue());
             newValueField.setText("");
             lastUpdateCellVersion.setText(String.valueOf(selectedCell.getVersion()));
         } else {
-            selectedCellId.setText("");
+            selectedCellId.setText(cellId);
             originalValueLabel.setText("");
             newValueField.setText("");
             lastUpdateCellVersion.setText("N/A");
@@ -84,6 +84,6 @@ public class ActionLineController {
 
     // Function to display an error (if needed)
     private void showErrorAlert(String message) {
-        System.out.println("Error: " + message);  // Handle the error appropriately
+        mainController.showErrorAlert("Error: " + message);
     }
 }

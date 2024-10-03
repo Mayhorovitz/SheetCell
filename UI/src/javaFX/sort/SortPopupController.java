@@ -7,13 +7,12 @@ import javaFX.sheet.SheetController;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import sheet.api.Sheet;
-
-import java.io.IOException;
 
 public class SortPopupController {
 
@@ -22,7 +21,7 @@ public class SortPopupController {
     @FXML
     private TextField columnsTextField;  // TextField for columns input
     @FXML
-    private Button sortButton;  // Sort button
+    private Button Sort;
 
     private SheetController sheetController;
     private Engine engine;
@@ -36,39 +35,50 @@ public class SortPopupController {
 
     @FXML
     private void handleSort() {
-        String range = rangeTextField.getText();
-        String columns = columnsTextField.getText();
+        String range = rangeTextField.getText().toUpperCase();
+        String columns = columnsTextField.getText().toUpperCase();
 
         if (range != null && !range.isEmpty() && columns != null && !columns.isEmpty()) {
             String[] columnArray = columns.split(",");
-            Sheet sortedSheet = engine.sortSheetRangeByColumns(range, columnArray);
 
-            // Open the ReadOnlyPopup to display the sorted sheet
             try {
+                // נסה למיין את הגיליון
+                Sheet sortedSheet = engine.sortSheetRangeByColumns(range, columnArray);
+
+                // פתח את חלון הפופ-אפ להצגת הגיליון הממויין
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/readOnlyPopup/readOnlyPopup.fxml"));
                 VBox root = loader.load();
 
                 ReadOnlyPopupController popupController = loader.getController();
                 popupController.setEngine(engine);
-                popupController.setUiModel(uiModel);  // Pass the uiModel
-                popupController.setSheetToDisplay(sortedSheet);  // Set the sorted sheet to display
+                popupController.setUiModel(uiModel);
+                popupController.setSheetToDisplay(sortedSheet);  // הגדר את הגיליון הממויין להצגה
                 popupController.displaySheet();
 
                 Stage stage = new Stage();
                 stage.setTitle("Sorted Sheet - View Only");
-                stage.setScene(new Scene(root, 800, 600));  // Set desired size
+                stage.setScene(new Scene(root, 800, 600));  // קבע גודל רצוי
                 stage.show();
 
-                // Close the sort popup
-                Stage currentStage = (Stage) sortButton.getScene().getWindow();
+                // סגור את חלון המיון
+                Stage currentStage = (Stage) Sort.getScene().getWindow();
                 currentStage.close();
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                showError("Error sorting sheet: " + e.getMessage());
             }
         } else {
-            // Handle invalid input
-            System.out.println("Please enter valid range and columns.");
+            // טיפול בקלט לא חוקי
+            showError("Please enter valid range and columns.");
         }
+    }
+
+    // Utility method to show error alerts
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

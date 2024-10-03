@@ -24,9 +24,8 @@ public class SheetImpl implements Sheet, Serializable {
     private int colWidth;
     private final Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
-    private Map<String, Range> ranges;
+    private final Map<String, Range> ranges;
     private Map<String, List<Cell>> rangeUsageMap; // מפת טווחים לתאים המשתמשים בהם
-    private List<Integer> originalRowNumbers;
 
     // Constructors
     public SheetImpl() {
@@ -130,13 +129,21 @@ public class SheetImpl implements Sheet, Serializable {
         if (coordinate == null) {
             throw new IllegalArgumentException("Coordinate cannot be null.");
         }
+
+        if (coordinate.getRow() < 1 || coordinate.getRow() > rows || coordinate.getColumn() < 1 || coordinate.getColumn() > cols) {
+            throw new IllegalArgumentException("Coordinate " + coordinate + " is out of bounds. Sheet size is " + rows + " rows and " + cols + " columns.");
+        }
+
         return activeCells.get(coordinate);
     }
-
     @Override
     public void addCell(Coordinate coordinate, Cell cell) {
-        if (coordinate == null || cell == null) {
-            throw new IllegalArgumentException("Coordinate and Cell cannot be null.");
+        if (coordinate == null) {
+            throw new IllegalArgumentException("Coordinate cannot be null.");
+        }
+        if (cell == null) {
+        return;
+
         }
 
 
@@ -150,6 +157,7 @@ public class SheetImpl implements Sheet, Serializable {
         cellsThatHaveChanged.add(cell);
     }
 
+    //Update a cell's value and recalculate the sheet.
     @Override
     public Sheet updateCellValueAndCalculate(String cellId, String value) {
         if (cellId == null || value == null) {
@@ -199,7 +207,6 @@ public class SheetImpl implements Sheet, Serializable {
     }
 
 
-
     //order the cells to calculate the new effective values
     public List<Cell> orderCellsForCalculation() {
         List<Cell> orderedCells = new ArrayList<>();
@@ -235,6 +242,7 @@ public class SheetImpl implements Sheet, Serializable {
         visited.put(cell, false); // mark cell as processed
         orderedCells.add(cell); // add cell to the ordered list
     }
+
     private List<Coordinate> extractRefs(String value) {
         List<Coordinate> references = new ArrayList<>();
         String upperValue = value.toUpperCase();
@@ -313,6 +321,7 @@ public class SheetImpl implements Sheet, Serializable {
             }
         }
     }
+
     // Helper function to extract range references from cell value
     private List<String> extractRangeRefs(String value) {
         List<String> rangeRefs = new ArrayList<>();
@@ -343,6 +352,7 @@ public class SheetImpl implements Sheet, Serializable {
 
         return coordinates;
     }
+
     // Checking whether the rows and columns in the range are within the sheet boundaries
     private boolean isRangeWithinSheetBounds(Coordinate startCell, Coordinate endCell) {
 
@@ -352,12 +362,13 @@ public class SheetImpl implements Sheet, Serializable {
                 endCell.getColumn() >= 1 && endCell.getColumn() <= cols;
     }
 
+    //add new range
     @Override
     public void addRange(String name, String range) {
         if (ranges.containsKey(name)) {
             throw new IllegalArgumentException("Range with name '" + name + "' already exists.");
         }
-        List <Coordinate> coordinates= extractCells(range);
+        List<Coordinate> coordinates = extractCells(range);
 
         Coordinate startCell = coordinates.get(0);
         Coordinate endCell = coordinates.get(1);
@@ -368,6 +379,7 @@ public class SheetImpl implements Sheet, Serializable {
 
         ranges.put(name, new RangeImpl(name, startCell, endCell, this));
     }
+
     @Override
     public List<Cell> getCellsInRange(Range range) {
         List<Cell> cellsInRange = new ArrayList<>();
@@ -385,6 +397,7 @@ public class SheetImpl implements Sheet, Serializable {
         return cellsInRange;
     }
 
+    // Check if there are cells that use the range in the map
     @Override
     public void deleteRange(String name) {
         if (!ranges.containsKey(name)) {
@@ -413,20 +426,21 @@ public class SheetImpl implements Sheet, Serializable {
     private List<Coordinate> extractCells(String rangeCells) {
 
         String[] cellRange = rangeCells.split("\\.\\."); // Using regex to split by ".."
-            if (cellRange.length != 2) {
-                throw new IllegalArgumentException("Please specify the range in the format 'A1:B3'.");
-            }
+        if (cellRange.length != 2) {
+            throw new IllegalArgumentException("Please specify the range in the format 'A1..B3'.");
+        }
 
 
-            String startCell = cellRange[0].trim();
-            String endCell = cellRange[1].trim();
+        String startCell = cellRange[0].trim();
+        String endCell = cellRange[1].trim();
 
-            List<Coordinate> coordinates = new ArrayList<>();
-            coordinates.add(createCoordinate((startCell)));
-            coordinates.add(createCoordinate((endCell)));
+        List<Coordinate> coordinates = new ArrayList<>();
+        coordinates.add(createCoordinate((startCell)));
+        coordinates.add(createCoordinate((endCell)));
 
-            return coordinates;
+        return coordinates;
     }
+
     @Override
 
     public Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
@@ -434,7 +448,7 @@ public class SheetImpl implements Sheet, Serializable {
         filteredSheet.setName(this.name + " - Filtered");
         filteredSheet.setRowHeight(this.rowHeight);
         filteredSheet.setColWidth(this.colWidth);
-        filteredSheet.setSheetVersion(this.version );
+        filteredSheet.setSheetVersion(this.version);
 
         List<Coordinate> rangeCoordinates = extractCells(range);
         Coordinate startCell = rangeCoordinates.get(0);
@@ -444,10 +458,8 @@ public class SheetImpl implements Sheet, Serializable {
 
         int startCol = startCell.getColumn();
         int endCol = endCell.getColumn();
-        int numCols = endCol - startCol + 1;
-        filteredSheet.setCols(numCols);
-
-        // לא נשתמש ברשימת originalRowNumbers בתוך ה-SheetImpl
+        filteredSheet.setCols(this.cols);
+        filteredSheet.setRows(this.rows);
 
         for (int row = startCell.getRow(); row <= endCell.getRow(); row++) {
             Coordinate coordinate = createCoordinate(row, colIndex);
@@ -455,28 +467,19 @@ public class SheetImpl implements Sheet, Serializable {
             if (cell != null) {
                 String value = cell.getEffectiveValue().toString();
                 if (selectedValues.contains(value)) {
-                    originalRowNumbers.add(row);  // שמירת מספר השורה המקורי ברשימה המועברת
+                    originalRowNumbers.add(row);
 
                     for (int col = startCol; col <= endCol; col++) {
                         Coordinate cellCoordinate = createCoordinate(row, col);
                         Cell originalCell = getCell(cellCoordinate);
                         if (originalCell != null) {
                             Cell newCell = originalCell;
-
-
-                            int newRowIndex = originalRowNumbers.size();  // השורה החדשה בגיליון המסונן
-                            int newColIndex = col - startCol + 1;
-                            Coordinate newCoordinate = createCoordinate(newRowIndex, newColIndex);
-
-                            filteredSheet.addCell(newCoordinate, newCell);
+                            filteredSheet.addCell(cellCoordinate, newCell);
                         }
                     }
                 }
             }
         }
-
-        filteredSheet.setRows(originalRowNumbers.size());
-        filteredSheet.updateDependenciesAndInfluences();
 
         return filteredSheet;
     }
@@ -501,49 +504,46 @@ public class SheetImpl implements Sheet, Serializable {
             for (int col = startCol; col <= endCol; col++) {
                 Coordinate coordinate = createCoordinate(row, col);
                 Cell cell = this.getCell(coordinate);
-                rowCells.add(cell); // הוספת התאים בשורה זו לרשימה
+                rowCells.add(cell);
             }
-            rowsInRange.add(rowCells); // הוספת השורה לרשימת השורות
+            rowsInRange.add(rowCells);
         }
 
-        // מיון השורות לפי העמודות שנבחרו
+        // Sort the rows based on specified columns
         rowsInRange.sort((row1, row2) -> {
-            // לולאה על עמודות המיון לפי סדר
             for (String colToSort : columnsToSort) {
-                int colIndex = getColumnIndexFromName(colToSort) - startCol;  // המרת שם העמודה לאינדקס יחסית לעמודה הראשונה בטווח
+                int colIndex = getColumnIndexFromName(colToSort) - startCol;
 
                 if (colIndex >= 0 && colIndex < row1.size()) {
                     Cell cell1 = row1.get(colIndex);
                     Cell cell2 = row2.get(colIndex);
 
                     try {
-                        // מיון על בסיס ערך מספרי בלבד
-                        Double value1 = cell1 != null ? Double.parseDouble(cell1.getEffectiveValue().toString()) : Double.MAX_VALUE; // אם התא ריק
+                        Double value1 = cell1 != null ? Double.parseDouble(cell1.getEffectiveValue().toString()) : Double.MAX_VALUE;
                         Double value2 = cell2 != null ? Double.parseDouble(cell2.getEffectiveValue().toString()) : Double.MAX_VALUE;
 
                         int comparison = value1.compareTo(value2);
                         if (comparison != 0) {
-                            return comparison; // אם יש הבדל בין הערכים המספריים, מחזירים את תוצאת ההשוואה
+                            return comparison;
                         }
                     } catch (NumberFormatException e) {
-                        // אם הערכים אינם מספריים, מחשיבים אותם כזהים וממשיכים לעמודה הבאה
                         continue;
                     }
                 }
             }
-            return 0; // אם כל הערכים שווים או אינם מספריים, משאירים את הסדר המקורי
+            return 0;
         });
 
-        // עדכון הגיליון הממוין עם התאים החדשים
+        // Update the sorted sheet with new cell positions
         for (int row = startRow; row <= endRow; row++) {
             List<Cell> sortedRow = rowsInRange.get(row - startRow);
             for (int col = startCol; col <= endCol; col++) {
                 Coordinate coordinate = createCoordinate(row, col);
-                sortedSheet.addCell(coordinate, sortedRow.get(col - startCol)); // הוספת התאים הממוינים לעותק החדש של הגיליון
+                sortedSheet.addCell(coordinate, sortedRow.get(col - startCol));
             }
         }
 
-        return sortedSheet;  // החזרת הגיליון הממוין
+        return sortedSheet;
     }
 
     @Override
@@ -554,7 +554,7 @@ public class SheetImpl implements Sheet, Serializable {
 
         int colIndex = getColumnIndexFromName(column);
 
-        // בדיקה שהעמודה נמצאת בטווח
+        // Check if column is within range
         if (colIndex < startCell.getColumn() || colIndex > endCell.getColumn()) {
             throw new IllegalArgumentException("Column " + column + " is not within the specified range.");
         }
@@ -574,14 +574,12 @@ public class SheetImpl implements Sheet, Serializable {
     }
 
 
-
-
     private int getColumnIndexFromName(String columnName) {
         int index = 0;
         for (char c : columnName.toUpperCase().toCharArray()) {
             index = index * 26 + (c - 'A' + 1);
         }
-        return index;  // אינדקס מתחיל ב-0
+        return index;
     }
 
 }

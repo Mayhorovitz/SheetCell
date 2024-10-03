@@ -20,16 +20,15 @@ import java.io.IOException;
 public class CommandsController {
 
     @FXML
-    private ColorPicker bgColorPicker;  // Background color picker
+    private ColorPicker bgColorPicker;
     @FXML
-    private ColorPicker textColorPicker;  // Text color picker
+    private ColorPicker textColorPicker;
     @FXML
-    private Spinner<Integer> columnWidthSpinner;  // Column width spinner
+    private Spinner<Integer> columnWidthSpinner;
     @FXML
-    private Spinner<Integer> rowHeightSpinner;  // Row height spinner
+    private Spinner<Integer> rowHeightSpinner;
     @FXML
-    private ComboBox<String> alignmentComboBox;  // Dropdown for alignment
-
+    private ComboBox<String> alignmentComboBox;
     private SheetController sheetController;
 
     public void setSheetController(SheetController sheetController) {
@@ -120,7 +119,7 @@ public class CommandsController {
     }
 
     @FXML
-    public void handleSortButton(ActionEvent actionEvent) {
+    public void handleSortButton() {
         try {
             // Load the FXML for the sort popup
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/sort/SortPopup.fxml"));
