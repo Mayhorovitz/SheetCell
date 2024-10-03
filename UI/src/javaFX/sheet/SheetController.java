@@ -136,12 +136,14 @@ public class SheetController {
     }
 
     private void addColumnAndRowConstraints(int numCols, double colWidth, int numRows, double rowHeight) {
+        // Add ColumnConstraints (including header column at index 0)
         for (int i = 0; i <= numCols; i++) {
             ColumnConstraints colConstraints = new ColumnConstraints();
             colConstraints.setPrefWidth(colWidth);  // Set preferred width
             spreadsheetGrid.getColumnConstraints().add(colConstraints);
         }
 
+        // Add RowConstraints (including header row at index 0)
         for (int i = 0; i <= numRows; i++) {
             RowConstraints rowConstraints = new RowConstraints();
             rowConstraints.setPrefHeight(rowHeight);  // Set preferred height
@@ -153,21 +155,33 @@ public class SheetController {
         // Adding column headers (A, B, C, etc.)
         for (int col = 1; col <= numCols; col++) {
             Label colHeader = new Label(getColumnName(col));
-            colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setPrefWidth(spreadsheetGrid.getColumnConstraints().get(col - 1).getPrefWidth()); // Match column width
-            colHeader.setPrefHeight(uiModel.getRowHeight()); // Match row height
+            colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; "
+                    + "-fx-border-color: black; -fx-border-width: 1px;");
             colHeader.setAlignment(Pos.CENTER); // Center the text
+
+            ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(col);
+            colHeader.prefWidthProperty().bind(colConstraints.prefWidthProperty());
+
+            RowConstraints headerRowConstraints = spreadsheetGrid.getRowConstraints().get(0);
+            colHeader.prefHeightProperty().bind(headerRowConstraints.prefHeightProperty());
+
             spreadsheetGrid.add(colHeader, col, 0);  // Add column headers at the top (row 0)
         }
 
         // Adding row headers (1, 2, 3, etc.)
         for (int row = 1; row <= numRows; row++) {
             Label rowHeader = new Label(String.valueOf(row));
-            rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setPrefWidth(uiModel.getColWidth()); // Match column width
-            rowHeader.setPrefHeight(spreadsheetGrid.getRowConstraints().get(row - 1).getPrefHeight()); // Match row height
+            rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; "
+                    + "-fx-border-color: black; -fx-border-width: 1px;");
             rowHeader.setAlignment(Pos.CENTER); // Center the text
-            spreadsheetGrid.add(rowHeader, 0, row);  // Add row headers on the left (column 0)
+
+            RowConstraints rowConstraints = spreadsheetGrid.getRowConstraints().get(row);
+            rowHeader.prefHeightProperty().bind(rowConstraints.prefHeightProperty());
+
+            ColumnConstraints headerColConstraints = spreadsheetGrid.getColumnConstraints().get(0);
+            rowHeader.prefWidthProperty().bind(headerColConstraints.prefWidthProperty());
+
+            spreadsheetGrid.add(rowHeader, 0, row);
         }
     }
 
@@ -364,6 +378,9 @@ public class SheetController {
             rowConstraints.setPrefHeight(height);  // Set preferred height
         }
     }
+
+
+
 
     public void setColumnAlignment(int colIndex, String alignment) {
         Pos pos;
