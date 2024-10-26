@@ -3,7 +3,6 @@ package javaFX.commands;
 import javaFX.filter.FilterPopupController;
 import javaFX.sheet.SheetController;
 import javaFX.sort.SortPopupController;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -141,7 +140,7 @@ public class CommandsController {
 
 
     @FXML
-    public void handleFilterButton(ActionEvent actionEvent) {
+    public void handleFilterButton() {
         try {
             // Load the FXML for the filter popup
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/filter/FilterPopup.fxml"));

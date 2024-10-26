@@ -239,8 +239,8 @@ public class SheetImpl implements Sheet, Serializable {
             }
         }
 
-        visited.put(cell, false); // mark cell as processed
-        orderedCells.add(cell); // add cell to the ordered list
+        visited.put(cell, false);
+        orderedCells.add(cell);
     }
 
     private List<Coordinate> extractRefs(String value) {
@@ -295,7 +295,6 @@ public class SheetImpl implements Sheet, Serializable {
             // Extract individual cell references
             List<Coordinate> influences = extractRefs(originalValue);
 
-            // Check for references to ranges (e.g., SUM or AVERAGE)
             List<String> rangeNames = extractRangeRefs(originalValue);
             for (String rangeName : rangeNames) {
                 Range range = getRange(rangeName);
@@ -326,7 +325,6 @@ public class SheetImpl implements Sheet, Serializable {
     private List<String> extractRangeRefs(String value) {
         List<String> rangeRefs = new ArrayList<>();
 
-        // Regular expression to match functions like {AVERAGE,rangeName} or {SUM,rangeName}
         Pattern pattern = Pattern.compile("\\{(AVERAGE|SUM),\\s*([^,\\s}]+)\\s*}");
         Matcher matcher = pattern.matcher(value);
 

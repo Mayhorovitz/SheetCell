@@ -1,8 +1,8 @@
 package cell.api;
 
-import java.util.List;
 import coordinate.Coordinate;
-import javafx.scene.paint.Color;
+
+import java.util.List;
 
 
     public interface Cell {
@@ -21,4 +21,6 @@ import javafx.scene.paint.Color;
         boolean calculateEffectiveValue();
         void resetDependencies();
         void resetInfluences();
+
+        void setOriginalValue(String value);
     }

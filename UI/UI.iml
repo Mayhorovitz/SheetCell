@@ -9,5 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="engine" exported="" />
     <orderEntry type="library" exported="" name="javafx-swt" level="project" />
+    <orderEntry type="module" module-name="DTO" exported="" />
   </component>
 </module>

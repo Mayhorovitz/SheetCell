@@ -79,13 +79,27 @@ public class SheetController {
     public void setSpreadsheetGrid(GridPane gridPane) {
         this.spreadsheetGrid = gridPane;
     }
+    public int getSelectedColumnIndex() {
+        return selectedCol;
+    }
 
+    public int getSelectedRowIndex() {
+        return selectedRow;
+    }
+
+
+    public Engine getEngine() {
+        return this.engine;
+    }
+
+    public UIModel getUiModel() {
+        return this.uiModel;
+    }
     public void displaySheet(Sheet sheet) {
         if (spreadsheetGrid.getChildren().isEmpty()) {
             // Only initialize if the grid is empty
             initializeSheet(sheet);
         } else {
-            // Apply only changes, no full clear
             updateSheet(sheet);
         }
 
@@ -94,13 +108,11 @@ public class SheetController {
 
     public void initializeSheet(Sheet sheet) {
         cellToLabel.clear();
-        // Clear the GridPane before loading the new file
         clearGridPane();
 
         int numRows = sheet.getRows();
         int numCols = sheet.getCols();
 
-        // Remove gaps between cells
         spreadsheetGrid.setHgap(0);
         spreadsheetGrid.setVgap(0);
 
@@ -143,7 +155,6 @@ public class SheetController {
             spreadsheetGrid.getColumnConstraints().add(colConstraints);
         }
 
-        // Add RowConstraints (including header row at index 0)
         for (int i = 0; i <= numRows; i++) {
             RowConstraints rowConstraints = new RowConstraints();
             rowConstraints.setPrefHeight(rowHeight);  // Set preferred height
@@ -152,12 +163,11 @@ public class SheetController {
     }
 
     private void addColumnsAndRowHeaders(int numCols, int numRows) {
-        // Adding column headers (A, B, C, etc.)
         for (int col = 1; col <= numCols; col++) {
             Label colHeader = new Label(getColumnName(col));
             colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; "
                     + "-fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setAlignment(Pos.CENTER); // Center the text
+            colHeader.setAlignment(Pos.CENTER);
 
             ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(col);
             colHeader.prefWidthProperty().bind(colConstraints.prefWidthProperty());
@@ -165,10 +175,9 @@ public class SheetController {
             RowConstraints headerRowConstraints = spreadsheetGrid.getRowConstraints().get(0);
             colHeader.prefHeightProperty().bind(headerRowConstraints.prefHeightProperty());
 
-            spreadsheetGrid.add(colHeader, col, 0);  // Add column headers at the top (row 0)
+            spreadsheetGrid.add(colHeader, col, 0);
         }
 
-        // Adding row headers (1, 2, 3, etc.)
         for (int row = 1; row <= numRows; row++) {
             Label rowHeader = new Label(String.valueOf(row));
             rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; "
@@ -204,13 +213,12 @@ public class SheetController {
                     Label cellLabel = new Label(cell != null ? cell.getEffectiveValue().toString() : "");
                     cellLabel.setAlignment(Pos.CENTER);
 
-                    // Set cell dimensions based on the UI model
                     cellLabel.setPrefHeight(uiModel.getRowHeight());
                     cellLabel.setPrefWidth(uiModel.getColWidth());
                     cellLabel.getStyleClass().add("cell");
-                    applyCellStyle(cell, cellLabel);  // Apply styles like background and text color
+                    applyCellStyle(cell, cellLabel);
 
-                    cellToLabel.put(cellID, cellLabel);  // Store label in map for easy access
+                    cellToLabel.put(cellID, cellLabel);
 
                     spreadsheetGrid.add(cellLabel, col, row);
 
@@ -223,10 +231,8 @@ public class SheetController {
                         String selectedCellId = getColumnName(selectedCol) + selectedRow;
 
                         if (isReadOnly && onCellSelected != null) {
-                            // In read-only mode, use the provided listener
                             onCellSelected.accept(selectedCellId);
                         } else if (mainController != null) {
-                            // In normal mode, notify the main controller
                             mainController.handleCellSelection(selectedCellId);
                         }
                     });
@@ -236,11 +242,9 @@ public class SheetController {
     }
 
     private void applyCellStyle(Cell cell, Label label) {
-        // Always apply the border style
         String borderStyle = "-fx-border-color: black; -fx-border-width: 1px;";
 
         if (cell != null) {
-            // Apply the saved background and text colors along with the border
             label.setStyle(String.format(
                     "-fx-background-color: %s; -fx-text-fill: %s; %s",
                     cell.getBackgroundColor(), cell.getTextColor(), borderStyle
@@ -251,7 +255,6 @@ public class SheetController {
         }
     }
 
-    // Convert column index to name (A, B, C, etc.)
     private String getColumnName(int colIndex) {
         StringBuilder columnName = new StringBuilder();
         while (colIndex > 0) {
@@ -456,9 +459,7 @@ public class SheetController {
     }
 
     public void resetRangeHighlight() {
-        // Reset the style of all cells that were highlighted as a range
         cellToLabel.values().forEach(label -> {
-            // Remove only the range highlight without affecting the base style
             String currentStyle = label.getStyle();
             // Remove the range highlight
             currentStyle = currentStyle.replaceAll("-fx-background-color: rgba\\(0,255,204,0.28\\);", "");
@@ -467,29 +468,11 @@ public class SheetController {
         });
     }
 
-    public int getSelectedColumnIndex() {
-        return selectedCol; // Return the currently selected column
-    }
-
-    public int getSelectedRowIndex() {
-        return selectedRow; // Return the currently selected row
-    }
-
-
-    public Engine getEngine() {
-        return this.engine;
-    }
-
-    public UIModel getUiModel() {
-        return this.uiModel;
-    }
 
     public void initializeFilterSheet(Sheet sheetToDisplay) {
         cellToLabel.clear();
-        // Clear the GridPane before loading the new file
         clearGridPane();
 
-        // Determine the min and max row and column indices
         Map<Coordinate, Cell> activeCells = sheetToDisplay.getActiveCells();
 
         int minRow = Integer.MAX_VALUE;
@@ -532,20 +515,19 @@ public class SheetController {
         for (int col = minCol; col <= maxCol; col++) {
             Label colHeader = new Label(getColumnName(col));
             colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setPrefWidth(uiModel.getColWidth()); // Match column width
-            colHeader.setPrefHeight(uiModel.getRowHeight()); // Match row height
-            colHeader.setAlignment(Pos.CENTER); // Center the text
-            spreadsheetGrid.add(colHeader, col - minCol + 1, 0);  // Add column headers at the top (row 0)
+            colHeader.setPrefWidth(uiModel.getColWidth());
+            colHeader.setPrefHeight(uiModel.getRowHeight());
+            colHeader.setAlignment(Pos.CENTER);
+            spreadsheetGrid.add(colHeader, col - minCol + 1, 0);
         }
 
-        // Adding row headers (original row numbers)
         for (int row = minRow; row <= maxRow; row++) {
             Label rowHeader = new Label(String.valueOf(row));
             rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setPrefWidth(uiModel.getColWidth()); // Match column width
-            rowHeader.setPrefHeight(uiModel.getRowHeight()); // Match row height
-            rowHeader.setAlignment(Pos.CENTER); // Center the text
-            spreadsheetGrid.add(rowHeader, 0, row - minRow + 1);  // Add row headers on the left (column 0)
+            rowHeader.setPrefWidth(uiModel.getColWidth());
+            rowHeader.setPrefHeight(uiModel.getRowHeight());
+            rowHeader.setAlignment(Pos.CENTER);
+            spreadsheetGrid.add(rowHeader, 0, row - minRow + 1);
         }
     }
 
@@ -553,7 +535,6 @@ public class SheetController {
     private void populateFilterSheetGrid(Sheet sheet, int numCols, int numRows) {
         Map<Coordinate, Cell> activeCells = sheet.getActiveCells();
 
-        // Determine the min and max row and column indices
         int minRow = Integer.MAX_VALUE;
         int maxRow = Integer.MIN_VALUE;
         int minCol = Integer.MAX_VALUE;
@@ -602,9 +583,8 @@ public class SheetController {
             cellLabel.setPrefHeight(uiModel.getRowHeight());
             cellLabel.setPrefWidth(uiModel.getColWidth());
             cellLabel.getStyleClass().add("cell");
-            applyCellStyle(cell, cellLabel);  // Apply styles like background and text color
-
-            cellToLabel.put(cellID, cellLabel);  // Store label in map for easy access
+            applyCellStyle(cell, cellLabel);
+            cellToLabel.put(cellID, cellLabel);
 
             spreadsheetGrid.add(cellLabel, colIndex, rowIndex);
 

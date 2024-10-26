@@ -129,5 +129,10 @@ public class CellImpl implements Cell , Serializable {
         this.influencingOn.clear();
     }
 
+    @Override
+    public void setOriginalValue(String value) {
+        this.originalValue = value;
+    }
+
 
 }
