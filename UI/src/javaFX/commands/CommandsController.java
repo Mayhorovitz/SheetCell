@@ -16,18 +16,22 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
+/**
+ * Controller for the commands panel, handling styling and data manipulation actions.
+ */
 public class CommandsController {
 
     @FXML
-    private ColorPicker bgColorPicker;
+    private ColorPicker bgColorPicker;  // Background color picker
     @FXML
-    private ColorPicker textColorPicker;
+    private ColorPicker textColorPicker;  // Text color picker
     @FXML
-    private Spinner<Integer> columnWidthSpinner;
+    private Spinner<Integer> columnWidthSpinner;  // Column width spinner
     @FXML
-    private Spinner<Integer> rowHeightSpinner;
+    private Spinner<Integer> rowHeightSpinner;  // Row height spinner
     @FXML
-    private ComboBox<String> alignmentComboBox;
+    private ComboBox<String> alignmentComboBox;  // Dropdown for alignment
+
     private SheetController sheetController;
 
     public void setSheetController(SheetController sheetController) {
@@ -36,7 +40,7 @@ public class CommandsController {
 
     @FXML
     private void initialize() {
-        // Update Spinner ranges for column width (up to 100) and row height (up to 100)
+        // Update Spinner ranges for column width and row height
         columnWidthSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 200, 10));
         rowHeightSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 200, 10));
 
@@ -47,14 +51,14 @@ public class CommandsController {
         // Add listeners to update size when the spinner value changes
         columnWidthSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
             if (newValue != null) {
-                int selectedColIndex = sheetController.getSelectedColumnIndex(); // Get the selected column index
+                int selectedColIndex = sheetController.getSelectedColumnIndex();
                 sheetController.setColumnWidth(selectedColIndex, newValue.doubleValue());
             }
         });
 
         rowHeightSpinner.valueProperty().addListener((obs, oldValue, newValue) -> {
             if (newValue != null) {
-                int selectedRowIndex = sheetController.getSelectedRowIndex(); // Get the selected row index
+                int selectedRowIndex = sheetController.getSelectedRowIndex();
                 sheetController.setRowHeight(selectedRowIndex, newValue.doubleValue());
             }
         });
@@ -78,7 +82,6 @@ public class CommandsController {
             sheetController.applyTextColorToSelectedCell(selectedTextColor);
         }
     }
-    // Set column width when user selects a value from spinner
     @FXML
     private void handleSetColumnWidth() {
         Integer colWidth = columnWidthSpinner.getValue();
@@ -105,8 +108,7 @@ public class CommandsController {
     private void handleSetColumnAlignment() {
         String alignment = alignmentComboBox.getValue();
         if (alignment != null) {
-            // Add logic to get the selected column index
-            int selectedColIndex = sheetController.getSelectedColumnIndex(); // You will need to implement this method
+            int selectedColIndex = sheetController.getSelectedColumnIndex();
             sheetController.setColumnAlignment(selectedColIndex, alignment);
         }
     }
@@ -138,7 +140,6 @@ public class CommandsController {
         }
     }
 
-
     @FXML
     public void handleFilterButton() {
         try {
@@ -159,5 +160,4 @@ public class CommandsController {
             e.printStackTrace();
         }
     }
-
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetsManagement.SheetsManagementController">
+    <children>
+        <BorderPane AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.bottomAnchor="10.0">
+            <!-- Top Section: Title and Upload Button -->
+            <top>
+                <HBox spacing="10.0">
+                    <Label text="Sheets Management" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                    <Button fx:id="uploadSheetButton" text="Upload New Sheet" />
+                </HBox>
+            </top>
+
+            <!-- Center Section: Available Sheets Table and Permissions Table -->
+            <center>
+                <VBox spacing="10.0">
+                    <!-- Available Sheets Table -->
+                    <fx:include fx:id="availableSheets" source="components/availableSheets/availableSheets.fxml" />
+
+                    <!-- Permissions Table -->
+                    <fx:include fx:id="permissionsTable" source="components/permissionsTable/permissionsTable.fxml" />
+                </VBox>
+            </center>
+
+            <!-- Right Section: Commands -->
+            <right>
+                <fx:include fx:id="commands" source="components/commands/commands.fxml"/>
+            </right>
+        </BorderPane>
+    </children>
+</AnchorPane>

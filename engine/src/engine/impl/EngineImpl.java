@@ -4,61 +4,86 @@ import cell.api.Cell;
 import cell.impl.CellImpl;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
+import dto.api.*;
+import dto.impl.DTOFactoryImpl;
+import dto.impl.PermissionRequestDTOImpl;
+import dto.impl.SheetSummaryDTO;
 import engine.api.Engine;
-import range.api.Range;
-import sheet.api.Sheet;
-import sheet.impl.SheetImpl;
 import generated.*;
-
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
+import permission.PermissionRequest;
+import permission.PermissionStatus;
+import permission.PermissionType;
+import permission.PermissionsManager;
+import range.api.Range;
+import sheet.api.Sheet;
+import sheet.impl.SheetImpl;
 
-import java.io.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
 
+/**
+ * Implementation of the Engine interface.
+ */
 public class EngineImpl implements Engine {
 
     public static final int MAX_ROWS = 50;
     public static final int MAX_COLS = 20;
     public static final int LOAD_VERSION = 1;
 
-    private Map<Integer, Sheet> allSheets;
-    int currentSheetVersion;
+    private Map<String, Map<Integer, Sheet>> allSheets = new HashMap<>();
+    private Map<String, Integer> currentSheetVersions = new HashMap<>();
+    private DTOFactory dtoFactory = new DTOFactoryImpl();
+    private Map<String, PermissionsManager> permissionsManagers = new HashMap<>();
 
-    //handle loading file request
+
+    /**
+     * Handles loading an XML file into the engine.
+     */
     @Override
-    public void loadFile(String filePath) throws Exception {
-        STLSheet loadedSheetFromXML = loadXMLFile(filePath);
-        allSheets = new HashMap<>();
+    public void loadFile(InputStream inputStream, String owner) throws Exception {
+        STLSheet loadedSheetFromXML = loadXMLFile(inputStream);
+        String sheetName = loadedSheetFromXML.getName();
+
+        if (allSheets.containsKey(sheetName)) {
+            throw new IllegalArgumentException("A sheet with the name '" + sheetName + "' already exists.");
+        }
+
+        Map<Integer, Sheet> versionsMap = new HashMap<>();
         Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML);
         currentSheet.setSheetVersion(LOAD_VERSION);
-        currentSheetVersion = LOAD_VERSION;
+        currentSheet.setOwner(owner);
+        versionsMap.put(LOAD_VERSION, currentSheet);
+        allSheets.put(sheetName, versionsMap);
+        currentSheetVersions.put(sheetName, LOAD_VERSION);
 
-        allSheets.put(LOAD_VERSION, currentSheet);
+        // יצירת מנהל הרשאות והוספת הרשאה עבור הבעלים עם הרשאת OWNER
+        PermissionsManager permissionsManager = new PermissionsManager(owner);
+        permissionsManager.addPermission(owner, PermissionType.OWNER);
+        permissionsManagers.put(sheetName, permissionsManager);
     }
 
-    public int getCurrentSheetVersion() {
-        return currentSheetVersion;
+    @Override
+    public int getCurrentSheetVersion(String sheetName) {
+        return currentSheetVersions.get(sheetName);
+    }
+    @Override
+    public PermissionsManager getPermissionsManager(String sheetName) {
+        if (!permissionsManagers.containsKey(sheetName)) {
+            throw new IllegalArgumentException("Sheet with name '" + sheetName + "' does not exist.");
+        }
+        return permissionsManagers.get(sheetName);
     }
 
-    //load xml file to the engine
-    public STLSheet loadXMLFile(String filePath) throws IOException {
-        File xmlFile = new File(filePath);
-        if (!xmlFile.exists() || !xmlFile.isFile()) {
-            throw new IOException("File does not exist or is not a valid file.");
-        }
-        if (!filePath.endsWith(".xml")) {
-            throw new IOException("The file is not an XML file.");
-        }
-
+    private STLSheet loadXMLFile(InputStream inputStream) throws IOException {
         try {
             JAXBContext context = JAXBContext.newInstance(STLSheet.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            STLSheet sheet = (STLSheet) unmarshaller.unmarshal(xmlFile);
+            STLSheet sheet = (STLSheet) unmarshaller.unmarshal(inputStream);
             validateSheet(sheet);
             return sheet;
         } catch (JAXBException e) {
@@ -66,14 +91,16 @@ public class EngineImpl implements Engine {
         }
     }
 
-    //check the validation of the file
+
+    /**
+     * Validates the loaded STLSheet object.
+     */
     private void validateSheet(STLSheet sheet) {
         STLLayout layout = sheet.getSTLLayout();
         if (layout.getRows() < 1 || layout.getRows() > MAX_ROWS ||
                 layout.getColumns() < 1 || layout.getColumns() > MAX_COLS) {
             throw new IllegalArgumentException("Invalid sheet layout: Rows and columns must be within allowed range.");
         }
-
 
         for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
             int row = cell.getRow();
@@ -86,17 +113,25 @@ public class EngineImpl implements Engine {
         }
     }
 
-
+    /**
+     * Extracts row number from a cell coordinate string.
+     */
     private int extractRowFromCoordinate(String coordinateString) {
-        String rowPart = coordinateString.replaceAll("[^0-9]", ""); // Extract the numeric part for row
-        return Integer.parseInt(rowPart); // Convert it to integer
+        String rowPart = coordinateString.replaceAll("[^0-9]", "");
+        return Integer.parseInt(rowPart);
     }
 
+    /**
+     * Extracts column index from a cell coordinate string.
+     */
     private int extractColumnFromCoordinate(String coordinateString) {
-        String columnPart = coordinateString.replaceAll("[^A-Za-z]", ""); // Extract the letter part for column
-        return convertColumnToIndex(columnPart); // Convert it to column index
+        String columnPart = coordinateString.replaceAll("[^A-Za-z]", "");
+        return convertColumnToIndex(columnPart);
     }
 
+    /**
+     * Converts a column letter to its corresponding index.
+     */
     public int convertColumnToIndex(String column) {
         int result = 0;
         for (char c : column.toUpperCase().toCharArray()) {
@@ -105,7 +140,9 @@ public class EngineImpl implements Engine {
         return result;
     }
 
-    //converts an STLSheet object into a Sheet object
+    /**
+     * Converts an STLSheet object into a Sheet object.
+     */
     private Sheet STLSheetToSheet(STLSheet stlSheet) {
         Sheet newSheet = new SheetImpl();
         newSheet.setName(stlSheet.getName());
@@ -117,29 +154,31 @@ public class EngineImpl implements Engine {
         newSheet.setRowHeight(size.getRowsHeightUnits());
         newSheet.setColWidth(size.getColumnWidthUnits());
 
-        // Process the new ranges
-        for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
-            String name = range.getName();
-            String from =  range.getSTLBoundaries().getFrom();
-            String to = range.getSTLBoundaries().getTo();
-            newSheet.addRange(name, from + ".." + to);
-
+        // Process ranges
+        if (stlSheet.getSTLRanges() != null && stlSheet.getSTLRanges().getSTLRange() != null) {
+            for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
+                String name = range.getName();
+                String from = range.getSTLBoundaries().getFrom();
+                String to = range.getSTLBoundaries().getTo();
+                newSheet.addRange(name, from + ".." + to);
+            }
         }
 
-        // Existing logic for processing cells
+        // Process cells
         for (STLCell stlCell : stlSheet.getSTLCells().getSTLCell()) {
             String originalValue = stlCell.getSTLOriginalValue();
             int row = stlCell.getRow();
             String column = stlCell.getColumn();
             int col = convertColumnToIndex(column);
 
-            Coordinate coordinate = new CoordinateImpl(row, col); // Use CoordinateImpl here
+            Coordinate coordinate = new CoordinateImpl(row, col);
             Cell cell = new CellImpl(row, col, originalValue, 1, newSheet);
             newSheet.addCell(coordinate, cell);
         }
 
         newSheet.updateDependenciesAndInfluences();
-        // Calculate the effective values for each cell in the correct order
+
+        // Calculate the effective values for each cell
         for (Cell cell : newSheet.orderCellsForCalculation()) {
             cell.calculateEffectiveValue();
             newSheet.addCellThatChanged(cell);
@@ -148,115 +187,325 @@ public class EngineImpl implements Engine {
         return newSheet;
     }
 
-    //handle update cell request update the cell value
-    public void updateCell(String coordinate, String newValue) {
+    /**
+     * Updates a cell's value.
+     */
+    @Override
+    public void updateCell(String sheetName, String coordinate, String newValue) {
         if (coordinate == null || newValue == null) {
             throw new IllegalArgumentException("Cell location and value cannot be null.");
         }
 
-        Sheet sheet = getCurrentSheet();
-        Sheet newSheet = sheet.updateCellValueAndCalculate(coordinate, newValue);
-        currentSheetVersion = newSheet.getVersion();
-        allSheets.put(currentSheetVersion, newSheet);
+        if (!allSheets.containsKey(sheetName)) {
+            throw new IllegalArgumentException("Sheet with name '" + sheetName + "' does not exist.");
+        }
+
+        Map<Integer, Sheet> sheetVersions = allSheets.get(sheetName);
+        int currentVersion = currentSheetVersions.get(sheetName);
+        Sheet currentSheet = sheetVersions.get(currentVersion);
+        Sheet newSheet = currentSheet.updateCellValueAndCalculate(coordinate, newValue);
+
+        int newVersion = currentVersion + 1;
+        newSheet.setSheetVersion(newVersion);
+        sheetVersions.put(newVersion, newSheet);
+        currentSheetVersions.put(sheetName, newVersion);
     }
 
-
-    @Override
-    public Sheet getCurrentSheet() {
-        if (allSheets == null || allSheets.isEmpty()) {
-            throw new IllegalStateException("No file has been loaded. Please load a file first.");
+    /**
+     * Retrieves the current sheet.
+     */
+    private Sheet getCurrentSheet(String sheetName) {
+        if (!allSheets.containsKey(sheetName)) {
+            throw new IllegalArgumentException("Sheet with name '" + sheetName + "' does not exist.");
         }
-        return allSheets.get(currentSheetVersion);
+
+        int currentVersion = currentSheetVersions.get(sheetName);
+        Map<Integer, Sheet> sheetVersions = allSheets.get(sheetName);
+        return sheetVersions.get(currentVersion);
     }
-
+    /**
+     * Retrieves cell information as a DTO.
+     */
     @Override
-    public Cell getCellInfo(String cellIdentifier) {
-        if (allSheets == null || allSheets.isEmpty()) {
-            throw new IllegalStateException("No file has been loaded. Please load a file first.");
-        }
+    public CellDTO getCellInfo(String sheetName, String cellIdentifier) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
         Coordinate cellCoordinate = new CoordinateImpl(extractRowFromCoordinate(cellIdentifier), extractColumnFromCoordinate(cellIdentifier));
-        validateCoordinate(cellCoordinate);
-        return allSheets.get(currentSheetVersion).getCell(cellCoordinate);
+        validateCoordinate(currentSheet, cellCoordinate);
+        Cell cell = currentSheet.getCell(cellCoordinate);
+        if (cell != null) {
+            return dtoFactory.createCellDTO(cell);
+        } else {
+            return dtoFactory.createEmptyCellDTO(cellIdentifier);
+        }
     }
-
-    private void validateCoordinate(Coordinate coordinate) {
-        if (coordinate.getRow() < 1 || coordinate.getRow() > getCurrentSheet().getRows() ||
-                coordinate.getColumn() < 1 || coordinate.getColumn() > getCurrentSheet().getCols()) {
+    /**
+     * Validates that a coordinate is within the sheet bounds.
+     */
+    private void validateCoordinate(Sheet currentSheet, Coordinate coordinate) {
+        if (coordinate.getRow() < 1 || coordinate.getRow() > currentSheet.getRows() ||
+                coordinate.getColumn() < 1 || coordinate.getColumn() > currentSheet.getCols()) {
             throw new IllegalArgumentException("Cell location " + coordinate + " is out of bounds.");
         }
     }
 
-    public Sheet getSheetByVersion(int version) {
-        if (!allSheets.containsKey(version)) {
-            throw new IllegalArgumentException("Invalid version number: " + version);
-        }
-        return allSheets.get(version);
-    }
-
+    /**
+     * Adds a range to the sheet.
+     */
     @Override
-    public void saveSystemState(String filePath) throws IOException {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath + ".dat"))) {
-            oos.writeObject(this.allSheets);
-            oos.writeInt(this.currentSheetVersion);
-            System.out.println("System state has been saved.");
-        }
+    public void addRangeToSheet(String sheetName, String name, String range) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        currentSheet.addRange(name, range);
     }
 
+    /**
+     * Deletes a range from the sheet.
+     */
     @Override
-    public void loadSystemState(String filePath) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath + ".dat"))) {
-            this.allSheets = (Map<Integer, Sheet>) ois.readObject();
-            this.currentSheetVersion = ois.readInt();
-            System.out.println("System state has been loaded.");
+    public void deleteRangeFromSheet(String sheetName, String name) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        currentSheet.deleteRange(name);
+    }
+
+    /**
+     * Retrieves a range from the sheet as a DTO.
+     */
+    @Override
+    public RangeDTO getRangeFromSheet(String sheetName, String name) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Range range = currentSheet.getRange(name);
+        if (range != null) {
+            return dtoFactory.createRangeDTO(range);
+        } else {
+            throw new IllegalArgumentException("Range not found: " + name);
         }
     }
 
+    /**
+     * Retrieves all ranges from the sheet as DTOs.
+     */
+    @Override
+    public Collection<RangeDTO> getAllRangesFromSheet(String sheetName) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Collection<Range> ranges = currentSheet.getAllRanges();
+        return ranges.stream()
+                .map(dtoFactory::createRangeDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Sorts a range by specified columns and returns the sorted sheet as a DTO.
+     */
+    @Override
+    public SheetDTO sortSheetRangeByColumns(String sheetName, String range, String[] columns) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Sheet sortedSheet = currentSheet.sortSheet(range, columns);
+        return dtoFactory.createSheetDTO(sortedSheet);
+    }
+
+    /**
+     * Gets unique values in a range column.
+     */
+    @Override
+    public List<String> getUniqueValuesInRangeColumn(String sheetName, String range, String column) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        return currentSheet.getUniqueValuesInRangeColumn(range, column);
+    }
+
+    /**
+     * Filters a sheet by values and returns the filtered sheet as a DTO.
+     */
+    @Override
+    public SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Sheet filteredSheet = currentSheet.filterSheetByValues(range, column, selectedValues, originalRowNumbers);
+        return dtoFactory.createSheetDTO(filteredSheet);
+    }
+
+
+
+
+    /**
+     * Exits the application.
+     */
     @Override
     public void exit() {
         System.exit(0);
     }
 
     @Override
-    public void addRangeToSheet(String name, String range) {
-        Sheet currentSheet = getCurrentSheet();
-        currentSheet.addRange(name, range);
-    }
-    @Override
-    public void deleteRangeFromSheet(String name) {
-        Sheet currentSheet = getCurrentSheet();
-        currentSheet.deleteRange(name);
-    }
-    @Override
-    public Range getRangeFromSheet(String name) {
-        Sheet currentSheet = getCurrentSheet();
-        return currentSheet.getRange(name);
-    }
-    @Override
-    public Collection<Range> getAllRangesFromSheet() {
-        Sheet currentSheet = getCurrentSheet();
-        return currentSheet.getAllRanges();
-    }
-     // Sorts a sheet range by specified columns.
-    @Override
-    public Sheet sortSheetRangeByColumns(String range, String[] columns) {
-        Sheet currentSheet = getCurrentSheet();
-
-        Sheet sortSheet = currentSheet.sortSheet(range, columns);
-
-        return sortSheet;
-    }
-//Gets unique values in a range column.
-    @Override
-    public List<String> getUniqueValuesInRangeColumn(String range, String column) {
-        Sheet currentSheet = getCurrentSheet();
-        return currentSheet.getUniqueValuesInRangeColumn(range, column);
+    public SheetDTO getSheetDTOByVersion(String sheetName, int versionNumber) {
+            if (!allSheets.get(sheetName).containsKey(versionNumber)) {
+                throw new IllegalArgumentException("Invalid version number: " + versionNumber);
+            }
+            return dtoFactory.createSheetDTO(allSheets.get(sheetName).get(versionNumber));
     }
 
+    /**
+     * Retrieves the current sheet as a DTO.
+     */
     @Override
-    public Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
-        Sheet currentSheet = getCurrentSheet();
-        return currentSheet.filterSheetByValues(range, column, selectedValues, originalRowNumbers);
+    public SheetDTO getCurrentSheetDTO(String sheetName) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        return dtoFactory.createSheetDTO(currentSheet);
     }
 
+
+    private Coordinate parseCellId(String cellId) {
+        int row = extractRowFromCoordinate(cellId);
+        int column = extractColumnFromCoordinate(cellId);
+        return new CoordinateImpl(row, column);
+    }
+
+
+    @Override
+    public void updateCellBackgroundColor(String sheetName, String cellId, String colorHex) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Coordinate coordinate = parseCellId(cellId);
+        validateCoordinate(currentSheet, coordinate);
+
+        Cell cell = currentSheet.getCell(coordinate);
+        if (cell == null) {
+            throw new IllegalArgumentException("Cell " + cellId + " does not exist.");
+        }
+
+        // Update the cell's background color
+        cell.setBackgroundColor(colorHex);
+
+    }
+
+
+    @Override
+    public void updateCellTextColor(String sheetName, String cellId, String colorHex) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Coordinate coordinate = parseCellId(cellId);
+        validateCoordinate(currentSheet, coordinate);
+
+        Cell cell = currentSheet.getCell(coordinate);
+        if (cell == null) {
+            throw new IllegalArgumentException("Cell " + cellId + " does not exist.");
+        }
+
+        // Update the cell's text color
+        cell.setTextColor(colorHex);
+
+    }
+
+    @Override
+    public void resetCellDesign(String sheetName, String cellId) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        Coordinate coordinate = parseCellId(cellId);
+        validateCoordinate(currentSheet, coordinate);
+
+        Cell cell = currentSheet.getCell(coordinate);
+        if (cell == null) {
+            throw new IllegalArgumentException("Cell " + cellId + " does not exist.");
+        }
+
+        // Reset the cell's text and background colors to default
+        cell.setTextColor("#000000");       // Black text
+        cell.setBackgroundColor("#FFFFFF"); // White background
+
+    }
+
+
+    @Override
+    public Collection<SheetSummaryDTO> getAllSheetsSummary(String currentUserName) {
+        List<SheetSummaryDTO> sheetSummaryDTOs = new ArrayList<>();
+        for (Map.Entry<String, Map<Integer, Sheet>> entry : allSheets.entrySet()) {
+            String sheetName = entry.getKey();
+            int currentVersion = currentSheetVersions.get(sheetName);
+            Sheet currentSheet = entry.getValue().get(currentVersion);
+
+            PermissionType permissionType = getPermissionsManager(sheetName).getUserPermission(currentUserName);
+
+            String size = currentSheet.getRows() + "x" + currentSheet.getCols();
+            SheetSummaryDTO summaryDTO = new SheetSummaryDTO(
+                    currentSheet.getName(),
+                    currentSheet.getOwner(),
+                    size,
+                    permissionType.toString()
+            );
+            sheetSummaryDTOs.add(summaryDTO);
+        }
+        return sheetSummaryDTOs;
+    }
+
+    @Override
+    public void submitPermissionRequest(String sheetName, String requesterUsername, PermissionType requestedPermission) {
+        PermissionsManager permissionsManager = getPermissionsManager(sheetName);
+        permissionsManager.submitPermissionRequest(requesterUsername, requestedPermission);
+    }
+    @Override
+    public List<PermissionRequest> getPermissionRequests(String sheetName) {
+        PermissionsManager permissionsManager = getPermissionsManager(sheetName);
+        return permissionsManager.getPermissionRequests();
+    }
+    @Override
+    public void handlePermissionRequest(String sheetName, int requestIndex, String approverUsername, PermissionStatus status) {
+        PermissionsManager permissionsManager = getPermissionsManager(sheetName);
+        permissionsManager.handlePermissionRequest(requestIndex, approverUsername, status);
+    }
+    @Override
+    public void handleResponseRequest(String sheetName, String requesterUsername, String approverUsername, PermissionStatus status) {
+        PermissionsManager permissionsManager = getPermissionsManager(sheetName);
+
+        // מציאת הבקשה לפי שם המשתמש המבקש
+        List<PermissionRequest> requests = permissionsManager.getPermissionRequests();
+        Optional<PermissionRequest> requestOptional = requests.stream()
+                .filter(request -> request.getUsername().equals(requesterUsername) && request.getStatus() == PermissionStatus.PENDING)
+                .findFirst();
+
+        if (requestOptional.isEmpty()) {
+            throw new IllegalArgumentException("No pending request found for user '" + requesterUsername + "' in sheet '" + sheetName + "'.");
+        }
+
+        PermissionRequest request = requestOptional.get();
+        if (!approverUsername.equals(permissionsManager.getOwnerUsername())) {
+            throw new IllegalArgumentException("Only the owner can handle permission requests.");
+        }
+
+        // עדכון הסטטוס של הבקשה
+        request.setStatus(status);
+
+    }
+
+    @Override
+    public List<PermissionRequestDTO> getPermissionRequestsDTO(String sheetName) {
+        PermissionsManager permissionsManager = getPermissionsManager(sheetName);
+        return permissionsManager.getPermissionRequests().stream()
+                .map(request -> new PermissionRequestDTOImpl(
+                        request.getUsername(),
+                        sheetName, // הוספת שם הגיליון
+                        request.getRequestedPermission(),
+                        request.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PermissionRequestDTO> getPendingRequestsForOwner(String ownerUsername) {
+        List<PermissionRequestDTO> pendingRequests = new ArrayList<>();
+
+        for (Map.Entry<String, PermissionsManager> entry : permissionsManagers.entrySet()) {
+            String sheetName = entry.getKey();
+            PermissionsManager permissionsManager = entry.getValue();
+
+            if (permissionsManager.getOwnerUsername().equals(ownerUsername)) {
+                List<PermissionRequest> requests = permissionsManager.getPermissionRequests();
+                for (PermissionRequest request : requests) {
+                    if (request.getStatus() == PermissionStatus.PENDING) {
+                        PermissionRequestDTO requestDTO = new PermissionRequestDTOImpl(
+                                request.getUsername(),
+                                sheetName,  // הוספת שם הגיליון
+                                request.getRequestedPermission(),
+                                request.getStatus()
+                        );
+                        pendingRequests.add(requestDTO);
+                    }
+                }
+            }
+        }
+
+        return pendingRequests;
+    }
 
 }

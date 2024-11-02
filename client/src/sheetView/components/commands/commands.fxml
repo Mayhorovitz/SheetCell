@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox alignment="CENTER" prefWidth="200" spacing="10" style="-fx-padding: 10; -fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.commands.CommandsController">
+
+    <!-- Column and Row Size Controls with Spinner -->
+    <HBox alignment="CENTER_LEFT" prefHeight="20.0" prefWidth="177.0" spacing="10">
+        <Label prefHeight="17.0" prefWidth="135.0" text="Column Width" />
+        <Spinner fx:id="columnWidthSpinner" initialValue="10" max="100" min="1" onMouseReleased="#handleSetColumnWidth" prefHeight="25.0" prefWidth="100.0" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" prefHeight="20.0" prefWidth="177.0" spacing="10">
+        <Label prefHeight="17.0" prefWidth="135.0" text="Row Height" />
+        <Spinner fx:id="rowHeightSpinner" initialValue="10" max="100" min="1" onMouseReleased="#handleSetRowHeight" prefHeight="25.0" prefWidth="100.0" />
+    </HBox>
+
+    <!-- Alignment ComboBox -->
+    <HBox alignment="CENTER_LEFT" prefHeight="15.0" prefWidth="177.0" spacing="10">
+        <Label prefHeight="17.0" prefWidth="135.0" text="Text Alignment" />
+        <ComboBox fx:id="alignmentComboBox" onAction="#handleSetColumnAlignment" prefWidth="100.0" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" minHeight="30.0" prefHeight="32.0" prefWidth="177.0" spacing="10">
+        <Label prefHeight="17.0" prefWidth="91.0" text="Background Color" />
+        <ColorPicker fx:id="bgColorPicker" onAction="#handleApplyBackgroundColor" prefHeight="30.0" prefWidth="81.0" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" minHeight="30.0" prefHeight="33.0" prefWidth="177.0" spacing="10">
+        <Label prefHeight="17.0" prefWidth="91.0" text="Text Color" />
+        <ColorPicker fx:id="textColorPicker" onAction="#handleApplyTextColor" prefHeight="30.0" prefWidth="81.0" />
+    </HBox>
+
+    <!-- Reset Cell Design Button -->
+    <Button onAction="#handleResetCellDesign" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Reset Cell Design" />
+   <HBox prefHeight="0.0" prefWidth="250.0">
+      <children>
+         <Button onAction="#handleSortButton" prefHeight="25.0" prefWidth="100.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="sort">
+            <HBox.margin>
+               <Insets left="10.0" />
+            </HBox.margin>
+         </Button>
+         <Button onAction="#handleFilterButton" prefHeight="28.0" prefWidth="100.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="filter" textAlignment="CENTER">
+            <HBox.margin>
+               <Insets left="50.0" right="10.0" />
+            </HBox.margin>
+         </Button>
+      </children>
+   </HBox>
+
+</VBox>

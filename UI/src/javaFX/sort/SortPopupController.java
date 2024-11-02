@@ -1,5 +1,6 @@
 package javaFX.sort;
 
+import dto.api.SheetDTO;
 import engine.api.Engine;
 import javaFX.main.UIModel;
 import javaFX.readOnlyPopup.ReadOnlyPopupController;
@@ -12,8 +13,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import sheet.api.Sheet;
 
+/**
+ * Controller for the sort popup, allowing users to sort data within a range.
+ */
 public class SortPopupController {
 
     @FXML
@@ -21,7 +24,7 @@ public class SortPopupController {
     @FXML
     private TextField columnsTextField;  // TextField for columns input
     @FXML
-    private Button Sort;
+    private Button sortButton;
 
     private SheetController sheetController;
     private Engine engine;
@@ -42,33 +45,32 @@ public class SortPopupController {
             String[] columnArray = columns.split(",");
 
             try {
-                // נסה למיין את הגיליון
-                Sheet sortedSheet = engine.sortSheetRangeByColumns(range, columnArray);
+                SheetDTO sortedSheetDTO = engine.sortSheetRangeByColumns(range, columnArray);
 
-                // פתח את חלון הפופ-אפ להצגת הגיליון הממויין
+                // Open the ReadOnlyPopup to display the sorted sheet
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/readOnlyPopup/readOnlyPopup.fxml"));
                 VBox root = loader.load();
 
                 ReadOnlyPopupController popupController = loader.getController();
                 popupController.setEngine(engine);
                 popupController.setUiModel(uiModel);
-                popupController.setSheetToDisplay(sortedSheet);  // הגדר את הגיליון הממויין להצגה
+                popupController.setSheetToDisplay(sortedSheetDTO);
                 popupController.displaySheet();
 
                 Stage stage = new Stage();
                 stage.setTitle("Sorted Sheet - View Only");
-                stage.setScene(new Scene(root, 800, 600));  // קבע גודל רצוי
+                stage.setScene(new Scene(root, 800, 600));  // Set desired size
                 stage.show();
 
-                // סגור את חלון המיון
-                Stage currentStage = (Stage) Sort.getScene().getWindow();
+                // Close the sort popup
+                Stage currentStage = (Stage) sortButton.getScene().getWindow();
                 currentStage.close();
 
             } catch (Exception e) {
                 showError("Error sorting sheet: " + e.getMessage());
             }
         } else {
-            // טיפול בקלט לא חוקי
+            // Handle invalid input
             showError("Please enter valid range and columns.");
         }
     }
@@ -76,7 +78,7 @@ public class SortPopupController {
     // Utility method to show error alerts
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
+        alert.setTitle("Sort Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

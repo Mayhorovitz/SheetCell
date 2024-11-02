@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.MainController">
+
+    <!-- Top Section: Shticell Title, Load Button, and Version Selector -->
+    <top>
+        <VBox spacing="10">
+            <HBox>
+                <Label text="shticell" textOverrun="WORD_ELLIPSIS">
+                    <font>
+                        <Font name="Arial Black" size="16.0" />
+                    </font>
+                </Label>
+            </HBox>
+            <HBox alignment="CENTER" spacing="10">
+                <Label text="Version:" />
+                <ComboBox fx:id="versionSelector" onAction="#handleVersionSelection" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" />
+            </HBox>
+            <fx:include fx:id="actionLine" source="components/actionLine/actionLine.fxml" />
+        </VBox>
+    </top>
+
+    <!-- Left Section: Commands and Ranges -->
+    <left>
+        <VBox maxWidth="250" prefWidth="220">
+            <ScrollPane  fitToHeight="true" fitToWidth="true">
+                <content>
+                    <VBox spacing="10" fillWidth="true">
+                        <fx:include source="components/commands/commands.fxml" />
+                        <fx:include source="components/ranges/RangesComponent.fxml" />
+                    </VBox>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </left>
+
+    <!-- Center Section: Sheet Grid -->
+    <center>
+        <fx:include source="../sheet/sheet.fxml" />
+    </center>
+
+</BorderPane>

@@ -1,7 +1,8 @@
 package javaFX.sheet;
 
-import cell.api.Cell;
-import coordinate.Coordinate;
+import dto.api.CellDTO;
+import dto.api.RangeDTO;
+import dto.api.SheetDTO;
 import engine.api.Engine;
 import javaFX.main.MainController;
 import javaFX.main.UIModel;
@@ -12,43 +13,43 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import range.api.Range;
-import sheet.api.Sheet;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static coordinate.CoordinateFactory.createCoordinate;
-
+/**
+ * Controller for displaying and interacting with the spreadsheet grid.
+ */
 public class SheetController {
-
     private Engine engine;
     private MainController mainController;
-    private UIModel uiModel;  // Using UIModel to store dimensions
+    private UIModel uiModel;
     private int selectedRow = -1;
     private int selectedCol = -1;
-    private Cell lastSelectedCell = null;
+    private CellDTO lastSelectedCell = null;
+
     @FXML
-    private GridPane spreadsheetGrid;  // GridPane to display the sheet
+    private GridPane spreadsheetGrid;
     @FXML
-    private ScrollPane spreadsheetScrollPane;  // ScrollPane to enable scrolling
+    private ScrollPane spreadsheetScrollPane;
 
-    private final Map<String, Label> cellToLabel = new HashMap<>();  // Map to store cell labels for easy access
+    private final Map<String, Label> cellToLabel = new HashMap<>();
 
-    private Consumer<String> onCellSelected;  // Listener for cell selection
+    private Consumer<String> onCellSelected;
 
-    private boolean isReadOnly = false;  // Flag to indicate read-only mode
+    private boolean isReadOnly = false;
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
     }
-
     public void setEngine(Engine engine) {
         this.engine = engine;
     }
-
+    public Engine getEngine() {
+        return this.engine;
+    }
     public void setUiModel(UIModel uiModel) {
         this.uiModel = uiModel;
 
@@ -67,7 +68,9 @@ public class SheetController {
             }
         });
     }
-
+    public UIModel getUiModel() {
+        return this.uiModel;
+    }
     public void setOnCellSelected(Consumer<String> onCellSelected) {
         this.onCellSelected = onCellSelected;
     }
@@ -79,6 +82,7 @@ public class SheetController {
     public void setSpreadsheetGrid(GridPane gridPane) {
         this.spreadsheetGrid = gridPane;
     }
+
     public int getSelectedColumnIndex() {
         return selectedCol;
     }
@@ -87,31 +91,23 @@ public class SheetController {
         return selectedRow;
     }
 
-
-    public Engine getEngine() {
-        return this.engine;
-    }
-
-    public UIModel getUiModel() {
-        return this.uiModel;
-    }
-    public void displaySheet(Sheet sheet) {
+    public void displaySheet(SheetDTO sheetDTO) {
         if (spreadsheetGrid.getChildren().isEmpty()) {
             // Only initialize if the grid is empty
-            initializeSheet(sheet);
+            initializeSheet(sheetDTO);
         } else {
-            updateSheet(sheet);
+            updateSheet(sheetDTO);
         }
 
         spreadsheetScrollPane.setPannable(true);
     }
 
-    public void initializeSheet(Sheet sheet) {
+    public void initializeSheet(SheetDTO sheetDTO) {
         cellToLabel.clear();
         clearGridPane();
 
-        int numRows = sheet.getRows();
-        int numCols = sheet.getCols();
+        int numRows = sheetDTO.getRows();
+        int numCols = sheetDTO.getCols();
 
         spreadsheetGrid.setHgap(0);
         spreadsheetGrid.setVgap(0);
@@ -121,13 +117,13 @@ public class SheetController {
         spreadsheetGrid.setStyle("-fx-border-color: transparent;");
 
         // Get row height and column width from the sheet
-        int rowHeightFromSheet = sheet.getRowHeight();
-        int colWidthFromSheet = sheet.getColWidth();
+        int rowHeightFromSheet = sheetDTO.getRowHeight();
+        int colWidthFromSheet = sheetDTO.getColWidth();
 
         // Initialize rows and columns based on values from the sheet
         addColumnAndRowConstraints(numCols, colWidthFromSheet, numRows, rowHeightFromSheet);
         addColumnsAndRowHeaders(numCols, numRows);
-        populateSheetGrid(sheet, numCols, numRows);
+        populateSheetGrid(sheetDTO, numCols, numRows);
     }
 
     private void clearGridPane() {
@@ -139,12 +135,12 @@ public class SheetController {
         spreadsheetGrid.getRowConstraints().clear();
     }
 
-    private void updateSheet(Sheet sheet) {
-        int numRows = sheet.getRows();
-        int numCols = sheet.getCols();
+    private void updateSheet(SheetDTO sheetDTO) {
+        int numRows = sheetDTO.getRows();
+        int numCols = sheetDTO.getCols();
 
         // Update cells that have changed
-        populateSheetGrid(sheet, numCols, numRows);
+        populateSheetGrid(sheetDTO, numCols, numRows);
     }
 
     private void addColumnAndRowConstraints(int numCols, double colWidth, int numRows, double rowHeight) {
@@ -194,29 +190,30 @@ public class SheetController {
         }
     }
 
-    private void populateSheetGrid(Sheet sheet, int numCols, int numRows) {
+    private void populateSheetGrid(SheetDTO sheetDTO, int numCols, int numRows) {
+        Map<String, CellDTO> cells = sheetDTO.getCells();
+
         for (int row = 1; row <= numRows; row++) {
             for (int col = 1; col <= numCols; col++) {
                 String cellID = getColumnName(col) + row;
-                Coordinate coordinate = createCoordinate(row, col);
-                Cell cell = sheet.getCell(coordinate);
+                CellDTO cellDTO = cells.get(cellID);
 
                 if (cellToLabel.containsKey(cellID)) {
                     Label existingLabel = cellToLabel.get(cellID);
 
                     // Update the value and reapply style
-                    existingLabel.setText(cell != null ? cell.getEffectiveValue().toString() : "");
-                    applyCellStyle(cell, existingLabel);
+                    existingLabel.setText(cellDTO != null ? cellDTO.getEffectiveValue() : "");
+                    applyCellStyle(cellDTO, existingLabel);
 
                 } else {
                     // Create a new label if it doesn't exist
-                    Label cellLabel = new Label(cell != null ? cell.getEffectiveValue().toString() : "");
+                    Label cellLabel = new Label(cellDTO != null ? cellDTO.getEffectiveValue() : "");
                     cellLabel.setAlignment(Pos.CENTER);
 
                     cellLabel.setPrefHeight(uiModel.getRowHeight());
                     cellLabel.setPrefWidth(uiModel.getColWidth());
                     cellLabel.getStyleClass().add("cell");
-                    applyCellStyle(cell, cellLabel);
+                    applyCellStyle(cellDTO, cellLabel);
 
                     cellToLabel.put(cellID, cellLabel);
 
@@ -241,13 +238,13 @@ public class SheetController {
         }
     }
 
-    private void applyCellStyle(Cell cell, Label label) {
+    private void applyCellStyle(CellDTO cellDTO, Label label) {
         String borderStyle = "-fx-border-color: black; -fx-border-width: 1px;";
 
-        if (cell != null) {
+        if (cellDTO != null) {
             label.setStyle(String.format(
                     "-fx-background-color: %s; -fx-text-fill: %s; %s",
-                    cell.getBackgroundColor(), cell.getTextColor(), borderStyle
+                    cellDTO.getBackgroundColor(), cellDTO.getTextColor(), borderStyle
             ));
         } else {
             // Default to white background and black text, always with the border
@@ -265,12 +262,12 @@ public class SheetController {
         return columnName.toString();
     }
 
-    public void highlightDependenciesAndInfluences(Cell selectedCell) {
+    public void highlightDependenciesAndInfluences(CellDTO selectedCellDTO) {
         resetCellBorders();  // Reset previous highlights
-        if (selectedCell != null) {
-            lastSelectedCell = selectedCell;
-            highlightCells(selectedCell.getDependsOn(), "lightblue");
-            highlightCells(selectedCell.getInfluencingOn(), "lightgreen");
+        if (selectedCellDTO != null) {
+            lastSelectedCell = selectedCellDTO;
+            highlightCells(selectedCellDTO.getDependsOn(), "lightblue");
+            highlightCells(selectedCellDTO.getInfluencingOn(), "lightgreen");
         }
         Label selectedLabel = cellToLabel.get(getColumnName(selectedCol) + selectedRow);
         if (selectedLabel != null) {
@@ -279,9 +276,9 @@ public class SheetController {
         }
     }
 
-    private void highlightCells(List<Cell> cells, String color) {
-        for (Cell cell : cells) {
-            Label cellLabel = cellToLabel.get(getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow());
+    private void highlightCells(List<String> cellIds, String color) {
+        for (String cellId : cellIds) {
+            Label cellLabel = cellToLabel.get(cellId);
             if (cellLabel != null) {
                 String currentStyle = cellLabel.getStyle();
                 String newStyle = currentStyle + ";-fx-border-color:" + color + ";-fx-border-width: 4px;-fx-border-style: dashed;";
@@ -297,9 +294,9 @@ public class SheetController {
         }
     }
 
-    public void clearHighlights(List<Cell> cells) {
-        for (Cell cell : cells) {
-            Label cellLabel = cellToLabel.get(getColumnName(cell.getCoordinate().getColumn()) + cell.getCoordinate().getRow());
+    public void clearHighlights(List<String> cellIds) {
+        for (String cellId : cellIds) {
+            Label cellLabel = cellToLabel.get(cellId);
             if (cellLabel != null) {
                 String currentStyle = cellLabel.getStyle()
                         .replaceAll("-fx-border-color:.*?;", "")
@@ -322,9 +319,8 @@ public class SheetController {
     }
 
     // Highlight a specific cell with a style
-    private void highlightCell(Coordinate cell, String style) {
-        String cellID = getColumnName(cell.getColumn()) + cell.getRow();
-        Label cellLabel = cellToLabel.get(cellID);
+    private void highlightCell(String cellId, String style) {
+        Label cellLabel = cellToLabel.get(cellId);
         if (cellLabel != null) {
             cellLabel.setStyle(cellLabel.getStyle() + style);
         }
@@ -333,14 +329,15 @@ public class SheetController {
     public void applyBackgroundColorToSelectedCell(Color color) {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
-            Cell selectedCell = engine.getCurrentSheet().getCell(createCoordinate(selectedRow, selectedCol));
-            selectedCell.setBackgroundColor(toHexString(color));  // Save color in the cell object
+            String colorHex = toHexString(color);
+            // Notify the engine to update the cell's background color
+            mainController.getEngine().updateCellBackgroundColor(cellID, colorHex);
 
             Label selectedLabel = cellToLabel.get(cellID);
             if (selectedLabel != null) {
                 // Keep existing styles, just append the background color
                 String currentStyle = selectedLabel.getStyle();
-                selectedLabel.setStyle(currentStyle + "-fx-background-color: " + toHexString(color) + ";");
+                selectedLabel.setStyle(currentStyle + "-fx-background-color: " + colorHex + ";");
             }
         }
     }
@@ -348,14 +345,15 @@ public class SheetController {
     public void applyTextColorToSelectedCell(Color color) {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
-            Cell selectedCell = engine.getCurrentSheet().getCell(createCoordinate(selectedRow, selectedCol));
-            selectedCell.setTextColor(toHexString(color));  // Save color in the cell object
+            String colorHex = toHexString(color);
+            // Notify the engine to update the cell's text color
+            mainController.getEngine().updateCellTextColor(cellID, colorHex);
 
             Label selectedLabel = cellToLabel.get(cellID);
             if (selectedLabel != null) {
                 // Keep existing styles, just append the text color
                 String currentStyle = selectedLabel.getStyle();
-                selectedLabel.setStyle(currentStyle + "-fx-text-fill: " + toHexString(color) + ";");
+                selectedLabel.setStyle(currentStyle + "-fx-text-fill: " + colorHex + ";");
             }
         }
     }
@@ -382,9 +380,6 @@ public class SheetController {
         }
     }
 
-
-
-
     public void setColumnAlignment(int colIndex, String alignment) {
         Pos pos;
         switch (alignment) {
@@ -409,51 +404,42 @@ public class SheetController {
 
     public void resetCellDesign() {
         if (selectedRow != -1 && selectedCol != -1) {
-            Coordinate coordinate = createCoordinate(selectedRow, selectedCol);
-            Cell selectedCell = engine.getCurrentSheet().getCell(coordinate);
-
-            // Reset the cell's colors to default (black text, white background)
-            selectedCell.setTextColor(toHexString(Color.BLACK));
-            selectedCell.setBackgroundColor(toHexString(Color.WHITE));
+            String cellID = getColumnName(selectedCol) + selectedRow;
+            // Notify the engine to reset the cell's design
+            mainController.getEngine().resetCellDesign(cellID);
 
             // Update the specific cell's appearance in the grid
-            spreadsheetGrid.getChildren().stream()
-                    .filter(node -> GridPane.getRowIndex(node) == selectedRow && GridPane.getColumnIndex(node) == selectedCol)
-                    .findFirst()
-                    .ifPresent(node -> {
-                        if (node instanceof Label) {
-                            Label cellLabel = (Label) node;
-                            // Apply the default black text and white background
-                            String currentStyle = cellLabel.getStyle();
-                            // Replace only the text color and background, without affecting other styles
-                            currentStyle = currentStyle.replaceAll("-fx-text-fill:.*?;", "");
-                            currentStyle = currentStyle.replaceAll("-fx-background-color:.*?;", "");
-                            cellLabel.setStyle(currentStyle + "-fx-text-fill: black; -fx-background-color: white;");
-                        }
-                    });
+            Label cellLabel = cellToLabel.get(cellID);
+            if (cellLabel != null) {
+                String currentStyle = cellLabel.getStyle();
+                // Replace only the text color and background, without affecting other styles
+                currentStyle = currentStyle.replaceAll("-fx-text-fill:.*?;", "");
+                currentStyle = currentStyle.replaceAll("-fx-background-color:.*?;", "");
+                cellLabel.setStyle(currentStyle + "-fx-text-fill: black; -fx-background-color: white;");
+            }
         }
     }
 
-    public void highlightRange(Range range) {
+    public void highlightRange(RangeDTO rangeDTO) {
         // First, reset any previously highlighted range
         resetRangeHighlight();
 
         // Extract the start and end coordinates of the range
-        Coordinate start = createCoordinate(range.getFrom());
-        Coordinate end = createCoordinate(range.getTo());
+        String startCellId = rangeDTO.getFrom();
+        String endCellId = rangeDTO.getTo();
 
-        int startRow = start.getRow();
-        int startCol = start.getColumn();
-        int endRow = end.getRow();
-        int endCol = end.getColumn();
+        int startRow = extractRowFromCellId(startCellId);
+        int startCol = extractColumnFromCellId(startCellId);
+        int endRow = extractRowFromCellId(endCellId);
+        int endCol = extractColumnFromCellId(endCellId);
 
         // Loop through all the cells in the range and highlight them
         for (int row = startRow; row <= endRow; row++) {
             for (int col = startCol; col <= endCol; col++) {
-                Coordinate cellCoordinate = createCoordinate(row, col);
+                String cellId = getColumnName(col) + row;
 
                 // Apply the highlight style
-                highlightCell(cellCoordinate, "-fx-border-color: #00ffcc; -fx-border-width: 2px; -fx-background-color: rgba(0,255,204,0.28);");
+                highlightCell(cellId, "-fx-border-color: #00ffcc; -fx-border-width: 2px; -fx-background-color: rgba(0,255,204,0.28);");
             }
         }
     }
@@ -468,21 +454,20 @@ public class SheetController {
         });
     }
 
-
-    public void initializeFilterSheet(Sheet sheetToDisplay) {
+    public void initializeFilterSheet(SheetDTO sheetDTO) {
         cellToLabel.clear();
         clearGridPane();
 
-        Map<Coordinate, Cell> activeCells = sheetToDisplay.getActiveCells();
+        Map<String, CellDTO> activeCells = sheetDTO.getCells();
 
         int minRow = Integer.MAX_VALUE;
         int maxRow = Integer.MIN_VALUE;
         int minCol = Integer.MAX_VALUE;
         int maxCol = Integer.MIN_VALUE;
 
-        for (Coordinate coord : activeCells.keySet()) {
-            int row = coord.getRow();
-            int col = coord.getColumn();
+        for (String cellId : activeCells.keySet()) {
+            int row = extractRowFromCellId(cellId);
+            int col = extractColumnFromCellId(cellId);
             if (row < minRow) minRow = row;
             if (row > maxRow) maxRow = row;
             if (col < minCol) minCol = col;
@@ -501,13 +486,13 @@ public class SheetController {
         spreadsheetGrid.setStyle("-fx-border-color: transparent;");
 
         // Get row height and column width from the sheet
-        int rowHeightFromSheet = sheetToDisplay.getRowHeight();
-        int colWidthFromSheet = sheetToDisplay.getColWidth();
+        int rowHeightFromSheet = sheetDTO.getRowHeight();
+        int colWidthFromSheet = sheetDTO.getColWidth();
 
         // Initialize rows and columns based on values from the sheet
         addColumnAndRowConstraints(numCols, colWidthFromSheet, numRows, rowHeightFromSheet);
         addFilterColumnsAndRowHeaders(minCol, maxCol, minRow, maxRow);
-        populateFilterSheetGrid(sheetToDisplay, numCols, numRows);
+        populateFilterSheetGrid(sheetDTO, numCols, numRows, minCol, minRow);
     }
 
     private void addFilterColumnsAndRowHeaders(int minCol, int maxCol, int minRow, int maxRow) {
@@ -531,66 +516,33 @@ public class SheetController {
         }
     }
 
-
-    private void populateFilterSheetGrid(Sheet sheet, int numCols, int numRows) {
-        Map<Coordinate, Cell> activeCells = sheet.getActiveCells();
-
-        int minRow = Integer.MAX_VALUE;
-        int maxRow = Integer.MIN_VALUE;
-        int minCol = Integer.MAX_VALUE;
-        int maxCol = Integer.MIN_VALUE;
-
-        for (Coordinate coord : activeCells.keySet()) {
-            int row = coord.getRow();
-            int col = coord.getColumn();
-            if (row < minRow) minRow = row;
-            if (row > maxRow) maxRow = row;
-            if (col < minCol) minCol = col;
-            if (col > maxCol) maxCol = col;
-        }
+    private void populateFilterSheetGrid(SheetDTO sheetDTO, int numCols, int numRows, int minCol, int minRow) {
+        Map<String, CellDTO> activeCells = sheetDTO.getCells();
 
         // Build the column and row headers using original indices
-        for (int col = minCol; col <= maxCol; col++) {
-            Label colHeader = new Label(getColumnName(col));
-            colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setPrefWidth(uiModel.getColWidth()); // Match column width
-            colHeader.setPrefHeight(uiModel.getRowHeight()); // Match row height
-            colHeader.setAlignment(Pos.CENTER); // Center the text
-            spreadsheetGrid.add(colHeader, col - minCol + 1, 0);  // Add column headers at the top (row 0)
-        }
+        for (String cellId : activeCells.keySet()) {
+            int row = extractRowFromCellId(cellId);
+            int col = extractColumnFromCellId(cellId);
+            int rowIndex = row - minRow + 1;
+            int colIndex = col - minCol + 1;
 
-        // Adding row headers (original row numbers)
-        for (int row = minRow; row <= maxRow; row++) {
-            Label rowHeader = new Label(String.valueOf(row));
-            rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setPrefWidth(uiModel.getColWidth()); // Match column width
-            rowHeader.setPrefHeight(uiModel.getRowHeight()); // Match row height
-            rowHeader.setAlignment(Pos.CENTER); // Center the text
-            spreadsheetGrid.add(rowHeader, 0, row - minRow + 1);  // Add row headers on the left (column 0)
-        }
+            CellDTO cellDTO = activeCells.get(cellId);
 
-        // Populate the cells
-        for (Cell cell : activeCells.values()) {
-            Coordinate coord = cell.getCoordinate();
-            int rowIndex = coord.getRow() - minRow + 1;
-            int colIndex = coord.getColumn() - minCol + 1;
-            String cellID = getColumnName(coord.getColumn()) + coord.getRow();
-
-            Label cellLabel = new Label(cell.getEffectiveValue().toString());
+            Label cellLabel = new Label(cellDTO.getEffectiveValue());
             cellLabel.setAlignment(Pos.CENTER);
 
             // Set cell dimensions based on the UI model
             cellLabel.setPrefHeight(uiModel.getRowHeight());
             cellLabel.setPrefWidth(uiModel.getColWidth());
             cellLabel.getStyleClass().add("cell");
-            applyCellStyle(cell, cellLabel);
-            cellToLabel.put(cellID, cellLabel);
+            applyCellStyle(cellDTO, cellLabel);
+            cellToLabel.put(cellId, cellLabel);
 
             spreadsheetGrid.add(cellLabel, colIndex, rowIndex);
 
             // Add listener for clicks on the cell
-            final int finalRow = coord.getRow();
-            final int finalCol = coord.getColumn();
+            final int finalRow = row;
+            final int finalCol = col;
             cellLabel.setOnMouseClicked(event -> {
                 selectedRow = finalRow;
                 selectedCol = finalCol;
@@ -605,6 +557,24 @@ public class SheetController {
                 }
             });
         }
+    }
+
+    private int extractRowFromCellId(String cellId) {
+        String rowPart = cellId.replaceAll("[^0-9]", "");
+        return Integer.parseInt(rowPart);
+    }
+
+    private int extractColumnFromCellId(String cellId) {
+        String columnPart = cellId.replaceAll("[^A-Za-z]", "");
+        return convertColumnToIndex(columnPart);
+    }
+
+    private int convertColumnToIndex(String column) {
+        int result = 0;
+        for (char c : column.toUpperCase().toCharArray()) {
+            result = result * 26 + (c - 'A' + 1);
+        }
+        return result;
     }
 
 }

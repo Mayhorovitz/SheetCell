@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="sheetsManagement.components.commands.PermissionsRequestsController" spacing="10" alignment="TOP_CENTER" prefWidth="400" prefHeight="300">
+    <children>
+        <Label text="Pending Permission Requests" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+
+        <TableView fx:id="permissionsRequestsTable" prefHeight="200">
+            <columns>
+                <TableColumn fx:id="usernameColumn" text="Username" prefWidth="100" />
+                <TableColumn fx:id="permissionTypeColumn" text="Permission Type" prefWidth="100" />
+                <TableColumn fx:id="sheetNameColumn" text="Sheet Name" prefWidth="150" />
+            </columns>
+        </TableView>
+
+        <HBox spacing="10" alignment="CENTER">
+            <Button fx:id="approveButton" text="Approve" />
+            <Button fx:id="denyButton" text="Deny" />
+            <Button text="Close" onAction="#handleClosePopup" />
+        </HBox>
+    </children>
+</VBox>

@@ -17,6 +17,7 @@ import static coordinate.CoordinateFactory.createCoordinate;
 
 public class SheetImpl implements Sheet, Serializable {
     private String name;
+    private String owner;
     private int version;
     private int rows;
     private int cols;
@@ -84,8 +85,23 @@ public class SheetImpl implements Sheet, Serializable {
         }
         this.colWidth = colWidth;
     }
+    // Setter for owner
+    public void setOwner(String owner) {
+        if (owner == null || owner.isEmpty()) {
+            throw new IllegalArgumentException("Owner name cannot be null or empty.");
+        }
+        this.owner = owner;
+    }
+
+
 
     // Getters
+
+    // Getter for owner
+    @Override
+    public String getOwner() {
+        return owner;
+    }
     public Map<Coordinate, Cell> getActiveCells() {
         return activeCells;
     }

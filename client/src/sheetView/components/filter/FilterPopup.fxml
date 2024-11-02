@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="sheetView.components.filter.FilterPopupController" alignment="CENTER" spacing="10" style="-fx-padding: 10;">
+
+    <Label text="Enter Range (e.g., A3..V9):" />
+    <TextField fx:id="rangeTextField" />
+
+    <Label text="Select Column to Filter By (e.g., A):" />
+    <TextField fx:id="columnTextField" />
+
+    <Button text="Load Values" onAction="#handleLoadValues" />
+
+    <!-- ScrollPane wrapping the valuesContainer -->
+    <ScrollPane maxHeight="200.0" prefHeight="200.0" fitToWidth="true">
+        <content>
+            <VBox fx:id="valuesContainer" spacing="5" />
+        </content>
+    </ScrollPane>
+
+    <Button text="Apply Filter" onAction="#handleApplyFilter" />
+
+</VBox>

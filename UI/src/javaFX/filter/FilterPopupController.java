@@ -1,5 +1,6 @@
 package javaFX.filter;
 
+import dto.api.SheetDTO;
 import engine.api.Engine;
 import javaFX.main.UIModel;
 import javaFX.readOnlyPopup.ReadOnlyPopupController;
@@ -12,12 +13,14 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import sheet.api.Sheet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Controller for the filter popup, allowing users to filter data based on column values.
+ */
 public class FilterPopupController {
 
     @FXML
@@ -30,7 +33,6 @@ public class FilterPopupController {
     private VBox valuesContainer;
 
     private List<Integer> originalRowNumbers = new ArrayList<>();
-
 
     private SheetController sheetController;
     private Engine engine;
@@ -91,7 +93,7 @@ public class FilterPopupController {
         }
 
         try {
-            Sheet filteredSheet = engine.filterSheetByValues(selectedRange, selectedColumn, selectedValues, originalRowNumbers);
+            SheetDTO filteredSheetDTO = engine.filterSheetByValues(selectedRange, selectedColumn, selectedValues, originalRowNumbers);
 
             // Open ReadOnlyPopup to display the filtered sheet
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/readOnlyPopup/readOnlyPopup.fxml"));
@@ -100,13 +102,9 @@ public class FilterPopupController {
             ReadOnlyPopupController popupController = loader.getController();
             popupController.setEngine(engine);
             popupController.setUiModel(uiModel);
-            popupController.setSheetToDisplay(filteredSheet);
+            popupController.setSheetToDisplay(filteredSheetDTO);
 
-            // העברת originalRowNumbers ל-ReadOnlyPopupController
-
-            popupController.displayFilterSheet();
-
-
+            popupController.displaySheet();
 
             Stage stage = new Stage();
             stage.setTitle("Filtered Sheet");

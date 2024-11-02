@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetsManagement.components.availableSheets.AvailableSheetsController">
+    <children>
+        <TableView fx:id="availableSheetsTable" layoutX="14.0" layoutY="14.0" prefHeight="200.0" prefWidth="400.0">
+            <columns>
+                <TableColumn fx:id="sheetNameColumn" text="Sheet Name" />
+                <TableColumn fx:id="ownerColumn" text="Owner" />
+                <TableColumn fx:id="sheetSizeColumn" text="Size (nXm)" />
+                <TableColumn fx:id="permissionTypeColumn" text="Permission Type" />
+            </columns>
+        </TableView>
+    </children>
+</AnchorPane>

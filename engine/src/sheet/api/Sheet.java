@@ -45,5 +45,7 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     Sheet sortSheet(String range, String[] columns);
     List<String> getUniqueValuesInRangeColumn(String range, String column);
 
+    void setOwner(String owner);
 
+    String getOwner();
 }

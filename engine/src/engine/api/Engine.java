@@ -1,38 +1,70 @@
 package engine.api;
 
 
-import cell.api.Cell;
-import engine.exceptions.InvalidVersionException;
-import range.api.Range;
-import sheet.api.Sheet;
+import dto.api.CellDTO;
+import dto.api.PermissionRequestDTO;
+import dto.api.RangeDTO;
+import dto.api.SheetDTO;
+import dto.impl.SheetSummaryDTO;
+import permission.PermissionRequest;
+import permission.PermissionStatus;
+import permission.PermissionType;
+import permission.PermissionsManager;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
 public interface Engine {
 
-    void loadFile(String filePath) throws Exception;
-    void saveSystemState(String filePath) throws IOException;
-    void loadSystemState(String filePath) throws IOException, ClassNotFoundException;
-    Sheet getCurrentSheet();
-    Cell getCellInfo(String cellIdentifier);
-    void updateCell(String cellId, String newValue);
-    int getCurrentSheetVersion();
-    Sheet getSheetByVersion(int version) throws InvalidVersionException;
+    void loadFile(InputStream inputStream, String owner) throws Exception;
+
+    int getCurrentSheetVersion(String sheetName);
+
+    void updateCell(String sheetName, String coordinate, String newValue);
+
+    CellDTO getCellInfo(String sheetName, String cellIdentifier);
+
+    void addRangeToSheet(String sheetName, String name, String range);
+
+    void deleteRangeFromSheet(String sheetName, String name);
+
+    RangeDTO getRangeFromSheet(String sheetName, String name);
+
+    Collection<RangeDTO> getAllRangesFromSheet(String sheetName);
+
+    SheetDTO sortSheetRangeByColumns(String sheetName, String range, String[] columns);
+
+    List<String> getUniqueValuesInRangeColumn(String sheetName, String range, String column);
+
+    SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers);
+
     void exit();
 
-    void addRangeToSheet(String name, String range);
+    SheetDTO getSheetDTOByVersion(String sheetName, int versionNumber);
 
-    void deleteRangeFromSheet(String name);
-    Range getRangeFromSheet(String name);
-    Collection<Range> getAllRangesFromSheet();
-    int convertColumnToIndex(String colPart);
+    SheetDTO getCurrentSheetDTO(String sheetName);
 
-    Sheet sortSheetRangeByColumns(String range, String[] columns);
+    void updateCellBackgroundColor(String sheetName, String cellId, String colorHex);
+
+    void updateCellTextColor(String sheetName, String cellId, String colorHex);
+
+    void resetCellDesign(String sheetName, String cellId);
+
+    PermissionsManager getPermissionsManager(String sheetName);
 
 
-    List<String> getUniqueValuesInRangeColumn(String range, String column);
+    Collection<SheetSummaryDTO> getAllSheetsSummary(String currentUserName);
 
-    Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers);
+    void submitPermissionRequest(String sheetName, String requesterUsername, PermissionType requestedPermission);
+
+    List<PermissionRequest> getPermissionRequests(String sheetName);
+
+    void handlePermissionRequest(String sheetName, int requestIndex, String approverUsername, PermissionStatus status);
+
+    void handleResponseRequest(String sheetName, String requesterUsername, String approverUsername, PermissionStatus status);
+
+    List<PermissionRequestDTO> getPermissionRequestsDTO(String sheetName);
+
+    List<PermissionRequestDTO> getPendingRequestsForOwner(String ownerUsername);
 }

@@ -1,6 +1,6 @@
 package javaFX.actionLine;
 
-import cell.api.Cell;
+import dto.api.CellDTO;
 import engine.api.Engine;
 import javaFX.main.MainController;
 import javafx.fxml.FXML;
@@ -8,28 +8,31 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 
+/**
+ * Controller for the action line, allowing users to view and edit cell values.
+ */
 public class ActionLineController {
 
     private Engine engine;
 
     @FXML
-    private Label selectedCellId;
+    private Label selectedCellId;  // Label to display selected cell ID
 
     @FXML
-    private Label originalValueLabel;
+    private Label originalValueLabel;  // Label to display original value
 
     @FXML
-    private TextField newValueField;
+    private TextField newValueField;  // TextField for editing new value
 
     @FXML
-    private Label lastUpdateCellVersion;
+    private Label lastUpdateCellVersion;  // Label to display last update version
 
     @FXML
-    private Button updateButton;
+    private Button updateButton;  // Update Cell button
 
     private MainController mainController;
 
-    private boolean isReadOnly = false;
+    private boolean isReadOnly = false;  // Flag to indicate read-only mode
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
@@ -39,14 +42,14 @@ public class ActionLineController {
         this.engine = engine;
     }
 
-    public void updateActionLine(Cell selectedCell, String cellId) {
-        if (selectedCell != null) {
-            selectedCellId.setText(selectedCell.getCoordinate().toString());
-            originalValueLabel.setText(selectedCell.getOriginalValue());
+    public void updateActionLine(CellDTO selectedCellDTO) {
+        if (selectedCellDTO != null) {
+            selectedCellId.setText(selectedCellDTO.getIdentity());
+            originalValueLabel.setText(selectedCellDTO.getOriginalValue());
             newValueField.setText("");
-            lastUpdateCellVersion.setText(String.valueOf(selectedCell.getVersion()));
+            lastUpdateCellVersion.setText(String.valueOf(selectedCellDTO.getVersion()));
         } else {
-            selectedCellId.setText(cellId);
+            selectedCellId.setText("");
             originalValueLabel.setText("");
             newValueField.setText("");
             lastUpdateCellVersion.setText("N/A");
@@ -58,7 +61,9 @@ public class ActionLineController {
         String newValue = newValueField.getText();
         String selectedCell = selectedCellId.getText();
 
-        mainController.handleUpdateCell(newValue, selectedCell);
+        if (mainController != null) {
+            mainController.handleUpdateCell(newValue, selectedCell);
+        }
     }
 
     public void setReadOnly(boolean readOnly) {
@@ -84,6 +89,8 @@ public class ActionLineController {
 
     // Function to display an error (if needed)
     private void showErrorAlert(String message) {
-        mainController.showErrorAlert("Error: " + message);
+        if (mainController != null) {
+            mainController.showErrorAlert("Error: " + message);
+        }
     }
 }
