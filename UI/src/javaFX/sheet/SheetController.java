@@ -1,8 +1,6 @@
 package javaFX.sheet;
 
-import dto.api.CellDTO;
-import dto.api.RangeDTO;
-import dto.api.SheetDTO;
+
 import engine.api.Engine;
 import javaFX.main.MainController;
 import javaFX.main.UIModel;
@@ -28,7 +26,7 @@ public class SheetController {
     private UIModel uiModel;
     private int selectedRow = -1;
     private int selectedCol = -1;
-    private CellDTO lastSelectedCell = null;
+    private CellDTOImpl lastSelectedCell = null;
 
     @FXML
     private GridPane spreadsheetGrid;
@@ -191,12 +189,12 @@ public class SheetController {
     }
 
     private void populateSheetGrid(SheetDTO sheetDTO, int numCols, int numRows) {
-        Map<String, CellDTO> cells = sheetDTO.getCells();
+        Map<String, CellDTOImpl> cells = sheetDTO.getCells();
 
         for (int row = 1; row <= numRows; row++) {
             for (int col = 1; col <= numCols; col++) {
                 String cellID = getColumnName(col) + row;
-                CellDTO cellDTO = cells.get(cellID);
+                CellDTOImpl cellDTO = cells.get(cellID);
 
                 if (cellToLabel.containsKey(cellID)) {
                     Label existingLabel = cellToLabel.get(cellID);
@@ -238,7 +236,7 @@ public class SheetController {
         }
     }
 
-    private void applyCellStyle(CellDTO cellDTO, Label label) {
+    private void applyCellStyle(CellDTOImpl cellDTO, Label label) {
         String borderStyle = "-fx-border-color: black; -fx-border-width: 1px;";
 
         if (cellDTO != null) {
@@ -262,7 +260,7 @@ public class SheetController {
         return columnName.toString();
     }
 
-    public void highlightDependenciesAndInfluences(CellDTO selectedCellDTO) {
+    public void highlightDependenciesAndInfluences(CellDTOImpl selectedCellDTO) {
         resetCellBorders();  // Reset previous highlights
         if (selectedCellDTO != null) {
             lastSelectedCell = selectedCellDTO;
@@ -458,7 +456,7 @@ public class SheetController {
         cellToLabel.clear();
         clearGridPane();
 
-        Map<String, CellDTO> activeCells = sheetDTO.getCells();
+        Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
 
         int minRow = Integer.MAX_VALUE;
         int maxRow = Integer.MIN_VALUE;
@@ -517,7 +515,7 @@ public class SheetController {
     }
 
     private void populateFilterSheetGrid(SheetDTO sheetDTO, int numCols, int numRows, int minCol, int minRow) {
-        Map<String, CellDTO> activeCells = sheetDTO.getCells();
+        Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
 
         // Build the column and row headers using original indices
         for (String cellId : activeCells.keySet()) {
@@ -526,7 +524,7 @@ public class SheetController {
             int rowIndex = row - minRow + 1;
             int colIndex = col - minCol + 1;
 
-            CellDTO cellDTO = activeCells.get(cellId);
+            CellDTOImpl cellDTO = activeCells.get(cellId);
 
             Label cellLabel = new Label(cellDTO.getEffectiveValue());
             cellLabel.setAlignment(Pos.CENTER);

@@ -2,11 +2,10 @@ package dto.impl;
 
 
 import coordinate.Coordinate;
-import dto.api.CellDTO;
 
 import java.util.List;
 
-public class CellDTOImpl implements CellDTO {
+public class CellDTOImpl implements dto.api.CellDTO {
     private String identity;
     private String originalValue;
     private String effectiveValue;

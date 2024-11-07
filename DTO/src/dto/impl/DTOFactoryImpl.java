@@ -2,9 +2,7 @@ package dto.impl;
 
 
 import cell.api.Cell;
-import dto.api.CellDTO;
 import dto.api.DTOFactory;
-import dto.api.RangeDTO;
 import dto.api.SheetDTO;
 import range.api.Range;
 import sheet.api.Sheet;
@@ -18,10 +16,17 @@ public class DTOFactoryImpl implements DTOFactory {
 
     @Override
     public SheetDTO createSheetDTO(Sheet sheet) {
-        Map<String, CellDTO> cellDTOs = sheet.getActiveCells().entrySet().stream()
+        // המרת התאים למפת CellDTOImpl
+        Map<String, CellDTOImpl> cellDTOs = sheet.getActiveCells().entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey().toString(),
                         e -> createCellDTO(e.getValue())
+                ));
+
+        Map<String, RangeDTOImpl> rangeDTOs = sheet.getAllRanges().stream()
+                .collect(Collectors.toMap(
+                        Range::getName,
+                        this::createRangeDTO
                 ));
 
         return new SheetDTOImpl(
@@ -32,11 +37,12 @@ public class DTOFactoryImpl implements DTOFactory {
                 sheet.getCols(),
                 sheet.getRowHeight(),
                 sheet.getColWidth(),
-                cellDTOs
+                cellDTOs,
+                rangeDTOs
         );
     }
 
-    public CellDTO createCellDTO(Cell cell) {
+    public CellDTOImpl createCellDTO(Cell cell) {
         List<String> dependsOnIds = cell.getDependsOn().stream()
                 .map(depCell -> depCell.getCoordinate().toString())
                 .collect(Collectors.toList());
@@ -45,7 +51,7 @@ public class DTOFactoryImpl implements DTOFactory {
                 .map(infCell -> infCell.getCoordinate().toString())
                 .collect(Collectors.toList());
 
-        return new CellDTOImpl(
+        return new dto.impl.CellDTOImpl(
                 cell.getCoordinate().toString(),
                 cell.getOriginalValue(),
                 cell.getEffectiveValue().toString(),
@@ -58,12 +64,12 @@ public class DTOFactoryImpl implements DTOFactory {
     }
 
     @Override
-    public CellDTO createEmptyCellDTO(String identity) {
-        return new CellDTOImpl(identity, "", "", 0, "#FFFFFF", "#000000", new ArrayList<>(), new ArrayList<>());
+    public CellDTOImpl createEmptyCellDTO(String identity) {
+        return new dto.impl.CellDTOImpl(identity, "", "", 0, "#FFFFFF", "#000000", new ArrayList<>(), new ArrayList<>());
     }
 
     @Override
-    public RangeDTO createRangeDTO(Range range) {
+    public RangeDTOImpl createRangeDTO(Range range) {
         return new RangeDTOImpl(
                 range.getName(),
                 range.getFrom(),

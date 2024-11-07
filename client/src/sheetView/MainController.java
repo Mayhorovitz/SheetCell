@@ -1,23 +1,18 @@
 package sheetView;
 
 import com.google.gson.Gson;
-import dto.api.CellDTO;
 import dto.api.SheetDTO;
+import dto.impl.CellDTOImpl;
+import dto.impl.SheetDTOImpl;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.Response;
+import okhttp3.*;
 import sheetView.components.actionLine.ActionLineController;
 import sheetView.components.commands.CommandsController;
 import sheetView.components.ranges.RangeController;
@@ -31,16 +26,6 @@ public class MainController {
 
     private static final String SERVER_URL = "http://localhost:8080/shticell";
 
-
-    @FXML
-    private ComboBox<String> versionSelector;
-
-    @FXML
-    private ProgressBar progressBar;
-
-    @FXML
-    private Label progressLabel;
-
     @FXML
     private SheetController sheetController;
 
@@ -49,8 +34,11 @@ public class MainController {
 
     @FXML
     private ActionLineController actionLineController;
-
+    @FXML
     private CommandsController commandsController;
+
+
+    private SheetDTO currentSheet;
 
     private UIModel uiModel;
 
@@ -58,59 +46,63 @@ public class MainController {
     private void initialize() {
         uiModel = new UIModel();
 
-        // Initialize controllers
-        if (actionLineController != null) {
-            actionLineController.setMainController(this);
+        actionLineController.setMainController(this);
+        sheetController.setMainController(this);
+        sheetController.setUiModel(uiModel);
+        commandsController.setSheetController(sheetController);
+        rangeController.setMainController(this);
+
+
+    }
+
+    public void setSheetDTO(SheetDTO sheetDTO) {
+        this.currentSheet = sheetDTO;
+        rangeController.updateRangeListView();
+
+        // הצגת הגיליון באמצעות ה-SheetController
+        if (sheetController != null && sheetDTO != null) {
+            sheetController.initializeSheet(sheetDTO);
         }
     }
 
     @FXML
     public void handleCellSelection(String cellId) {
-        String finalUrl = HttpUrl
-                .parse(SERVER_URL + "/getCellInfo")
-                .newBuilder()
-                .addQueryParameter("cellId", cellId)
-                .build()
-                .toString();
-
-        HttpClientUtil.runAsync(finalUrl, new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Platform.runLater(() -> showErrorAlert("Failed to get cell info: " + e.getMessage()));
+        try {
+            CellDTOImpl selectedCellDTO = currentSheet.getCells().get(cellId);
+            if (selectedCellDTO != null) {
+                actionLineController.updateActionLine(selectedCellDTO);
+                sheetController.resetRangeHighlight();
+                sheetController.highlightDependenciesAndInfluences(selectedCellDTO);
+            } else {
+                actionLineController.updateActionLine(null);
             }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    CellDTO selectedCellDTO = new Gson().fromJson(response.body().string(), CellDTO.class);
-                    Platform.runLater(() -> {
-                        if (selectedCellDTO != null) {
-                            actionLineController.updateActionLine(selectedCellDTO);
-                            sheetController.resetRangeHighlight();
-                            sheetController.highlightDependenciesAndInfluences(selectedCellDTO);
-                        } else {
-                            actionLineController.updateActionLine(null);
-                        }
-                    });
-                } else {
-                    Platform.runLater(() -> showErrorAlert("Failed to get cell info: " + response.message()));
-                }
-            }
-        });
+        } catch (IllegalArgumentException e) {
+            actionLineController.updateActionLine(null);
+        }
     }
 
     public void handleUpdateCell(String newValue, String selectedCell) {
         if (selectedCell != null && !newValue.isEmpty()) {
-            String finalUrl = HttpUrl
-                    .parse(SERVER_URL + "/updateCell")
-                    .newBuilder()
-                    .addQueryParameter("sheetName", sheetName)
-                    .addQueryParameter("cellId", selectedCell)
-                    .addQueryParameter("newValue", newValue)
-                    .build()
-                    .toString();
+            String finalUrl = SERVER_URL + "/updateCell";
 
-            HttpClientUtil.runAsync(finalUrl, new Callback() {
+            HttpUrl url = HttpUrl.parse(finalUrl);
+            if (url == null) {
+                showErrorAlert("Invalid URL for updating cell.");
+                return;
+            }
+
+            RequestBody formBody = new FormBody.Builder()
+                    .add("sheetName", currentSheet.getName())
+                    .add("cellId", selectedCell)
+                    .add("newValue", newValue)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(formBody)
+                    .build();
+
+            HttpClientUtil.runAsync(request, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     Platform.runLater(() -> showErrorAlert("Failed to update cell: " + e.getMessage()));
@@ -120,10 +112,13 @@ public class MainController {
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String sheetJson = response.body().string();
-                        SheetDTO updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTO.class);
+                        SheetDTOImpl updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
                         Platform.runLater(() -> {
-                            sheetController.displaySheet(updatedSheetDTO);
-                            populateVersionSelector(sheetName);
+                            currentSheet = updatedSheetDTO;
+                            sheetController.setCurrentSheet(updatedSheetDTO);
+                            sheetController.displaySheet();
+                            actionLineController.setVersionSelectorItems(currentSheet.getVersion());
+
                         });
                     } else {
                         Platform.runLater(() -> showErrorAlert("Failed to update cell: " + response.message()));
@@ -134,9 +129,8 @@ public class MainController {
             showErrorAlert("Please select a cell and enter a new value.");
         }
     }
-    @FXML
-    private void handleVersionSelection() {
-        String selectedVersion = versionSelector.getValue();
+
+    public void handleVersionSelection(String selectedVersion) {
         if (selectedVersion != null) {
             String finalUrl = HttpUrl
                     .parse(SERVER_URL + "/getSheetVersion")
@@ -171,7 +165,7 @@ public class MainController {
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setTitle("View Only - Sheet Version");
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/readOnlyPopup/readOnlyPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/viewSheet/components/readOnlyPopup/readOnlyPopup.fxml"));
             VBox root = loader.load();
 
             ReadOnlyPopupController popupController = loader.getController();
@@ -185,34 +179,6 @@ public class MainController {
         } catch (IOException e) {
             showErrorAlert("Failed to load sheet version view: " + e.getMessage());
         }
-    }
-
-    private void populateVersionSelector() {
-        String finalUrl = HttpUrl
-                .parse(SERVER_URL + "/getVersions")
-                .newBuilder()
-                .build()
-                .toString();
-
-        HttpClientUtil.runAsync(finalUrl, new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Platform.runLater(() -> showErrorAlert("Failed to get versions: " + e.getMessage()));
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String[] versions = new Gson().fromJson(response.body().string(), String[].class);
-                    Platform.runLater(() -> {
-                        versionSelector.getItems().clear();
-                        versionSelector.getItems().addAll(versions);
-                    });
-                } else {
-                    Platform.runLater(() -> showErrorAlert("Failed to get versions: " + response.message()));
-                }
-            }
-        });
     }
 
 
@@ -245,4 +211,12 @@ public class MainController {
     }
 
 
+    public String getCurrentSheetName() {
+        return currentSheet.getName();
+    }
+
+    public SheetDTO getCurrentSheet() {
+        return this.currentSheet;
+    }
 }
+

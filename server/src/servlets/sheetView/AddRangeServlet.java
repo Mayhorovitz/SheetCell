@@ -1,7 +1,6 @@
-package servlets;
+package servlets.sheetView;
 
 import com.google.gson.Gson;
-import dto.api.SheetDTO;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,11 +10,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
 
-@WebServlet("/filterSheet")
-public class FilterSheetServlet extends HttpServlet {
+@WebServlet("/addRange")
+public class AddRangeServlet extends HttpServlet {
 
     private Engine engine;
 
@@ -26,27 +23,21 @@ public class FilterSheetServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String sheetName = request.getParameter("sheetName");
+        String rangeName = request.getParameter("rangeName");
         String range = request.getParameter("range");
-        String column = request.getParameter("column");
-        String selectedValuesJson = request.getParameter("selectedValues");
 
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
         try {
-            String[] selectedValuesArray = new Gson().fromJson(selectedValuesJson, String[].class);
-            List<String> selectedValues = Arrays.asList(selectedValuesArray);
-
-            SheetDTO filteredSheetDTO = engine.filterSheetByValues(sheetName, range, column, selectedValues, null);
-
-            String jsonResponse = new Gson().toJson(filteredSheetDTO);
-            out.print(jsonResponse);
+            engine.addRangeToSheet(sheetName, rangeName, range);
+            out.print(new Gson().toJson("Range added successfully"));
             out.flush();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(new Gson().toJson("Error filtering sheet: " + e.getMessage()));
+            out.print(new Gson().toJson("Error adding range: " + e.getMessage()));
             out.flush();
         }
     }

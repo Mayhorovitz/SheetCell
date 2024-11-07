@@ -1,5 +1,8 @@
 package dto.api;
 
+import dto.impl.CellDTOImpl;
+import dto.impl.RangeDTOImpl;
+
 import java.util.Map;
 
 public interface SheetDTO extends DTO {
@@ -12,5 +15,8 @@ public interface SheetDTO extends DTO {
     int getCols();
     int getRowHeight();
     int getColWidth();
-    Map<String, CellDTO> getCells();
+
+    Map<String, RangeDTOImpl>  getRanges();
+
+    Map<String, CellDTOImpl> getCells();
 }

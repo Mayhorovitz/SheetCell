@@ -1,7 +1,6 @@
-package servlets;
+package servlets.sheetView;
 
 import com.google.gson.Gson;
-import dto.impl.CellDTOImpl;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,9 +10,10 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
-@WebServlet("/getCellInfo")
-public class GetCellInfoServlet extends HttpServlet {
+@WebServlet("/getUniqueValues")
+public class GetUniqueValuesServlet extends HttpServlet {
 
     private Engine engine;
 
@@ -26,19 +26,20 @@ public class GetCellInfoServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String sheetName = request.getParameter("sheetName");
-        String cellId = request.getParameter("cellId");
+        String range = request.getParameter("range");
+        String column = request.getParameter("column");
 
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
         try {
-            CellDTOImpl cellDTO = engine.getCellInfo(sheetName, cellId);
-            String jsonResponse = new Gson().toJson(cellDTO);
+            List<String> uniqueValues = engine.getUniqueValuesInRangeColumn(sheetName, range, column);
+            String jsonResponse = new Gson().toJson(uniqueValues);
             out.print(jsonResponse);
             out.flush();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(new Gson().toJson("Error retrieving cell info: " + e.getMessage()));
+            out.print(new Gson().toJson("Error retrieving unique values: " + e.getMessage()));
             out.flush();
         }
     }

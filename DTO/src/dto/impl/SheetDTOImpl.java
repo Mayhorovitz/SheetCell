@@ -1,6 +1,5 @@
 package dto.impl;
 
-import dto.api.CellDTO;
 import dto.api.SheetDTO;
 
 import java.util.Map;
@@ -13,9 +12,11 @@ public class SheetDTOImpl implements SheetDTO {
     private int cols;
     private int rowHeight;
     private int colWidth;
-    private Map<String, CellDTO> cells;
+    private Map<String, CellDTOImpl> cells;
+    private  Map<String, RangeDTOImpl> ranges;
 
-    public SheetDTOImpl(String name,String owner, int version, int rows, int cols, int rowHeight, int colWidth, Map<String, CellDTO> cells) {
+
+    public SheetDTOImpl(String name,String owner, int version, int rows, int cols, int rowHeight, int colWidth, Map<String, CellDTOImpl> cells, Map<String, RangeDTOImpl> ranges) {
         this.name = name;
         this.owner = owner;
         this.version = version;
@@ -24,6 +25,7 @@ public class SheetDTOImpl implements SheetDTO {
         this.rowHeight = rowHeight;
         this.colWidth = colWidth;
         this.cells = cells;
+        this.ranges = ranges;
     }
 
     // Getters
@@ -63,7 +65,11 @@ public class SheetDTOImpl implements SheetDTO {
     }
 
     @Override
-    public Map<String, CellDTO> getCells() {
+    public Map<String, RangeDTOImpl>  getRanges() {
+        return ranges;
+    }
+    @Override
+    public Map<String, CellDTOImpl> getCells() {
         return cells;
     }
 }

@@ -1,7 +1,7 @@
 package sheetView.components.readOnlyPopup;
 
 import com.google.gson.Gson;
-import dto.api.CellDTO;
+import dto.impl.CellDTOImpl;
 import dto.api.SheetDTO;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -118,7 +118,7 @@ public class ReadOnlyPopupController {
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
-                        CellDTO selectedCellDTO = new Gson().fromJson(response.body().string(), CellDTO.class);
+                        CellDTOImpl selectedCellDTO = new Gson().fromJson(response.body().string(), CellDTOImpl.class);
                         Platform.runLater(() -> {
                             if (selectedCellDTO != null) {
                                 sheetController.highlightDependenciesAndInfluences(selectedCellDTO);

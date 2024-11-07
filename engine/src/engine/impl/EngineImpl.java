@@ -4,7 +4,11 @@ import cell.api.Cell;
 import cell.impl.CellImpl;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
-import dto.api.*;
+import dto.api.DTOFactory;
+import dto.api.PermissionRequestDTO;
+import dto.api.RangeDTO;
+import dto.api.SheetDTO;
+import dto.impl.CellDTOImpl;
 import dto.impl.DTOFactoryImpl;
 import dto.impl.PermissionRequestDTOImpl;
 import dto.impl.SheetSummaryDTO;
@@ -227,7 +231,7 @@ public class EngineImpl implements Engine {
      * Retrieves cell information as a DTO.
      */
     @Override
-    public CellDTO getCellInfo(String sheetName, String cellIdentifier) {
+    public CellDTOImpl getCellInfo(String sheetName, String cellIdentifier) {
         Sheet currentSheet = getCurrentSheet(sheetName);
         Coordinate cellCoordinate = new CoordinateImpl(extractRowFromCoordinate(cellIdentifier), extractColumnFromCoordinate(cellIdentifier));
         validateCoordinate(currentSheet, cellCoordinate);

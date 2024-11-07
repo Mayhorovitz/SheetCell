@@ -23,4 +23,7 @@
     <Label text="Last Update Cell Version:" />
     <Label fx:id="lastUpdateCellVersion"  />
 
+    <Label text="Version:" />
+    <ComboBox fx:id="versionSelector" onAction="#handleVersionSelection" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" />
+
 </HBox>

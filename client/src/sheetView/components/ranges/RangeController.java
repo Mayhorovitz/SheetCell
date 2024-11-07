@@ -1,7 +1,7 @@
 package sheetView.components.ranges;
 
-import com.google.gson.Gson;
 import dto.api.RangeDTO;
+import dto.impl.RangeDTOImpl;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -15,13 +15,14 @@ import sheetView.MainController;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * Controller for managing ranges in the spreadsheet.
  */
 public class RangeController {
-
     private static final String SERVER_URL = "http://localhost:8080/shticell";
+
     private MainController mainController;
 
     @FXML
@@ -39,7 +40,7 @@ public class RangeController {
     public void handleAddRange() {
         String rangeName = rangeNameField.getText();
         String rangeCells = rangeCellsField.getText().toUpperCase();
-        String sheetName = mainController.getSheetController().getCurrentSheetName();
+        String sheetName = mainController.getCurrentSheetName();
 
         // Validate user input
         if (rangeName.isEmpty() || rangeCells.isEmpty()) {
@@ -79,7 +80,7 @@ public class RangeController {
     @FXML
     public void handleDeleteRange() {
         String selectedRange = rangeListView.getSelectionModel().getSelectedItem();
-        String sheetName = mainController.getSheetController().getCurrentSheetName();
+        String sheetName = mainController.getCurrentSheetName();
         if (selectedRange == null) {
             showErrorAlert("Please select a range to delete.");
             return;
@@ -111,74 +112,30 @@ public class RangeController {
         });
     }
 
+
     // Method to handle range selection from the ListView
-    @FXML
-    public void handleRangeSelection() {
-        String selectedRange = rangeListView.getSelectionModel().getSelectedItem();
-        String sheetName = mainController.getSheetController().getCurrentSheetName();
-        if (selectedRange != null) {
-            String rangeName = selectedRange.split(":")[0];
+        @FXML
+        public void handleRangeSelection () {
+            String selectedRange = rangeListView.getSelectionModel().getSelectedItem();
+            if (selectedRange != null) {
+                String rangeName = selectedRange.split(":")[0];
 
-            String finalUrl = HttpUrl.parse(SERVER_URL + "/getAllRanges")
-                    .newBuilder()
-                    .addQueryParameter("sheetName", sheetName)
-                    .build()
-                    .toString();
-
-            HttpClientUtil.runAsync(finalUrl, new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Platform.runLater(() -> showErrorAlert("Error retrieving range: " + e.getMessage()));
+                // חיפוש הטווח מתוך ה- SheetDTO והדגשתו
+                RangeDTO range = mainController.getCurrentSheet().getRanges().get(rangeName);
+                if (range != null) {
+                    Platform.runLater(() -> mainController.getSheetController().highlightRange(range));
                 }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        RangeDTO[] ranges = new Gson().fromJson(response.body().string(), RangeDTO[].class);
-                        for (RangeDTO range : ranges) {
-                            if (range.getName().equals(rangeName)) {
-                                Platform.runLater(() -> mainController.getSheetController().highlightRange(range));
-                            }
-                        }
-                    } else {
-                        Platform.runLater(() -> showErrorAlert("Error retrieving range: " + response.message()));
-                    }
-                }
-            });
+            }
         }
-    }
 
     // Method to update the ListView with all ranges from the current sheet
     public void updateRangeListView() {
         rangeListView.getItems().clear();  // Clear existing items
-        String sheetName = mainController.getSheetController().getCurrentSheetName();
+        Collection<RangeDTOImpl> ranges = mainController.getCurrentSheet().getRanges().values();
 
-        String finalUrl = HttpUrl.parse(SERVER_URL + "/getAllRanges")
-                .newBuilder()
-                .addQueryParameter("sheetName", sheetName)
-                .build()
-                .toString();
-
-        HttpClientUtil.runAsync(finalUrl, new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Platform.runLater(() -> showErrorAlert("Error retrieving ranges: " + e.getMessage()));
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    RangeDTO[] ranges = new Gson().fromJson(response.body().string(), RangeDTO[].class);
-                    Platform.runLater(() -> {
-                        for (RangeDTO range : ranges) {
-                            rangeListView.getItems().add(range.getName() + ": " + range.getFrom() + " to " + range.getTo());
-                        }
-                    });
-                } else {
-                    Platform.runLater(() -> showErrorAlert("Error retrieving ranges: " + response.message()));
-                }
-            }
-        });
+        for (RangeDTO range : ranges) {
+            rangeListView.getItems().add(range.getName() + ": " + range.getFrom() + " to " + range.getTo());
+        }
     }
 
     // Utility method to show error alerts

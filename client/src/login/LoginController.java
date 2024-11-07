@@ -34,9 +34,6 @@ public class LoginController {
     @FXML
     public void initialize() {
         errorMessageLabel.textProperty().bind(errorMessageProperty);
-        HttpClientUtil.setCookieManagerLoggingFacility(line ->
-                Platform.runLater(() ->
-                        updateHttpStatusLine(line)));
     }
 
     @FXML
@@ -55,8 +52,6 @@ public class LoginController {
                 .addQueryParameter("username", userName)
                 .build()
                 .toString();
-
-        updateHttpStatusLine("New request is launched for: " + finalUrl);
 
         HttpClientUtil.runAsync(finalUrl, new Callback() {
 
@@ -93,10 +88,6 @@ public class LoginController {
     @FXML
     private void quitButtonClicked(ActionEvent e) {
         Platform.exit();
-    }
-
-    private void updateHttpStatusLine(String data) {
-        appMainController.updateHttpLine(data);
     }
 
     public void setMainController(main.AppMainController appMainController) {

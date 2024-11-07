@@ -1,8 +1,8 @@
 package sheetView.components.sheet;
 
-import dto.api.CellDTO;
 import dto.api.RangeDTO;
 import dto.api.SheetDTO;
+import dto.impl.CellDTOImpl;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -38,7 +38,9 @@ public class SheetController {
     private UIModel uiModel;
     private int selectedRow = -1;
     private int selectedCol = -1;
-    private CellDTO lastSelectedCell = null;
+    private CellDTOImpl lastSelectedCell = null;
+    private SheetDTO currentSheet;
+
 
     @FXML
     private GridPane spreadsheetGrid;
@@ -53,6 +55,10 @@ public class SheetController {
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
+    }
+
+    public void setCurrentSheet(SheetDTO currentSheet) {
+        this.currentSheet = currentSheet;
     }
 
     public void setUiModel(UIModel uiModel) {
@@ -96,18 +102,19 @@ public class SheetController {
         return selectedRow;
     }
 
-    public void displaySheet(SheetDTO sheetDTO) {
+    public void displaySheet() {
         if (spreadsheetGrid.getChildren().isEmpty()) {
             // Only initialize if the grid is empty
-            initializeSheet(sheetDTO);
+            initializeSheet(currentSheet);
         } else {
-            updateSheet(sheetDTO);
+            updateSheet(currentSheet);
         }
 
         spreadsheetScrollPane.setPannable(true);
     }
 
     public void initializeSheet(SheetDTO sheetDTO) {
+        this.currentSheet = sheetDTO;
         cellToLabel.clear();
         clearGridPane();
 
@@ -196,12 +203,12 @@ public class SheetController {
     }
 
     private void populateSheetGrid(SheetDTO sheetDTO, int numCols, int numRows) {
-        Map<String, CellDTO> cells = sheetDTO.getCells();
+        Map<String, CellDTOImpl> cells = sheetDTO.getCells();
 
         for (int row = 1; row <= numRows; row++) {
             for (int col = 1; col <= numCols; col++) {
                 String cellID = getColumnName(col) + row;
-                CellDTO cellDTO = cells.get(cellID);
+                CellDTOImpl cellDTO = cells.get(cellID);
 
                 if (cellToLabel.containsKey(cellID)) {
                     Label existingLabel = cellToLabel.get(cellID);
@@ -243,7 +250,7 @@ public class SheetController {
         }
     }
 
-    private void applyCellStyle(CellDTO cellDTO, Label label) {
+    private void applyCellStyle(CellDTOImpl cellDTO, Label label) {
         String borderStyle = "-fx-border-color: black; -fx-border-width: 1px;";
 
         if (cellDTO != null) {
@@ -267,7 +274,7 @@ public class SheetController {
         return columnName.toString();
     }
 
-    public void highlightDependenciesAndInfluences(CellDTO selectedCellDTO) {
+    public void highlightDependenciesAndInfluences(CellDTOImpl selectedCellDTO) {
         resetCellBorders();  // Reset previous highlights
         if (selectedCellDTO != null) {
             lastSelectedCell = selectedCellDTO;
@@ -331,14 +338,14 @@ public class SheetController {
         }
     }
 
-    public void applyBackgroundColorToSelectedCell(String sheetName, Color color) {
+    public void applyBackgroundColorToSelectedCell(Color color) {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
 
             String finalUrl = HttpUrl.parse(SERVER_URL + "/updateBackgroundColor")
                     .newBuilder()
-                    .addQueryParameter("sheetName", sheetName)
+                    .addQueryParameter("sheetName", currentSheet.getName())
                     .addQueryParameter("cellId", cellID)
                     .addQueryParameter("colorHex", colorHex)
                     .build()
@@ -369,14 +376,14 @@ public class SheetController {
     }
 
 
-    public void applyTextColorToSelectedCell(String sheetName, Color color) {
+    public void applyTextColorToSelectedCell( Color color) {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
 
             String finalUrl = HttpUrl.parse(SERVER_URL + "/updateTextColor")
                     .newBuilder()
-                    .addQueryParameter("sheetName", sheetName)
+                    .addQueryParameter("sheetName", currentSheet.getName())
                     .addQueryParameter("cellId", cellID)
                     .addQueryParameter("colorHex", colorHex)
                     .build()
@@ -453,18 +460,40 @@ public class SheetController {
     public void resetCellDesign() {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
-            // Notify the engine to reset the cell's design
-            mainController.resetCellDesign(cellID);
 
-            // Update the specific cell's appearance in the grid
-            Label cellLabel = cellToLabel.get(cellID);
-            if (cellLabel != null) {
-                String currentStyle = cellLabel.getStyle();
-                // Replace only the text color and background, without affecting other styles
-                currentStyle = currentStyle.replaceAll("-fx-text-fill:.*?;", "");
-                currentStyle = currentStyle.replaceAll("-fx-background-color:.*?;", "");
-                cellLabel.setStyle(currentStyle + "-fx-text-fill: black; -fx-background-color: white;");
-            }
+            // בונים את ה-URL של הבקשה לשרת
+            String finalUrl = HttpUrl.parse(SERVER_URL + "/resetCellDesign")
+                    .newBuilder()
+                    .addQueryParameter("sheetName", currentSheet.getName())
+                    .addQueryParameter("cellId", cellID)
+                    .build()
+                    .toString();
+
+            HttpClientUtil.runAsync(finalUrl, new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Platform.runLater(() -> mainController.showErrorAlert("Failed to reset cell design: " + e.getMessage()));
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        Platform.runLater(() -> {
+                            // עדכון העיצוב של התא ב-UI לאחר קבלת תשובה מוצלחת מהשרת
+                            Label cellLabel = cellToLabel.get(cellID);
+                            if (cellLabel != null) {
+                                String currentStyle = cellLabel.getStyle();
+                                // מחליפים רק את צבע הטקסט והרקע, מבלי להשפיע על שאר הסטיילים
+                                currentStyle = currentStyle.replaceAll("-fx-text-fill:.*?;", "");
+                                currentStyle = currentStyle.replaceAll("-fx-background-color:.*?;", "");
+                                cellLabel.setStyle(currentStyle + "-fx-text-fill: black; -fx-background-color: white;");
+                            }
+                        });
+                    } else {
+                        Platform.runLater(() -> mainController.showErrorAlert("Failed to reset cell design: " + response.message()));
+                    }
+                }
+            });
         }
     }
 
@@ -506,7 +535,7 @@ public class SheetController {
         cellToLabel.clear();
         clearGridPane();
 
-        Map<String, CellDTO> activeCells = sheetDTO.getCells();
+        Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
 
         int minRow = Integer.MAX_VALUE;
         int maxRow = Integer.MIN_VALUE;
@@ -565,7 +594,7 @@ public class SheetController {
     }
 
     private void populateFilterSheetGrid(SheetDTO sheetDTO, int numCols, int numRows, int minCol, int minRow) {
-        Map<String, CellDTO> activeCells = sheetDTO.getCells();
+        Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
 
         // Build the column and row headers using original indices
         for (String cellId : activeCells.keySet()) {
@@ -574,7 +603,7 @@ public class SheetController {
             int rowIndex = row - minRow + 1;
             int colIndex = col - minCol + 1;
 
-            CellDTO cellDTO = activeCells.get(cellId);
+            CellDTOImpl cellDTO = activeCells.get(cellId);
 
             Label cellLabel = new Label(cellDTO.getEffectiveValue());
             cellLabel.setAlignment(Pos.CENTER);
@@ -625,7 +654,4 @@ public class SheetController {
         return result;
     }
 
-    public String getCurrentSheetName() {
-        return null;
-    }
 }

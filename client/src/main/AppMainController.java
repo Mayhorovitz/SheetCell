@@ -1,5 +1,8 @@
 package main;
 
+import com.google.gson.Gson;
+import dto.api.SheetDTO;
+import dto.impl.SheetDTOImpl;
 import dto.impl.SheetSummaryDTO;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -8,11 +11,17 @@ import javafx.beans.property.StringProperty;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
-import login.LoginController;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.Response;
 import sheetView.MainController;
 import sheetsManagement.SheetsManagementController;
+import util.http.HttpClientUtil;
+import login.LoginController;
 
 import java.io.IOException;
 import java.net.URL;
@@ -86,12 +95,44 @@ public class AppMainController {
         setMainPanelTo(sheetsManagementComponent);
         sheetsManagementController.setActive();
     }
+
     public void switchToViewSheet(SheetSummaryDTO selectedSheet) {
         if (selectedSheet == null) {
             showError("Please select a sheet to view.");
             return;
         }
 
+        String finalUrl = HttpUrl
+                .parse("http://localhost:8080/shticell/getSheet")
+                .newBuilder()
+                .addQueryParameter("sheetName", selectedSheet.getName())
+                .build()
+                .toString();
+
+        HttpClientUtil.runAsync(finalUrl, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Platform.runLater(() -> showError("Failed to load sheet: " + e.getMessage()));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String sheetJson = response.body().string();
+
+                    // המרה של JSON ל- SheetDTOImpl כדי לוודא שהממשק הופך למימוש
+                    SheetDTOImpl sheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
+
+                    Platform.runLater(() -> showSheetView(sheetDTO));
+                } else {
+                    Platform.runLater(() -> showError("Failed to load sheet: " + response.message()));
+                }
+            }
+        });
+    }
+
+
+    private void showSheetView(SheetDTO sheetDTO) {
         try {
             URL sheetPageUrl = getClass().getResource("/sheetView/main.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader();
@@ -99,17 +140,16 @@ public class AppMainController {
             Parent sheetComponent = fxmlLoader.load();
             MainController mainController = fxmlLoader.getController();
 
+            // הגדרת הגיליון ב-MainController
             mainController.setSheetDTO(sheetDTO);
-            mainController.setRangeController(sheetsManagementController.getRangeController());
-            mainController.setSheetController(sheetsManagementController.getSheetController());
-            mainController.setActionLineController(sheetsManagementController.getActionLineController());
+
 
             setMainPanelTo(sheetComponent);
-
         } catch (IOException e) {
             showError("Failed to load sheet view: " + e.getMessage());
         }
     }
+
     public void switchToLogin() {
         Platform.runLater(() -> {
             currentUserName.set("Guest");
@@ -121,15 +161,15 @@ public class AppMainController {
         currentUserName.set(userName);
     }
 
-    public void updateHttpLine(String data) {
+    public void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     public void close() {
-    }
 
-    public void showError(String s) {
-    }
-
-    public void showMessage(String s) {
     }
 }

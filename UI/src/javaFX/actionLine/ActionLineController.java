@@ -1,6 +1,6 @@
 package javaFX.actionLine;
 
-import dto.api.CellDTO;
+import dto.api.CellDTOImpl;
 import engine.api.Engine;
 import javaFX.main.MainController;
 import javafx.fxml.FXML;
@@ -42,7 +42,7 @@ public class ActionLineController {
         this.engine = engine;
     }
 
-    public void updateActionLine(CellDTO selectedCellDTO) {
+    public void updateActionLine(CellDTOImpl selectedCellDTO) {
         if (selectedCellDTO != null) {
             selectedCellId.setText(selectedCellDTO.getIdentity());
             originalValueLabel.setText(selectedCellDTO.getOriginalValue());

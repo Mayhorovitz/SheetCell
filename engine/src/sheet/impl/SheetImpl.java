@@ -140,6 +140,7 @@ public class SheetImpl implements Sheet, Serializable {
         return this.name;
     }
 
+
     @Override
     public Cell getCell(Coordinate coordinate) {
         if (coordinate == null) {

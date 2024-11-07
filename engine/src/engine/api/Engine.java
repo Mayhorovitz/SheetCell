@@ -1,7 +1,7 @@
 package engine.api;
 
 
-import dto.api.CellDTO;
+import dto.impl.CellDTOImpl;
 import dto.api.PermissionRequestDTO;
 import dto.api.RangeDTO;
 import dto.api.SheetDTO;
@@ -23,7 +23,7 @@ public interface Engine {
 
     void updateCell(String sheetName, String coordinate, String newValue);
 
-    CellDTO getCellInfo(String sheetName, String cellIdentifier);
+    CellDTOImpl getCellInfo(String sheetName, String cellIdentifier);
 
     void addRangeToSheet(String sheetName, String name, String range);
 

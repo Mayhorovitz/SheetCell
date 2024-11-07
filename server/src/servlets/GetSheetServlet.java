@@ -12,8 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/sortSheetRange")
-public class SortSheetRangeServlet extends HttpServlet {
+@WebServlet("/getSheet")
+public class GetSheetServlet extends HttpServlet {
 
     private Engine engine;
 
@@ -26,35 +26,26 @@ public class SortSheetRangeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String sheetName = request.getParameter("sheetName");
-        String range = request.getParameter("range");
-        String columns = request.getParameter("columns");
 
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
         try {
-            // Validate input
-            if (sheetName == null || range == null || columns == null) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.print(new Gson().toJson("Missing required parameters"));
-                out.flush();
-                return;
+            if (sheetName == null || sheetName.isEmpty()) {
+                throw new IllegalArgumentException("Sheet name is required");
             }
 
-            // Parse columns into an array
-            String[] columnArray = columns.split(",");
+            SheetDTO sheetDTO = engine.getCurrentSheetDTO(sheetName);
+            if (sheetDTO == null) {
+                throw new IllegalArgumentException("Sheet with name '" + sheetName + "' not found.");
+            }
 
-            // Sort the sheet range by columns
-            SheetDTO sortedSheetDTO = engine.sortSheetRangeByColumns(sheetName, range, columnArray);
-
-            // Send the sorted sheet as a response
-            String jsonResponse = new Gson().toJson(sortedSheetDTO);
+            String jsonResponse = new Gson().toJson(sheetDTO);
             out.print(jsonResponse);
             out.flush();
-
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(new Gson().toJson("Error sorting sheet range: " + e.getMessage()));
+            out.print(new Gson().toJson("Error retrieving sheet: " + e.getMessage()));
             out.flush();
         }
     }

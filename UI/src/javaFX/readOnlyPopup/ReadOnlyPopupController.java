@@ -1,6 +1,6 @@
 package javaFX.readOnlyPopup;
 
-import dto.api.CellDTO;
+import dto.api.CellDTOImpl;
 import dto.api.SheetDTO;
 import engine.api.Engine;
 import javaFX.actionLine.ActionLineController;
@@ -73,7 +73,7 @@ public class ReadOnlyPopupController {
 
         // Set cell selection behavior
         sheetController.setOnCellSelected(cellId -> {
-            CellDTO selectedCellDTO = engine.getCellInfo(cellId);
+            CellDTOImpl selectedCellDTO = engine.getCellInfo(cellId);
             sheetController.highlightDependenciesAndInfluences(selectedCellDTO);
             actionLineController.updateActionLine(selectedCellDTO);
         });

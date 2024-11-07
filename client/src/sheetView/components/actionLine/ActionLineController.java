@@ -1,8 +1,9 @@
 package sheetView.components.actionLine;
 
-import dto.api.CellDTO;
+import dto.impl.CellDTOImpl;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import sheetView.MainController;
@@ -27,6 +28,9 @@ public class ActionLineController {
     @FXML
     private Button updateButton;  // Update Cell button
 
+    @FXML
+    private ComboBox<String> versionSelector;  // ComboBox for selecting version
+
     private MainController mainController;
 
     private boolean isReadOnly = false;  // Flag to indicate read-only mode
@@ -35,8 +39,7 @@ public class ActionLineController {
         this.mainController = mainController;
     }
 
-
-    public void updateActionLine(CellDTO selectedCellDTO) {
+    public void updateActionLine(CellDTOImpl selectedCellDTO) {
         if (selectedCellDTO != null) {
             selectedCellId.setText(selectedCellDTO.getIdentity());
             originalValueLabel.setText(selectedCellDTO.getOriginalValue());
@@ -60,6 +63,22 @@ public class ActionLineController {
         }
     }
 
+    @FXML
+    private void handleVersionSelection() {
+        String selectedVersion = versionSelector.getValue();
+
+        if (mainController != null) {
+            mainController.handleVersionSelection(selectedVersion);
+        }
+    }
+
+    public void setVersionSelectorItems(int currentVersion) {
+        versionSelector.getItems().clear();
+        for (int i = 1; i <= currentVersion; i++) {
+            versionSelector.getItems().add(String.valueOf(i));
+        }
+    }
+
     public void setReadOnly(boolean readOnly) {
         this.isReadOnly = readOnly;
         if (updateButton != null) {
@@ -78,6 +97,11 @@ public class ActionLineController {
         }
         if (newValueField != null) {
             newValueField.setEditable(!isReadOnly);
+        }
+
+        // Set listener for version selection changes
+        if (versionSelector != null) {
+            versionSelector.setOnAction(event -> handleVersionSelection());
         }
     }
 

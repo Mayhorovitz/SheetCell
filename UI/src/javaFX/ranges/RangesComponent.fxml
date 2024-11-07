@@ -10,7 +10,7 @@
 
 <VBox alignment="CENTER" prefWidth="250" spacing="10" style="-fx-background-color: #d0f3f7; -fx-border-color: #9bc0c4;"
       xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="javaFX.ranges.RangeController">
+      fx:controller=".ranges.RangeController">
 
     <TextField fx:id="rangeNameField" promptText="Range Name" />
     <TextField fx:id="rangeCellsField" promptText="Range Cells (e.g., A1..B3)" />
