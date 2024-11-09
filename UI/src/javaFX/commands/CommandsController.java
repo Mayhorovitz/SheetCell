@@ -123,7 +123,7 @@ public class CommandsController {
     public void handleSortButton() {
         try {
             // Load the FXML for the sort popup
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/sort/SortPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/sort/SortPopup.fxml"));
             Parent root = loader.load();
 
             // Get the controller and pass the SheetController to it

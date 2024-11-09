@@ -5,10 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import sheetView.components.filter.FilterPopupController;
@@ -70,19 +67,29 @@ public class CommandsController {
 
     @FXML
     private void handleApplyBackgroundColor() {
-        Color selectedColor = bgColorPicker.getValue();
+        if (!sheetController.isReadOnly()) {
+            Color selectedColor = bgColorPicker.getValue();
         if (selectedColor != null) {
             sheetController.applyBackgroundColorToSelectedCell(selectedColor);
+        }
+        } else {
+            showErrorAlert("You do not have permission to change the cell design.");
         }
     }
 
     @FXML
     private void handleApplyTextColor() {
-        Color selectedTextColor = textColorPicker.getValue();
-        if (selectedTextColor != null) {
-            sheetController.applyTextColorToSelectedCell(selectedTextColor);
-        }
+        if (!sheetController.isReadOnly()) {
+            Color selectedTextColor = textColorPicker.getValue();
+            if (selectedTextColor != null) {
+                sheetController.applyTextColorToSelectedCell(selectedTextColor);
+            }
+
+    } else {
+            showErrorAlert("You do not have permission to change the cell design.");
     }
+    }
+
     @FXML
     private void handleSetColumnWidth() {
         Integer colWidth = columnWidthSpinner.getValue();
@@ -117,14 +124,20 @@ public class CommandsController {
     // Reset the design of the selected cell
     @FXML
     private void handleResetCellDesign() {
-        sheetController.resetCellDesign();
+        if (!sheetController.isReadOnly()) {
+
+            sheetController.resetCellDesign();
+
+    } else {
+        showErrorAlert("You do not have permission to change the cell design.");
+    }
     }
 
     @FXML
     public void handleSortButton() {
         try {
             // Load the FXML for the sort popup
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/sort/SortPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/sort/SortPopup.fxml"));
             Parent root = loader.load();
 
             // Get the controller and pass the SheetController to it
@@ -145,7 +158,7 @@ public class CommandsController {
     public void handleFilterButton() {
         try {
             // Load the FXML for the filter popup
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/javaFX/filter/FilterPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/filter/FilterPopup.fxml"));
             Parent root = loader.load();
 
             // Get the controller and pass the SheetController to it
@@ -161,6 +174,12 @@ public class CommandsController {
             e.printStackTrace();
         }
     }
-
+    public void showErrorAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 
 }

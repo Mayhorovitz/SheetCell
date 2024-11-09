@@ -35,13 +35,16 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     List<Cell> getCellsThatHaveChanged();
     int getRowHeight();
     void addCellThatChanged(Cell cell);
+
+    Sheet updateCellValueAndCalculate(String cellId, String value, String userName);
+
     List<Cell> orderCellsForCalculation();
     Map<Coordinate, Cell> getActiveCells();
     void updateDependenciesAndInfluences();
     void addRange(String name, String range);
     void deleteRange(String name);
     Collection<Range> getAllRanges();
-    Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers);
+    Sheet filterSheetByValues(String range, String column, List<String> selectedValues);
     Sheet sortSheet(String range, String[] columns);
     List<String> getUniqueValuesInRangeColumn(String range, String column);
 

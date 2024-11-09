@@ -1,7 +1,7 @@
 package sheetView.components.filter;
 
 import com.google.gson.Gson;
-import dto.api.SheetDTO;
+import dto.impl.SheetDTOImpl;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -65,7 +65,7 @@ public class FilterPopupController {
 
         String finalUrl = HttpUrl.parse("http://localhost:8080/shticell/getUniqueValues")
                 .newBuilder()
-                .addQueryParameter("sheetName", "currentSheet") // Replace with actual sheet name
+                .addQueryParameter("sheetName", sheetController.getCurrentSheet().getName()) // Replace with actual sheet name
                 .addQueryParameter("range", selectedRange)
                 .addQueryParameter("column", selectedColumn)
                 .build()
@@ -116,7 +116,7 @@ public class FilterPopupController {
 
         String finalUrl = HttpUrl.parse("http://localhost:8080/shticell/filterSheet")
                 .newBuilder()
-                .addQueryParameter("sheetName", "currentSheet") // Replace with actual sheet name
+                .addQueryParameter("sheetName", sheetController.getCurrentSheet().getName()) // Replace with actual sheet name
                 .addQueryParameter("range", selectedRange)
                 .addQueryParameter("column", selectedColumn)
                 .addQueryParameter("selectedValues", new Gson().toJson(selectedValues))
@@ -132,7 +132,7 @@ public class FilterPopupController {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful()) {
-                    SheetDTO filteredSheetDTO = new Gson().fromJson(response.body().string(), SheetDTO.class);
+                    SheetDTOImpl filteredSheetDTO = new Gson().fromJson(response.body().string(), SheetDTOImpl.class);
                     Platform.runLater(() -> {
                         try {
                             // Open ReadOnlyPopup to display the filtered sheet
@@ -143,7 +143,7 @@ public class FilterPopupController {
                             popupController.setUiModel(uiModel);
                             popupController.setSheetToDisplay(filteredSheetDTO);
 
-                            popupController.displaySheet();
+                            popupController.displayFilterSheet();
 
                             Stage stage = new Stage();
                             stage.setTitle("Filtered Sheet");

@@ -18,7 +18,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
-import sheetView.MainController;
+import sheetView.SheetViewMainController;
 import sheetsManagement.SheetsManagementController;
 import util.http.HttpClientUtil;
 import login.LoginController;
@@ -96,7 +96,7 @@ public class AppMainController {
         sheetsManagementController.setActive();
     }
 
-    public void switchToViewSheet(SheetSummaryDTO selectedSheet) {
+    public void switchToViewSheet(SheetSummaryDTO selectedSheet, boolean isReadOnly) {
         if (selectedSheet == null) {
             showError("Please select a sheet to view.");
             return;
@@ -123,7 +123,7 @@ public class AppMainController {
                     // המרה של JSON ל- SheetDTOImpl כדי לוודא שהממשק הופך למימוש
                     SheetDTOImpl sheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
 
-                    Platform.runLater(() -> showSheetView(sheetDTO));
+                    Platform.runLater(() -> showSheetView(sheetDTO, isReadOnly));
                 } else {
                     Platform.runLater(() -> showError("Failed to load sheet: " + response.message()));
                 }
@@ -132,16 +132,16 @@ public class AppMainController {
     }
 
 
-    private void showSheetView(SheetDTO sheetDTO) {
+    private void showSheetView(SheetDTO sheetDTO, boolean isReadOnly) {
         try {
             URL sheetPageUrl = getClass().getResource("/sheetView/main.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(sheetPageUrl);
             Parent sheetComponent = fxmlLoader.load();
-            MainController mainController = fxmlLoader.getController();
+            SheetViewMainController sheetViewMainController = fxmlLoader.getController();
 
             // הגדרת הגיליון ב-MainController
-            mainController.setSheetDTO(sheetDTO);
+            sheetViewMainController.setSheetDTO(sheetDTO, isReadOnly);
 
 
             setMainPanelTo(sheetComponent);

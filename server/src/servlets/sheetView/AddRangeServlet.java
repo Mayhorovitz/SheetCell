@@ -1,6 +1,7 @@
 package servlets.sheetView;
 
 import com.google.gson.Gson;
+import dto.api.SheetDTO;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -33,7 +34,9 @@ public class AddRangeServlet extends HttpServlet {
 
         try {
             engine.addRangeToSheet(sheetName, rangeName, range);
-            out.print(new Gson().toJson("Range added successfully"));
+            SheetDTO updatedSheetDTO = engine.getCurrentSheetDTO(sheetName);
+            String jsonResponse = new Gson().toJson(updatedSheetDTO);
+            out.print(jsonResponse);
             out.flush();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

@@ -176,7 +176,7 @@ public class SheetImpl implements Sheet, Serializable {
 
     //Update a cell's value and recalculate the sheet.
     @Override
-    public Sheet updateCellValueAndCalculate(String cellId, String value) {
+    public Sheet updateCellValueAndCalculate(String cellId, String value, String userName) {
         if (cellId == null || value == null) {
             throw new IllegalArgumentException("Cell ID and value cannot be null.");
         }
@@ -191,7 +191,7 @@ public class SheetImpl implements Sheet, Serializable {
         String existingTextColor = existingCell != null ? existingCell.getTextColor() : "#000000"; // Default: black
 
         // Create a new cell with the updated value and increment the version
-        Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1, newSheetVersion);
+        Cell newCell = new CellImpl(coordinate, value, newSheetVersion.getVersion() + 1,userName, newSheetVersion);
 
         // Preserve the existing cell colors in the new cell
         newCell.setBackgroundColor(existingBackgroundColor);
@@ -458,7 +458,7 @@ public class SheetImpl implements Sheet, Serializable {
 
     @Override
 
-    public Sheet filterSheetByValues(String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
+    public Sheet filterSheetByValues(String range, String column, List<String> selectedValues) {
         SheetImpl filteredSheet = new SheetImpl();
         filteredSheet.setName(this.name + " - Filtered");
         filteredSheet.setRowHeight(this.rowHeight);
@@ -482,7 +482,6 @@ public class SheetImpl implements Sheet, Serializable {
             if (cell != null) {
                 String value = cell.getEffectiveValue().toString();
                 if (selectedValues.contains(value)) {
-                    originalRowNumbers.add(row);
 
                     for (int col = startCol; col <= endCol; col++) {
                         Coordinate cellCoordinate = createCoordinate(row, col);

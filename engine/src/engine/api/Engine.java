@@ -21,7 +21,7 @@ public interface Engine {
 
     int getCurrentSheetVersion(String sheetName);
 
-    void updateCell(String sheetName, String coordinate, String newValue);
+    void updateCell(String sheetName, String coordinate, String newValue, String userName);
 
     CellDTOImpl getCellInfo(String sheetName, String cellIdentifier);
 
@@ -37,7 +37,7 @@ public interface Engine {
 
     List<String> getUniqueValuesInRangeColumn(String sheetName, String range, String column);
 
-    SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers);
+    SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues);
 
     void exit();
 

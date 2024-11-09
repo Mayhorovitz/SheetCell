@@ -6,7 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import sheetView.MainController;
+import sheetView.SheetViewMainController;
 
 /**
  * Controller for the action line, allowing users to view and edit cell values.
@@ -31,22 +31,22 @@ public class ActionLineController {
     @FXML
     private ComboBox<String> versionSelector;  // ComboBox for selecting version
 
-    private MainController mainController;
+    private SheetViewMainController sheetViewMainController;
 
     private boolean isReadOnly = false;  // Flag to indicate read-only mode
 
-    public void setMainController(MainController mainController) {
-        this.mainController = mainController;
+    public void setMainController(SheetViewMainController sheetViewMainController) {
+        this.sheetViewMainController = sheetViewMainController;
     }
 
-    public void updateActionLine(CellDTOImpl selectedCellDTO) {
-        if (selectedCellDTO != null) {
-            selectedCellId.setText(selectedCellDTO.getIdentity());
-            originalValueLabel.setText(selectedCellDTO.getOriginalValue());
+    public void updateActionLine(CellDTOImpl selectedCell, String cellId) {
+        if (selectedCell != null) {
+            selectedCellId.setText(selectedCell.getIdentity());
+            originalValueLabel.setText(selectedCell.getOriginalValue());
             newValueField.setText("");
-            lastUpdateCellVersion.setText(String.valueOf(selectedCellDTO.getVersion()));
+            lastUpdateCellVersion.setText(String.valueOf(selectedCell.getVersion()) + " " + selectedCell.getChangedBy());
         } else {
-            selectedCellId.setText("");
+            selectedCellId.setText(cellId);
             originalValueLabel.setText("");
             newValueField.setText("");
             lastUpdateCellVersion.setText("N/A");
@@ -58,8 +58,8 @@ public class ActionLineController {
         String newValue = newValueField.getText();
         String selectedCell = selectedCellId.getText();
 
-        if (mainController != null) {
-            mainController.handleUpdateCell(newValue, selectedCell);
+        if (sheetViewMainController != null) {
+            sheetViewMainController.handleUpdateCell(newValue, selectedCell);
         }
     }
 
@@ -67,8 +67,8 @@ public class ActionLineController {
     private void handleVersionSelection() {
         String selectedVersion = versionSelector.getValue();
 
-        if (mainController != null) {
-            mainController.handleVersionSelection(selectedVersion);
+        if (sheetViewMainController != null) {
+            sheetViewMainController.handleVersionSelection(selectedVersion);
         }
     }
 
@@ -107,8 +107,8 @@ public class ActionLineController {
 
     // Function to display an error (if needed)
     private void showErrorAlert(String message) {
-        if (mainController != null) {
-            mainController.showErrorAlert("Error: " + message);
+        if (sheetViewMainController != null) {
+            sheetViewMainController.showErrorAlert("Error: " + message);
         }
     }
 }

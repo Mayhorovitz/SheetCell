@@ -18,6 +18,7 @@ public class CellImpl implements Cell , Serializable {
     private String originalValue;
     private EffectiveValue effectiveValue;
     private int version;
+    private String changedBy;
     private final List<Cell> dependsOn;
     private final List<Cell> influencingOn;
     private String backgroundColor; // Store as String
@@ -25,10 +26,11 @@ public class CellImpl implements Cell , Serializable {
     private SheetReadActions sheet;
 
 //constructors
-    public CellImpl(int row, int column, String originalValue, int version, SheetReadActions sheet )  {
+    public CellImpl(int row, int column, String originalValue, int version, String changedBy, SheetReadActions sheet )  {
         this.coordinate = new CoordinateImpl(row, column);
         this.originalValue = originalValue;
         this.version = version;
+        this.changedBy = changedBy;
         this.backgroundColor = "#FFFFFF"; // Default white background
         this.textColor = "#000000";
         this.dependsOn = new ArrayList<>();
@@ -37,10 +39,11 @@ public class CellImpl implements Cell , Serializable {
         this.sheet = sheet;
     }
 
-    public CellImpl(Coordinate coordinate, String originalValue, int version, SheetReadActions sheet )  {
+    public CellImpl(Coordinate coordinate, String originalValue, int version, String changedBy ,SheetReadActions sheet )  {
         this.coordinate = coordinate;
         this.originalValue = originalValue;
         this.version = version;
+        this.changedBy = changedBy;
         this.dependsOn = new ArrayList<>();
         this.influencingOn = new ArrayList<>();
         this.backgroundColor = "#FFFFFF"; // Default white background
@@ -76,6 +79,11 @@ public class CellImpl implements Cell , Serializable {
     @Override
     public String getOriginalValue() {
         return originalValue;
+    }
+
+    @Override
+    public String getChangedBy() {
+        return changedBy;
     }
 
     @Override

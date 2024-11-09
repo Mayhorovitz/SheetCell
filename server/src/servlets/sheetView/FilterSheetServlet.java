@@ -39,7 +39,7 @@ public class FilterSheetServlet extends HttpServlet {
             String[] selectedValuesArray = new Gson().fromJson(selectedValuesJson, String[].class);
             List<String> selectedValues = Arrays.asList(selectedValuesArray);
 
-            SheetDTO filteredSheetDTO = engine.filterSheetByValues(sheetName, range, column, selectedValues, null);
+            SheetDTO filteredSheetDTO = engine.filterSheetByValues(sheetName, range, column, selectedValues);
 
             String jsonResponse = new Gson().toJson(filteredSheetDTO);
             out.print(jsonResponse);

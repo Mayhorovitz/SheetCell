@@ -4,18 +4,11 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.MainController">
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.SheetViewMainController">
 
     <!-- Top Section: Shticell Title, Load Button, and Version Selector -->
     <top>
         <VBox spacing="10">
-            <HBox>
-                <Label text="shticell" textOverrun="WORD_ELLIPSIS">
-                    <font>
-                        <Font name="Arial Black" size="16.0" />
-                    </font>
-                </Label>
-            </HBox>
 
             <fx:include fx:id="actionLine" source="components/actionLine/actionLine.fxml" />
         </VBox>

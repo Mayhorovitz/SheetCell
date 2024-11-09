@@ -56,6 +56,7 @@ public class DTOFactoryImpl implements DTOFactory {
                 cell.getOriginalValue(),
                 cell.getEffectiveValue().toString(),
                 cell.getVersion(),
+                cell.getChangedBy(),
                 cell.getBackgroundColor(),
                 cell.getTextColor(),
                 dependsOnIds,
@@ -65,7 +66,7 @@ public class DTOFactoryImpl implements DTOFactory {
 
     @Override
     public CellDTOImpl createEmptyCellDTO(String identity) {
-        return new dto.impl.CellDTOImpl(identity, "", "", 0, "#FFFFFF", "#000000", new ArrayList<>(), new ArrayList<>());
+        return new dto.impl.CellDTOImpl(identity, "", "", 0, "", "#FFFFFF", "#000000", new ArrayList<>(), new ArrayList<>());
     }
 
     @Override

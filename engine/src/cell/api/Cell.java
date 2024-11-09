@@ -13,6 +13,9 @@ import java.util.List;
         void setTextColor(String textColor); // Fixed semicolon
         Coordinate getCoordinate();
         String getOriginalValue();
+
+        String getChangedBy();
+
         EffectiveValue getEffectiveValue();
         int getVersion();
         List<Cell> getDependsOn();

@@ -1,4 +1,4 @@
-package servlets;
+package servlets.sheetView;
 
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
@@ -25,7 +25,7 @@ public class ResetCellDesignServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String sheetName = request.getParameter("sheetName");
         String cellId = request.getParameter("cellId");
 

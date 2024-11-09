@@ -65,7 +65,12 @@ public class PermissionsManager {
             userPermissions.put(request.getUsername(), request.getRequestedPermission());
         }
     }
-
+    public synchronized void grantPermission(String username, PermissionType permissionType) {
+        if (username == null || permissionType == null) {
+            throw new IllegalArgumentException("Username and permission type cannot be null.");
+        }
+        userPermissions.put(username, permissionType);
+    }
     public synchronized PermissionType getUserPermission(String username) {
         return userPermissions.getOrDefault(username, PermissionType.NONE);
     }

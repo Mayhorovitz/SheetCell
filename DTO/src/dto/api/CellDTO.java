@@ -8,6 +8,9 @@ public interface CellDTO extends DTO {
     String getOriginalValue();
     String getEffectiveValue();
     int getVersion();
+
+    String getChangedBy();
+
     String getBackgroundColor();
     String getTextColor();
     List<String> getDependsOn();

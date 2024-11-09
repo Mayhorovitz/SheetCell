@@ -22,7 +22,7 @@ import util.http.HttpClientUtil;
 
 import java.io.IOException;
 
-public class MainController {
+public class SheetViewMainController {
 
     private static final String SERVER_URL = "http://localhost:8080/shticell";
 
@@ -41,6 +41,7 @@ public class MainController {
     private SheetDTO currentSheet;
 
     private UIModel uiModel;
+    private boolean isReadOnly;
 
     @FXML
     private void initialize() {
@@ -55,29 +56,32 @@ public class MainController {
 
     }
 
-    public void setSheetDTO(SheetDTO sheetDTO) {
+    public void setSheetDTO(SheetDTO sheetDTO, boolean isReadOnly) {
         this.currentSheet = sheetDTO;
+        this.isReadOnly = isReadOnly;
         rangeController.updateRangeListView();
 
-        // הצגת הגיליון באמצעות ה-SheetController
         if (sheetController != null && sheetDTO != null) {
             sheetController.initializeSheet(sheetDTO);
+            actionLineController.setVersionSelectorItems(sheetDTO.getVersion());
+            actionLineController.setReadOnly(isReadOnly);
         }
     }
 
     @FXML
     public void handleCellSelection(String cellId) {
         try {
-            CellDTOImpl selectedCellDTO = currentSheet.getCells().get(cellId);
-            if (selectedCellDTO != null) {
-                actionLineController.updateActionLine(selectedCellDTO);
+            CellDTOImpl selectedCell = currentSheet.getCells().get(cellId);
+            if (selectedCell != null) {
+                actionLineController.updateActionLine(selectedCell, cellId);
                 sheetController.resetRangeHighlight();
-                sheetController.highlightDependenciesAndInfluences(selectedCellDTO);
+                sheetController.highlightDependenciesAndInfluences(selectedCell);
             } else {
-                actionLineController.updateActionLine(null);
+                actionLineController.updateActionLine(null, cellId);
+                sheetController.highlightDependenciesAndInfluences(selectedCell);
             }
         } catch (IllegalArgumentException e) {
-            actionLineController.updateActionLine(null);
+            actionLineController.updateActionLine(null , cellId);
         }
     }
 
@@ -135,6 +139,7 @@ public class MainController {
             String finalUrl = HttpUrl
                     .parse(SERVER_URL + "/getSheetVersion")
                     .newBuilder()
+                    .addQueryParameter("sheetName", currentSheet.getName()) // הוספת שם הדף כפרמטר
                     .addQueryParameter("version", selectedVersion)
                     .build()
                     .toString();
@@ -149,7 +154,7 @@ public class MainController {
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String sheetJson = response.body().string();
-                        SheetDTO selectedSheetDTO = new Gson().fromJson(sheetJson, SheetDTO.class);
+                        SheetDTOImpl selectedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
                         Platform.runLater(() -> showSheetVersionPopup(selectedSheetDTO));
                     } else {
                         Platform.runLater(() -> showErrorAlert("Failed to get sheet version: " + response.message()));
@@ -165,7 +170,7 @@ public class MainController {
             popupStage.initModality(Modality.APPLICATION_MODAL);
             popupStage.setTitle("View Only - Sheet Version");
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/viewSheet/components/readOnlyPopup/readOnlyPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/readOnlyPopup/readOnlyPopup.fxml"));
             VBox root = loader.load();
 
             ReadOnlyPopupController popupController = loader.getController();
@@ -217,6 +222,10 @@ public class MainController {
 
     public SheetDTO getCurrentSheet() {
         return this.currentSheet;
+    }
+
+    public boolean isReadOnly() {
+        return this.isReadOnly;
     }
 }
 

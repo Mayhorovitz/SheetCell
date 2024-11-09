@@ -13,11 +13,8 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.paint.Color;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.Response;
-import sheetView.MainController;
+import okhttp3.*;
+import sheetView.SheetViewMainController;
 import sheetView.UIModel;
 import util.http.HttpClientUtil;
 
@@ -34,7 +31,7 @@ import java.util.function.Consumer;
 public class SheetController {
     private static final String SERVER_URL = "http://localhost:8080/shticell";
 
-    private MainController mainController;
+    private SheetViewMainController sheetViewMainController;
     private UIModel uiModel;
     private int selectedRow = -1;
     private int selectedCol = -1;
@@ -53,8 +50,12 @@ public class SheetController {
 
     private boolean isReadOnly = false;
 
-    public void setMainController(MainController mainController) {
-        this.mainController = mainController;
+    public SheetDTO getCurrentSheet(){
+        return currentSheet;
+    }
+
+    public void setMainController(SheetViewMainController sheetViewMainController) {
+        this.sheetViewMainController = sheetViewMainController;
     }
 
     public void setCurrentSheet(SheetDTO currentSheet) {
@@ -241,8 +242,8 @@ public class SheetController {
 
                         if (isReadOnly && onCellSelected != null) {
                             onCellSelected.accept(selectedCellId);
-                        } else if (mainController != null) {
-                            mainController.handleCellSelection(selectedCellId);
+                        } else if (sheetViewMainController != null) {
+                            sheetViewMainController.handleCellSelection(selectedCellId);
                         }
                     });
                 }
@@ -343,18 +344,30 @@ public class SheetController {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
 
-            String finalUrl = HttpUrl.parse(SERVER_URL + "/updateBackgroundColor")
-                    .newBuilder()
-                    .addQueryParameter("sheetName", currentSheet.getName())
-                    .addQueryParameter("cellId", cellID)
-                    .addQueryParameter("colorHex", colorHex)
-                    .build()
-                    .toString();
+            String finalUrl = SERVER_URL + "/updateBackgroundColor";
 
-            HttpClientUtil.runAsync(finalUrl, new Callback() {
+            HttpUrl url = HttpUrl.parse(finalUrl);
+            if (url == null) {
+                sheetViewMainController.showErrorAlert("Invalid URL for updating background color.");
+                return;
+            }
+
+            RequestBody formBody = new FormBody.Builder()
+                    .add("sheetName", currentSheet.getName())
+                    .add("cellId", cellID)
+                    .add("colorHex", colorHex)
+                    .build();
+
+            // יצירת בקשת POST
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(formBody)
+                    .build();
+
+            HttpClientUtil.runAsync(request, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Platform.runLater(() -> mainController.showErrorAlert("Failed to update cell background color: " + e.getMessage()));
+                    Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to update cell background color: " + e.getMessage()));
                 }
 
                 @Override
@@ -368,7 +381,7 @@ public class SheetController {
                             }
                         });
                     } else {
-                        Platform.runLater(() -> mainController.showErrorAlert("Failed to update cell background color: " + response.message()));
+                        Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to update cell background color: " + response.message()));
                     }
                 }
             });
@@ -376,23 +389,34 @@ public class SheetController {
     }
 
 
-    public void applyTextColorToSelectedCell( Color color) {
+    public void applyTextColorToSelectedCell(Color color) {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
 
-            String finalUrl = HttpUrl.parse(SERVER_URL + "/updateTextColor")
-                    .newBuilder()
-                    .addQueryParameter("sheetName", currentSheet.getName())
-                    .addQueryParameter("cellId", cellID)
-                    .addQueryParameter("colorHex", colorHex)
-                    .build()
-                    .toString();
+            String finalUrl = SERVER_URL + "/updateTextColor";
 
-            HttpClientUtil.runAsync(finalUrl, new Callback() {
+            HttpUrl url = HttpUrl.parse(finalUrl);
+            if (url == null) {
+                sheetViewMainController.showErrorAlert("Invalid URL for updating text color.");
+                return;
+            }
+
+            RequestBody formBody = new FormBody.Builder()
+                    .add("sheetName", currentSheet.getName())
+                    .add("cellId", cellID)
+                    .add("colorHex", colorHex)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(formBody)
+                    .build();
+
+            HttpClientUtil.runAsync(request, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Platform.runLater(() -> mainController.showErrorAlert("Failed to update cell text color: " + e.getMessage()));
+                    Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to update cell text color: " + e.getMessage()));
                 }
 
                 @Override
@@ -406,12 +430,13 @@ public class SheetController {
                             }
                         });
                     } else {
-                        Platform.runLater(() -> mainController.showErrorAlert("Failed to update cell text color: " + response.message()));
+                        Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to update cell text color: " + response.message()));
                     }
                 }
             });
         }
     }
+
 
     // Convert Color to hex string
     private String toHexString(Color color) {
@@ -472,7 +497,7 @@ public class SheetController {
             HttpClientUtil.runAsync(finalUrl, new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
-                    Platform.runLater(() -> mainController.showErrorAlert("Failed to reset cell design: " + e.getMessage()));
+                    Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to reset cell design: " + e.getMessage()));
                 }
 
                 @Override
@@ -490,7 +515,7 @@ public class SheetController {
                             }
                         });
                     } else {
-                        Platform.runLater(() -> mainController.showErrorAlert("Failed to reset cell design: " + response.message()));
+                        Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to reset cell design: " + response.message()));
                     }
                 }
             });
@@ -628,9 +653,9 @@ public class SheetController {
                 if (isReadOnly && onCellSelected != null) {
                     // In read-only mode, use the provided listener
                     onCellSelected.accept(selectedCellId);
-                } else if (mainController != null) {
+                } else if (sheetViewMainController != null) {
                     // In normal mode, notify the main controller
-                    mainController.handleCellSelection(selectedCellId);
+                    sheetViewMainController.handleCellSelection(selectedCellId);
                 }
             });
         }
@@ -654,4 +679,7 @@ public class SheetController {
         return result;
     }
 
+    public boolean isReadOnly() {
+        return sheetViewMainController.isReadOnly();
+    }
 }

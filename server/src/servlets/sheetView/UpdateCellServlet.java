@@ -8,6 +8,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import utils.SessionUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -21,12 +22,13 @@ public class UpdateCellServlet extends HttpServlet {
         String sheetName = request.getParameter("sheetName");
         String cellId = request.getParameter("cellId");
         String newValue = request.getParameter("newValue");
+        String userName = SessionUtils.getUsername(request);
 
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
         Engine engine = (Engine) getServletContext().getAttribute("engine");
         try {
-            engine.updateCell(sheetName, cellId, newValue);
+            engine.updateCell(sheetName, cellId, newValue, userName);
             SheetDTO updatedSheetDTO = engine.getCurrentSheetDTO(sheetName);
             String jsonResponse = new Gson().toJson(updatedSheetDTO);
             out.print(jsonResponse);

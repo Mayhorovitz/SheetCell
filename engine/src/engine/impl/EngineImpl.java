@@ -58,7 +58,7 @@ public class EngineImpl implements Engine {
         }
 
         Map<Integer, Sheet> versionsMap = new HashMap<>();
-        Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML);
+        Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML, owner);
         currentSheet.setSheetVersion(LOAD_VERSION);
         currentSheet.setOwner(owner);
         versionsMap.put(LOAD_VERSION, currentSheet);
@@ -147,7 +147,7 @@ public class EngineImpl implements Engine {
     /**
      * Converts an STLSheet object into a Sheet object.
      */
-    private Sheet STLSheetToSheet(STLSheet stlSheet) {
+    private Sheet STLSheetToSheet(STLSheet stlSheet, String owner) {
         Sheet newSheet = new SheetImpl();
         newSheet.setName(stlSheet.getName());
 
@@ -176,7 +176,7 @@ public class EngineImpl implements Engine {
             int col = convertColumnToIndex(column);
 
             Coordinate coordinate = new CoordinateImpl(row, col);
-            Cell cell = new CellImpl(row, col, originalValue, 1, newSheet);
+            Cell cell = new CellImpl(row, col, originalValue, 1, owner,newSheet);
             newSheet.addCell(coordinate, cell);
         }
 
@@ -195,7 +195,7 @@ public class EngineImpl implements Engine {
      * Updates a cell's value.
      */
     @Override
-    public void updateCell(String sheetName, String coordinate, String newValue) {
+    public void updateCell(String sheetName, String coordinate, String newValue,String userName) {
         if (coordinate == null || newValue == null) {
             throw new IllegalArgumentException("Cell location and value cannot be null.");
         }
@@ -207,7 +207,7 @@ public class EngineImpl implements Engine {
         Map<Integer, Sheet> sheetVersions = allSheets.get(sheetName);
         int currentVersion = currentSheetVersions.get(sheetName);
         Sheet currentSheet = sheetVersions.get(currentVersion);
-        Sheet newSheet = currentSheet.updateCellValueAndCalculate(coordinate, newValue);
+        Sheet newSheet = currentSheet.updateCellValueAndCalculate(coordinate, newValue, userName);
 
         int newVersion = currentVersion + 1;
         newSheet.setSheetVersion(newVersion);
@@ -319,9 +319,9 @@ public class EngineImpl implements Engine {
      * Filters a sheet by values and returns the filtered sheet as a DTO.
      */
     @Override
-    public SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues, List<Integer> originalRowNumbers) {
+    public SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues) {
         Sheet currentSheet = getCurrentSheet(sheetName);
-        Sheet filteredSheet = currentSheet.filterSheetByValues(range, column, selectedValues, originalRowNumbers);
+        Sheet filteredSheet = currentSheet.filterSheetByValues(range, column, selectedValues);
         return dtoFactory.createSheetDTO(filteredSheet);
     }
 
@@ -453,7 +453,6 @@ public class EngineImpl implements Engine {
     public void handleResponseRequest(String sheetName, String requesterUsername, String approverUsername, PermissionStatus status) {
         PermissionsManager permissionsManager = getPermissionsManager(sheetName);
 
-        // מציאת הבקשה לפי שם המשתמש המבקש
         List<PermissionRequest> requests = permissionsManager.getPermissionRequests();
         Optional<PermissionRequest> requestOptional = requests.stream()
                 .filter(request -> request.getUsername().equals(requesterUsername) && request.getStatus() == PermissionStatus.PENDING)
@@ -468,8 +467,11 @@ public class EngineImpl implements Engine {
             throw new IllegalArgumentException("Only the owner can handle permission requests.");
         }
 
-        // עדכון הסטטוס של הבקשה
         request.setStatus(status);
+        // הוספת הרשאה למשתמש אם הבקשה אושרה
+        if (status == PermissionStatus.APPROVED) {
+            permissionsManager.grantPermission(requesterUsername, request.getRequestedPermission());
+        }
 
     }
 

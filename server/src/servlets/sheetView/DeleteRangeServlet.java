@@ -1,5 +1,6 @@
 package servlets.sheetView;
 import com.google.gson.Gson;
+import dto.api.SheetDTO;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -30,11 +31,14 @@ public class DeleteRangeServlet extends HttpServlet {
 
         try {
             engine.deleteRangeFromSheet(sheetName, rangeName);
-            out.print(new Gson().toJson("Range deleted successfully"));
+            SheetDTO updatedSheetDTO = engine.getCurrentSheetDTO(sheetName);
+            String jsonResponse = new Gson().toJson(updatedSheetDTO);
+            out.print(jsonResponse);
             out.flush();
         } catch (Exception e) {
+            e.printStackTrace();  // To log the error
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(new Gson().toJson("Error deleting range: " + e.getMessage()));
+            out.print("error:" + e.getMessage());
             out.flush();
         }
     }

@@ -2,6 +2,7 @@ package sheetView.components.sort;
 
 import com.google.gson.Gson;
 import dto.api.SheetDTO;
+import dto.impl.SheetDTOImpl;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -34,7 +35,7 @@ public class SortPopupController {
     @FXML
     private TextField columnsTextField;  // TextField for columns input
     @FXML
-    private Button sortButton;
+    private Button Sort;
 
     private SheetController sheetController;
     private UIModel uiModel;
@@ -52,7 +53,7 @@ public class SortPopupController {
         if (range != null && !range.isEmpty() && columns != null && !columns.isEmpty()) {
             String finalUrl = HttpUrl.parse(SERVER_URL + "/sortSheetRange")
                     .newBuilder()
-                    .addQueryParameter("sheetName", sheetController.getUiModel().getSheetName())
+                    .addQueryParameter("sheetName", sheetController.getCurrentSheet().getName())
                     .addQueryParameter("range", range)
                     .addQueryParameter("columns", columns)
                     .build()
@@ -67,7 +68,7 @@ public class SortPopupController {
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
                     if (response.isSuccessful()) {
-                        SheetDTO sortedSheetDTO = new Gson().fromJson(response.body().string(), SheetDTO.class);
+                        SheetDTOImpl sortedSheetDTO = new Gson().fromJson(response.body().string(), SheetDTOImpl.class);
                         Platform.runLater(() -> showSortedSheetPopup(sortedSheetDTO));
                     } else {
                         Platform.runLater(() -> showError("Error sorting sheet: " + response.message()));
@@ -97,7 +98,7 @@ public class SortPopupController {
             stage.show();
 
             // Close the sort popup
-            Stage currentStage = (Stage) sortButton.getScene().getWindow();
+            Stage currentStage = (Stage) Sort.getScene().getWindow();
             currentStage.close();
         } catch (IOException e) {
             showError("Failed to display sorted sheet: " + e.getMessage());

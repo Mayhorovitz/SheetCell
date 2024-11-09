@@ -10,16 +10,18 @@ public class CellDTOImpl implements dto.api.CellDTO {
     private String originalValue;
     private String effectiveValue;
     private int version;
+    private String changedBy;
     private String backgroundColor;
     private String textColor;
     private List<String> dependsOn; //
     private List<String> influencingOn;
 
-    public CellDTOImpl(String identity, String originalValue, String effectiveValue, int version, String backgroundColor, String textColor, List<String> dependsOn, List<String> influencingOn) {
+    public CellDTOImpl(String identity, String originalValue, String effectiveValue, int version, String changedBy, String backgroundColor, String textColor, List<String> dependsOn, List<String> influencingOn) {
         this.identity = identity;
         this.originalValue = originalValue;
         this.effectiveValue = effectiveValue;
         this.version = version;
+        this.changedBy = changedBy;
         this.backgroundColor = backgroundColor;
         this.textColor = textColor;
         this.dependsOn = dependsOn;
@@ -45,6 +47,10 @@ public class CellDTOImpl implements dto.api.CellDTO {
     @Override
     public int getVersion() {
         return version;
+    }
+    @Override
+    public String getChangedBy() {
+        return changedBy;
     }
 
     @Override

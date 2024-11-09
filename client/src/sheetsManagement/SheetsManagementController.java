@@ -132,7 +132,13 @@ public class SheetsManagementController {
     public void handleViewSheet() {
         SheetSummaryDTO selectedSheet = availableSheetsController.getAvailableSheetsTable().getSelectionModel().getSelectedItem();
         if (selectedSheet != null) {
-            mainController.switchToViewSheet(selectedSheet);
+            String permissionType = selectedSheet.getPermissionType();
+            if (permissionType.equals("NONE")) {
+                showError("You do not have permission to view this sheet.");
+            } else {
+                boolean isReadOnly = permissionType.equals("READER");
+                mainController.switchToViewSheet(selectedSheet, isReadOnly);
+            }
         } else {
             showError("Please select a sheet to view.");
         }
@@ -144,8 +150,7 @@ public class SheetsManagementController {
     }
 
     public void setActive() {
-        // כאן תוכל להוסיף פעולות שתרצה שיבוצעו כאשר המסך הופך לפעיל
-        // לדוגמה, לטעון מחדש נתונים או לעדכן רכיבים מסוימים ב-UI
+
         if (availableSheetsController != null) {
             availableSheetsController.refreshSheetsTable(); // לדוגמה: לרענן את טבלת הגיליונות
         }
