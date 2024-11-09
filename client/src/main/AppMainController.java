@@ -18,7 +18,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
-import sheetView.SheetViewMainController;
+import sheetView.main.SheetViewMainController;
 import sheetsManagement.SheetsManagementController;
 import util.http.HttpClientUtil;
 import login.LoginController;
@@ -134,7 +134,7 @@ public class AppMainController {
 
     private void showSheetView(SheetDTO sheetDTO, boolean isReadOnly) {
         try {
-            URL sheetPageUrl = getClass().getResource("/sheetView/main.fxml");
+            URL sheetPageUrl = getClass().getResource("/sheetView/main/main.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(sheetPageUrl);
             Parent sheetComponent = fxmlLoader.load();

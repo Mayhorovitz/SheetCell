@@ -65,7 +65,6 @@ public class EngineImpl implements Engine {
         allSheets.put(sheetName, versionsMap);
         currentSheetVersions.put(sheetName, LOAD_VERSION);
 
-        // יצירת מנהל הרשאות והוספת הרשאה עבור הבעלים עם הרשאת OWNER
         PermissionsManager permissionsManager = new PermissionsManager(owner);
         permissionsManager.addPermission(owner, PermissionType.OWNER);
         permissionsManagers.put(sheetName, permissionsManager);
@@ -468,7 +467,6 @@ public class EngineImpl implements Engine {
         }
 
         request.setStatus(status);
-        // הוספת הרשאה למשתמש אם הבקשה אושרה
         if (status == PermissionStatus.APPROVED) {
             permissionsManager.grantPermission(requesterUsername, request.getRequestedPermission());
         }
@@ -481,7 +479,7 @@ public class EngineImpl implements Engine {
         return permissionsManager.getPermissionRequests().stream()
                 .map(request -> new PermissionRequestDTOImpl(
                         request.getUsername(),
-                        sheetName, // הוספת שם הגיליון
+                        sheetName,
                         request.getRequestedPermission(),
                         request.getStatus()))
                 .collect(Collectors.toList());
@@ -501,7 +499,7 @@ public class EngineImpl implements Engine {
                     if (request.getStatus() == PermissionStatus.PENDING) {
                         PermissionRequestDTO requestDTO = new PermissionRequestDTOImpl(
                                 request.getUsername(),
-                                sheetName,  // הוספת שם הגיליון
+                                sheetName,
                                 request.getRequestedPermission(),
                                 request.getStatus()
                         );
@@ -512,6 +510,12 @@ public class EngineImpl implements Engine {
         }
 
         return pendingRequests;
+    }
+
+    @Override
+    public int getLatestVersion(String sheetName) {
+        int currentVersion = currentSheetVersions.get(sheetName);
+        return currentVersion;
     }
 
 }

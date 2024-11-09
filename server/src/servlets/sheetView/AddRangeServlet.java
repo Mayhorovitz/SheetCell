@@ -40,7 +40,7 @@ public class AddRangeServlet extends HttpServlet {
             out.flush();
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.print(new Gson().toJson("Error adding range: " + e.getMessage()));
+            out.print("Error adding range: " + e.getMessage());
             out.flush();
         }
     }

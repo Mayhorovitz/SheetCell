@@ -1,4 +1,4 @@
-package sheetView;
+package sheetView.main;
 
 import com.google.gson.Gson;
 import dto.api.SheetDTO;
@@ -42,6 +42,8 @@ public class SheetViewMainController {
 
     private UIModel uiModel;
     private boolean isReadOnly;
+    private VersionRefresher versionRefresher;
+
 
     @FXML
     private void initialize() {
@@ -52,6 +54,7 @@ public class SheetViewMainController {
         sheetController.setUiModel(uiModel);
         commandsController.setSheetController(sheetController);
         rangeController.setMainController(this);
+        versionRefresher = new VersionRefresher(this);
 
 
     }
@@ -65,6 +68,8 @@ public class SheetViewMainController {
             sheetController.initializeSheet(sheetDTO);
             actionLineController.setVersionSelectorItems(sheetDTO.getVersion());
             actionLineController.setReadOnly(isReadOnly);
+            versionRefresher.startRefreshing();
+
         }
     }
 
@@ -87,6 +92,14 @@ public class SheetViewMainController {
 
     public void handleUpdateCell(String newValue, String selectedCell) {
         if (selectedCell != null && !newValue.isEmpty()) {
+            // בדיקת אם המשתמש נמצא על הגרסה העדכנית ביותר
+            int currentVersion = currentSheet.getVersion();
+            if (!isOnLatestVersion(currentVersion)) {
+                showErrorAlert("Update failed: You are not viewing the latest version of the sheet. Please update to the latest version and try again.");
+                return;
+            }
+
+            // ביצוע העדכון אם המשתמש על הגרסה העדכנית ביותר
             String finalUrl = SERVER_URL + "/updateCell";
 
             HttpUrl url = HttpUrl.parse(finalUrl);
@@ -118,11 +131,7 @@ public class SheetViewMainController {
                         String sheetJson = response.body().string();
                         SheetDTOImpl updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
                         Platform.runLater(() -> {
-                            currentSheet = updatedSheetDTO;
-                            sheetController.setCurrentSheet(updatedSheetDTO);
-                            sheetController.displaySheet();
-                            actionLineController.setVersionSelectorItems(currentSheet.getVersion());
-
+                            updateCurrentSheet(updatedSheetDTO);
                         });
                     } else {
                         Platform.runLater(() -> showErrorAlert("Failed to update cell: " + response.message()));
@@ -134,37 +143,13 @@ public class SheetViewMainController {
         }
     }
 
-    public void handleVersionSelection(String selectedVersion) {
-        if (selectedVersion != null) {
-            String finalUrl = HttpUrl
-                    .parse(SERVER_URL + "/getSheetVersion")
-                    .newBuilder()
-                    .addQueryParameter("sheetName", currentSheet.getName()) // הוספת שם הדף כפרמטר
-                    .addQueryParameter("version", selectedVersion)
-                    .build()
-                    .toString();
-
-            HttpClientUtil.runAsync(finalUrl, new Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Platform.runLater(() -> showErrorAlert("Failed to get sheet version: " + e.getMessage()));
-                }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        String sheetJson = response.body().string();
-                        SheetDTOImpl selectedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
-                        Platform.runLater(() -> showSheetVersionPopup(selectedSheetDTO));
-                    } else {
-                        Platform.runLater(() -> showErrorAlert("Failed to get sheet version: " + response.message()));
-                    }
-                }
-            });
-        }
+    private boolean isOnLatestVersion(int currentVersion) {
+        // פונקציה לבדיקת אם המשתמש על הגרסה העדכנית ביותר
+        return currentVersion == versionRefresher.getLatestVersion();
     }
 
-    private void showSheetVersionPopup(SheetDTO sheetDTO) {
+
+    public void showSheetVersionPopup(SheetDTO sheetDTO) {
         try {
             Stage popupStage = new Stage();
             popupStage.initModality(Modality.APPLICATION_MODAL);
@@ -227,5 +212,24 @@ public class SheetViewMainController {
     public boolean isReadOnly() {
         return this.isReadOnly;
     }
+
+    public void stopVersionRefresher() {
+        if (versionRefresher != null) {
+            versionRefresher.stopRefreshing();
+        }
+    }
+
+    public void showVersionUpdateHint(int latestVersion) {
+        actionLineController.updateVersionSelector(latestVersion);
+    }
+
+    public void updateCurrentSheet(SheetDTOImpl updatedSheetDTO) {
+        this.currentSheet = updatedSheetDTO;
+        sheetController.setCurrentSheet(updatedSheetDTO);
+        sheetController.displaySheet();
+        actionLineController.setVersionSelectorItems(updatedSheetDTO.getVersion());
+        rangeController.updateRangeListView();
+    }
+
 }
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.main.SheetViewMainController">
+
+    <top>
+        <VBox spacing="10">
+
+            <fx:include fx:id="actionLine" source="../components/actionLine/actionLine.fxml"/>
+        </VBox>
+    </top>
+
+    <left>
+        <VBox maxWidth="250" prefWidth="220">
+            <ScrollPane  fitToHeight="true" fitToWidth="true">
+                <content>
+                    <VBox spacing="10" fillWidth="true">
+                        <fx:include fx:id="commands" source="../components/commands/commands.fxml" />
+                        <fx:include fx:id="range" source="../components/ranges/ranges.fxml" />
+                    </VBox>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </left>
+
+    <center>
+        <fx:include fx:id="sheet" source="../components/sheet/sheet.fxml" />
+    </center>
+
+</BorderPane>

@@ -26,7 +26,7 @@ public class DeleteRangeServlet extends HttpServlet {
         String sheetName = request.getParameter("sheetName");
         String rangeName = request.getParameter("rangeName");
 
-        response.setContentType("application/json");
+        response.setContentType("application/json; charset=UTF-8");
         PrintWriter out = response.getWriter();
 
         try {

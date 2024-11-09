@@ -14,8 +14,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.paint.Color;
 import okhttp3.*;
-import sheetView.SheetViewMainController;
-import sheetView.UIModel;
+import sheetView.main.SheetViewMainController;
+import sheetView.main.UIModel;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;

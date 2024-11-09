@@ -4,7 +4,7 @@ import dto.api.SheetDTO;
 import dto.impl.CellDTOImpl;
 import javafx.fxml.FXML;
 import javafx.scene.layout.GridPane;
-import sheetView.UIModel;
+import sheetView.main.UIModel;
 import sheetView.components.actionLine.ActionLineController;
 import sheetView.components.sheet.SheetController;
 

@@ -2,10 +2,12 @@ package sheetsManagement;
 
 import dto.impl.SheetSummaryDTO;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.stage.FileChooser;
 import main.AppMainController;
 import okhttp3.*;
@@ -34,8 +36,12 @@ public class SheetsManagementController {
     private PermissionsTableController permissionsTableController;
     @FXML
     private CommandsController commandsController;
+
     @FXML
-    private VBox uploadSheetBox;
+    private ProgressBar progressBar;
+
+    @FXML
+    private Label progressLabel;
     @FXML
     private Button uploadSheetButton;
 
@@ -74,31 +80,76 @@ public class SheetsManagementController {
         File selectedFile = fileChooser.showOpenDialog(null);
 
         if (selectedFile != null) {
-            try {
-                String finalUrl = Constants.UPLOAD_SHEET_PAGE;
-                MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-                multipartBodyBuilder.addFormDataPart("file", selectedFile.getName(), RequestBody.create(selectedFile, MediaType.parse("text/xml")));
-                RequestBody requestBody = multipartBodyBuilder.build();
-                Request request = new Request.Builder().url(finalUrl).post(requestBody).build();
+            Task<Void> uploadTask = new Task<>() {
+                @Override
+                protected Void call() throws Exception {
+                    try {
+                        String finalUrl = Constants.UPLOAD_SHEET_PAGE;
+                        MultipartBody.Builder multipartBodyBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+                        multipartBodyBuilder.addFormDataPart("file", selectedFile.getName(), RequestBody.create(selectedFile, MediaType.parse("text/xml")));
+                        RequestBody requestBody = multipartBodyBuilder.build();
+                        Request request = new Request.Builder().url(finalUrl).post(requestBody).build();
 
-                HttpClientUtil.getHttpClient().newCall(request).enqueue(new Callback() {
-                    @Override
-                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                        Platform.runLater(() -> showError("Failed to upload the sheet: " + e.getMessage()));
-                    }
-
-                    @Override
-                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                        if (response.isSuccessful()) {
-                            Platform.runLater(() -> showMessage("Sheet uploaded successfully."));
-                        } else {
-                            Platform.runLater(() -> showError("Failed to upload the sheet: " + response.message()));
+                        // Simulate progress for demonstration (no actual upload progress available with OkHttp)
+                        for (int i = 0; i <= 100; i++) {
+                            updateProgress(i, 100);
+                            updateMessage(i + "%");
+                            Thread.sleep(10);
                         }
+
+                        HttpClientUtil.getHttpClient().newCall(request).enqueue(new Callback() {
+                            @Override
+                            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                                Platform.runLater(() -> {
+                                    updateProgress(0, 100);
+
+                                    showError("Failed to upload the sheet: " + e.getMessage());
+                                });
+                            }
+
+                            @Override
+                            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+
+                                if (response.isSuccessful()) {
+                                    Platform.runLater(() -> {
+                                        updateProgress(100, 100);
+                                    });
+                                } else {
+                                    String errorMessage = response.body() != null ? response.body().string() : "Unknown error";
+
+                                    Platform.runLater(() -> {
+                                        updateProgress(0, 100);
+                                        showError(errorMessage);
+                                    });
+                                }
+                            }
+                        });
+
+                        return null;
+                    } catch (Exception e) {
+                        updateProgress(0, 100);
+                        throw e;
                     }
-                });
-            } catch (Exception e) {
-                showError("An error occurred while uploading the sheet: " + e.getMessage());
-            }
+                }
+            };
+
+            // Bind the progress bar and label to the task's properties
+            progressBar.progressProperty().bind(uploadTask.progressProperty());
+            progressLabel.textProperty().bind(uploadTask.messageProperty());
+
+            // Handle task completion
+            uploadTask.setOnSucceeded(event -> {
+                progressLabel.textProperty().unbind();
+                progressLabel.setText("Upload Complete!");
+            });
+
+            uploadTask.setOnFailed(event -> {
+                progressLabel.textProperty().unbind();
+                showError("An error occurred while uploading the sheet.");
+            });
+
+            // Run the task in a new thread
+            new Thread(uploadTask).start();
         }
     }
 

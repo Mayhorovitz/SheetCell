@@ -67,4 +67,6 @@ public interface Engine {
     List<PermissionRequestDTO> getPermissionRequestsDTO(String sheetName);
 
     List<PermissionRequestDTO> getPendingRequestsForOwner(String ownerUsername);
+
+    int getLatestVersion(String sheetName);
 }

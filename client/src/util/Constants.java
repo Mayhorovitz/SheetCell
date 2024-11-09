@@ -17,5 +17,6 @@ public class Constants {
     public static final String PERMISSION_REQUEST_PAGE = FULL_SERVER_PATH + "/permissionRequest";
     public static final String PERMISSION_RESPONSE_PAGE =  FULL_SERVER_PATH + "/permissionResponse";
     public static final String OWNED_SHEETS_PENDING_REQUESTS_PAGE =  FULL_SERVER_PATH +"/ownedSheetsPendingRequests";
+    public static final String GET_SHEET_VERSION =  FULL_SERVER_PATH +"/getSheetVersion";
 
 }
