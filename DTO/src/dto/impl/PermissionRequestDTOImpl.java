@@ -6,7 +6,7 @@ import permission.PermissionType;
 
 public class PermissionRequestDTOImpl implements PermissionRequestDTO {
     private String username;
-    private String sheetName;  // הוספת שם הגיליון
+    private String sheetName;
     private PermissionType requestedPermission;
     private PermissionStatus status;
 

@@ -30,9 +30,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of the Engine interface.
- */
+
 public class EngineImpl implements Engine {
 
     public static final int MAX_ROWS = 50;
@@ -45,9 +43,7 @@ public class EngineImpl implements Engine {
     private Map<String, PermissionsManager> permissionsManagers = new HashMap<>();
 
 
-    /**
-     * Handles loading an XML file into the engine.
-     */
+    // Handles loading an XML file into the engine.
     @Override
     public void loadFile(InputStream inputStream, String owner) throws Exception {
         STLSheet loadedSheetFromXML = loadXMLFile(inputStream);
@@ -95,9 +91,8 @@ public class EngineImpl implements Engine {
     }
 
 
-    /**
-     * Validates the loaded STLSheet object.
-     */
+    //  Validates the loaded STLSheet object.
+
     private void validateSheet(STLSheet sheet) {
         STLLayout layout = sheet.getSTLLayout();
         if (layout.getRows() < 1 || layout.getRows() > MAX_ROWS ||
@@ -116,25 +111,22 @@ public class EngineImpl implements Engine {
         }
     }
 
-    /**
-     * Extracts row number from a cell coordinate string.
-     */
+    //  Extracts row number from a cell coordinate string.
+
     private int extractRowFromCoordinate(String coordinateString) {
         String rowPart = coordinateString.replaceAll("[^0-9]", "");
         return Integer.parseInt(rowPart);
     }
 
-    /**
-     * Extracts column index from a cell coordinate string.
-     */
+    //  Extracts column index from a cell coordinate string.
+
     private int extractColumnFromCoordinate(String coordinateString) {
         String columnPart = coordinateString.replaceAll("[^A-Za-z]", "");
         return convertColumnToIndex(columnPart);
     }
 
-    /**
-     * Converts a column letter to its corresponding index.
-     */
+    // Converts a column letter to its corresponding index.
+
     public int convertColumnToIndex(String column) {
         int result = 0;
         for (char c : column.toUpperCase().toCharArray()) {
@@ -143,9 +135,7 @@ public class EngineImpl implements Engine {
         return result;
     }
 
-    /**
-     * Converts an STLSheet object into a Sheet object.
-     */
+    //  Converts an STLSheet object into a Sheet object.
     private Sheet STLSheetToSheet(STLSheet stlSheet, String owner) {
         Sheet newSheet = new SheetImpl();
         newSheet.setName(stlSheet.getName());
@@ -190,9 +180,7 @@ public class EngineImpl implements Engine {
         return newSheet;
     }
 
-    /**
-     * Updates a cell's value.
-     */
+    //  Updates a cell's value.
     @Override
     public void updateCell(String sheetName, String coordinate, String newValue,String userName) {
         if (coordinate == null || newValue == null) {
@@ -214,9 +202,7 @@ public class EngineImpl implements Engine {
         currentSheetVersions.put(sheetName, newVersion);
     }
 
-    /**
-     * Retrieves the current sheet.
-     */
+    //  Retrieves the current sheet.
     private Sheet getCurrentSheet(String sheetName) {
         if (!allSheets.containsKey(sheetName)) {
             throw new IllegalArgumentException("Sheet with name '" + sheetName + "' does not exist.");
@@ -226,9 +212,7 @@ public class EngineImpl implements Engine {
         Map<Integer, Sheet> sheetVersions = allSheets.get(sheetName);
         return sheetVersions.get(currentVersion);
     }
-    /**
-     * Retrieves cell information as a DTO.
-     */
+    //  Retrieves cell information as a DTO.
     @Override
     public CellDTOImpl getCellInfo(String sheetName, String cellIdentifier) {
         Sheet currentSheet = getCurrentSheet(sheetName);
@@ -241,9 +225,8 @@ public class EngineImpl implements Engine {
             return dtoFactory.createEmptyCellDTO(cellIdentifier);
         }
     }
-    /**
-     * Validates that a coordinate is within the sheet bounds.
-     */
+    // Validates that a coordinate is within the sheet bounds.
+
     private void validateCoordinate(Sheet currentSheet, Coordinate coordinate) {
         if (coordinate.getRow() < 1 || coordinate.getRow() > currentSheet.getRows() ||
                 coordinate.getColumn() < 1 || coordinate.getColumn() > currentSheet.getCols()) {
@@ -251,27 +234,21 @@ public class EngineImpl implements Engine {
         }
     }
 
-    /**
-     * Adds a range to the sheet.
-     */
+    // Adds a range to the sheet.
     @Override
     public void addRangeToSheet(String sheetName, String name, String range) {
         Sheet currentSheet = getCurrentSheet(sheetName);
         currentSheet.addRange(name, range);
     }
 
-    /**
-     * Deletes a range from the sheet.
-     */
+    //Deletes a range from the sheet.
     @Override
     public void deleteRangeFromSheet(String sheetName, String name) {
         Sheet currentSheet = getCurrentSheet(sheetName);
         currentSheet.deleteRange(name);
     }
 
-    /**
-     * Retrieves a range from the sheet as a DTO.
-     */
+    //  Retrieves a range from the sheet as a DTO
     @Override
     public RangeDTO getRangeFromSheet(String sheetName, String name) {
         Sheet currentSheet = getCurrentSheet(sheetName);
@@ -283,9 +260,7 @@ public class EngineImpl implements Engine {
         }
     }
 
-    /**
-     * Retrieves all ranges from the sheet as DTOs.
-     */
+    // Retrieves all ranges from the sheet as DTOs
     @Override
     public Collection<RangeDTO> getAllRangesFromSheet(String sheetName) {
         Sheet currentSheet = getCurrentSheet(sheetName);
@@ -295,9 +270,7 @@ public class EngineImpl implements Engine {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Sorts a range by specified columns and returns the sorted sheet as a DTO.
-     */
+    //  Sorts a range by specified columns and returns the sorted sheet as a DTO
     @Override
     public SheetDTO sortSheetRangeByColumns(String sheetName, String range, String[] columns) {
         Sheet currentSheet = getCurrentSheet(sheetName);
@@ -305,18 +278,14 @@ public class EngineImpl implements Engine {
         return dtoFactory.createSheetDTO(sortedSheet);
     }
 
-    /**
-     * Gets unique values in a range column.
-     */
+    // Gets unique values in a range column.
     @Override
     public List<String> getUniqueValuesInRangeColumn(String sheetName, String range, String column) {
         Sheet currentSheet = getCurrentSheet(sheetName);
         return currentSheet.getUniqueValuesInRangeColumn(range, column);
     }
 
-    /**
-     * Filters a sheet by values and returns the filtered sheet as a DTO.
-     */
+    //  Filters a sheet by values and returns the filtered sheet as a DTO.
     @Override
     public SheetDTO filterSheetByValues(String sheetName, String range, String column, List<String> selectedValues) {
         Sheet currentSheet = getCurrentSheet(sheetName);
@@ -324,16 +293,6 @@ public class EngineImpl implements Engine {
         return dtoFactory.createSheetDTO(filteredSheet);
     }
 
-
-
-
-    /**
-     * Exits the application.
-     */
-    @Override
-    public void exit() {
-        System.exit(0);
-    }
 
     @Override
     public SheetDTO getSheetDTOByVersion(String sheetName, int versionNumber) {
@@ -343,9 +302,7 @@ public class EngineImpl implements Engine {
             return dtoFactory.createSheetDTO(allSheets.get(sheetName).get(versionNumber));
     }
 
-    /**
-     * Retrieves the current sheet as a DTO.
-     */
+    // Retrieves the current sheet as a DTO.
     @Override
     public SheetDTO getCurrentSheetDTO(String sheetName) {
         Sheet currentSheet = getCurrentSheet(sheetName);
@@ -514,8 +471,7 @@ public class EngineImpl implements Engine {
 
     @Override
     public int getLatestVersion(String sheetName) {
-        int currentVersion = currentSheetVersions.get(sheetName);
-        return currentVersion;
+        return currentSheetVersions.get(sheetName);
     }
 
     @Override

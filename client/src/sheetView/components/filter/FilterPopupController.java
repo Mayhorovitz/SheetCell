@@ -15,19 +15,18 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
-import sheetView.main.UIModel;
+import org.jetbrains.annotations.NotNull;
 import sheetView.components.readOnlyPopup.ReadOnlyPopupController;
 import sheetView.components.sheet.SheetController;
+import sheetView.main.UIModel;
+import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Controller for the filter popup, allowing users to filter data based on column values.
- */
+
 public class FilterPopupController {
 
     @FXML
@@ -39,7 +38,6 @@ public class FilterPopupController {
     @FXML
     private VBox valuesContainer;
 
-    private List<Integer> originalRowNumbers = new ArrayList<>();
 
     private SheetController sheetController;
     private UIModel uiModel;
@@ -63,7 +61,7 @@ public class FilterPopupController {
             return;
         }
 
-        String finalUrl = HttpUrl.parse("http://localhost:8080/shticell/getUniqueValues")
+        String finalUrl = HttpUrl.parse(Constants.GET_UNIQUE_VALUES)
                 .newBuilder()
                 .addQueryParameter("sheetName", sheetController.getCurrentSheet().getName()) // Replace with actual sheet name
                 .addQueryParameter("range", selectedRange)
@@ -73,12 +71,12 @@ public class FilterPopupController {
 
         HttpClientUtil.runAsync(finalUrl, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> showError("Error loading values: " + e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     uniqueValues = new Gson().fromJson(response.body().string(), List.class);
                     Platform.runLater(() -> {
@@ -114,7 +112,7 @@ public class FilterPopupController {
             return;
         }
 
-        String finalUrl = HttpUrl.parse("http://localhost:8080/shticell/filterSheet")
+        String finalUrl = HttpUrl.parse(Constants.FILTER_SHEET)
                 .newBuilder()
                 .addQueryParameter("sheetName", sheetController.getCurrentSheet().getName()) // Replace with actual sheet name
                 .addQueryParameter("range", selectedRange)
@@ -125,12 +123,12 @@ public class FilterPopupController {
 
         HttpClientUtil.runAsync(finalUrl, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> showError("Error applying filter: " + e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     SheetDTOImpl filteredSheetDTO = new Gson().fromJson(response.body().string(), SheetDTOImpl.class);
                     Platform.runLater(() -> {

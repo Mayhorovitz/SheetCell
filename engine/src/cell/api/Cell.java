@@ -10,12 +10,10 @@ import java.util.List;
         String getBackgroundColor();
         void setBackgroundColor(String backgroundColor);
         String getTextColor();
-        void setTextColor(String textColor); // Fixed semicolon
+        void setTextColor(String textColor);
         Coordinate getCoordinate();
         String getOriginalValue();
-
         String getChangedBy();
-
         EffectiveValue getEffectiveValue();
         int getVersion();
         List<Cell> getDependsOn();
@@ -24,6 +22,5 @@ import java.util.List;
         boolean calculateEffectiveValue();
         void resetDependencies();
         void resetInfluences();
-
         void setOriginalValue(String value);
     }

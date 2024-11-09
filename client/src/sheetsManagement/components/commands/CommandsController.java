@@ -48,8 +48,7 @@ public class CommandsController {
     }
 
     private void handleViewSheet() {
-        // Logic for viewing the selected sheet
-        SheetSummaryDTO selectedSheet = mainController.getAvailableSheetsController().getAvailableSheetsTable().getSelectionModel().getSelectedItem();
+        SheetSummaryDTO selectedSheet = mainController.getAvailableSheetsController().getSelectedSheet();
         if (selectedSheet != null) {
             mainController.handleViewSheet();
         } else {
@@ -59,7 +58,7 @@ public class CommandsController {
 
     private void handleRequestPermission() {
         // Show a dialog for selecting a sheet and permission type
-        SheetSummaryDTO selectedSheet = mainController.getAvailableSheetsController().getAvailableSheetsTable().getSelectionModel().getSelectedItem();
+        SheetSummaryDTO selectedSheet = mainController.getAvailableSheetsController().getSelectedSheet();
         if (selectedSheet == null) {
             showError("Please select a sheet to request permission.");
             return;
@@ -73,7 +72,7 @@ public class CommandsController {
 
         // Create a choice dialog for the user to select permission type
         List<String> permissionTypes = FXCollections.observableArrayList("READER", "WRITER");
-        ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(permissionTypes.get(0), permissionTypes);
+        ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(permissionTypes.getFirst(), permissionTypes);
         choiceDialog.setTitle("Request Permission");
         choiceDialog.setHeaderText("Select Permission Type");
         choiceDialog.setContentText("Choose the permission type:");
@@ -89,7 +88,7 @@ public class CommandsController {
 
             Request request = new Request.Builder()
                     .url(finalUrl)
-                    .post(requestBody) // Ensure POST method is used
+                    .post(requestBody)
                     .build();
 
             HttpClientUtil.runAsync(request, new Callback() {
@@ -99,14 +98,14 @@ public class CommandsController {
                 }
 
                 @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response)  {
                     try {
                         if (!response.isSuccessful()) {
                             Platform.runLater(() -> showError("Failed to request permission: " + response.message()));
 
                         }
                     } finally {
-                        response.close(); // Ensure the response body is closed to prevent leaks
+                        response.close();
                     }
                 }
             });
@@ -119,30 +118,24 @@ public class CommandsController {
 
     private void showPermissionsRequestsPopup() {
         try {
-            // טוען את ה-FXML של מסך הבקשות
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetsManagement/components/commands/permissionsRequests.fxml"));
             Parent root = loader.load();
 
-            // יוצרים stage חדש עבור הפופ-אפ
             Stage popupStage = new Stage();
             popupStage.setTitle("Pending Permission Requests");
             popupStage.initModality(Modality.WINDOW_MODAL);
-            popupStage.initOwner(commandsBox.getScene().getWindow()); // מבטיח שהפופ-אפ יהיה מעל החלון הראשי
+            popupStage.initOwner(commandsBox.getScene().getWindow());
 
-            // מחברים את ה-Controller של המסך לפופ-אפ כדי לתמוך ברענון ובתפעול
             PermissionsRequestsController permissionsRequestsController = loader.getController();
-            permissionsRequestsController.setMainController(mainController); // מבטיח שה-mainController מאותחל
+            permissionsRequestsController.setMainController(mainController);
 
-            // קובעים סצנה ומוסיפים את התוכן
             Scene scene = new Scene(root);
             popupStage.setScene(scene);
 
             permissionsRequestsController.startRequestsRefresher();
 
-            // מציגים את הפופ-אפ
             popupStage.showAndWait();
 
-            // לאחר סגירה, עוצרים את הרענון כדי למנוע בעיות ביצועים
             permissionsRequestsController.stopRequestsRefresher();
         } catch (IOException e) {
             showError("Failed to open permissions requests: " + e.getMessage());

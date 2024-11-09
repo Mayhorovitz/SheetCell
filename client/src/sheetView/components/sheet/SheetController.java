@@ -14,8 +14,10 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.paint.Color;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import sheetView.main.SheetViewMainController;
 import sheetView.main.UIModel;
+import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
@@ -181,7 +183,7 @@ public class SheetController {
             ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(col);
             colHeader.prefWidthProperty().bind(colConstraints.prefWidthProperty());
 
-            RowConstraints headerRowConstraints = spreadsheetGrid.getRowConstraints().get(0);
+            RowConstraints headerRowConstraints = spreadsheetGrid.getRowConstraints().getFirst();
             colHeader.prefHeightProperty().bind(headerRowConstraints.prefHeightProperty());
 
             spreadsheetGrid.add(colHeader, col, 0);
@@ -196,7 +198,7 @@ public class SheetController {
             RowConstraints rowConstraints = spreadsheetGrid.getRowConstraints().get(row);
             rowHeader.prefHeightProperty().bind(rowConstraints.prefHeightProperty());
 
-            ColumnConstraints headerColConstraints = spreadsheetGrid.getColumnConstraints().get(0);
+            ColumnConstraints headerColConstraints = spreadsheetGrid.getColumnConstraints().getFirst();
             rowHeader.prefWidthProperty().bind(headerColConstraints.prefWidthProperty());
 
             spreadsheetGrid.add(rowHeader, 0, row);
@@ -344,9 +346,8 @@ public class SheetController {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
 
-            String finalUrl = SERVER_URL + "/updateBackgroundColor";
 
-            HttpUrl url = HttpUrl.parse(finalUrl);
+            HttpUrl url = HttpUrl.parse(Constants.UPDATE_BACKGROUND);
             if (url == null) {
                 sheetViewMainController.showErrorAlert("Invalid URL for updating background color.");
                 return;
@@ -366,12 +367,12 @@ public class SheetController {
 
             HttpClientUtil.runAsync(request, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to update cell background color: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
                             Label selectedLabel = cellToLabel.get(cellID);
@@ -394,9 +395,8 @@ public class SheetController {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
 
-            String finalUrl = SERVER_URL + "/updateTextColor";
 
-            HttpUrl url = HttpUrl.parse(finalUrl);
+            HttpUrl url = HttpUrl.parse(Constants.UPDATE_TEXT);
             if (url == null) {
                 sheetViewMainController.showErrorAlert("Invalid URL for updating text color.");
                 return;
@@ -415,12 +415,12 @@ public class SheetController {
 
             HttpClientUtil.runAsync(request, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to update cell text color: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
                             Label selectedLabel = cellToLabel.get(cellID);
@@ -461,18 +461,11 @@ public class SheetController {
     }
 
     public void setColumnAlignment(int colIndex, String alignment) {
-        Pos pos;
-        switch (alignment) {
-            case "Left":
-                pos = Pos.CENTER_LEFT;
-                break;
-            case "Right":
-                pos = Pos.CENTER_RIGHT;
-                break;
-            default:
-                pos = Pos.CENTER;
-                break;
-        }
+        Pos pos = switch (alignment) {
+            case "Left" -> Pos.CENTER_LEFT;
+            case "Right" -> Pos.CENTER_RIGHT;
+            default -> Pos.CENTER;
+        };
 
         // Apply the alignment for all cells in the column
         spreadsheetGrid.getChildren().forEach(node -> {
@@ -486,8 +479,7 @@ public class SheetController {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
 
-            // בונים את ה-URL של הבקשה לשרת
-            String finalUrl = HttpUrl.parse(SERVER_URL + "/resetCellDesign")
+            String finalUrl = HttpUrl.parse(Constants.RESET_CELL_DESIGN)
                     .newBuilder()
                     .addQueryParameter("sheetName", currentSheet.getName())
                     .addQueryParameter("cellId", cellID)
@@ -496,12 +488,12 @@ public class SheetController {
 
             HttpClientUtil.runAsync(finalUrl, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> sheetViewMainController.showErrorAlert("Failed to reset cell design: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
                             // עדכון העיצוב של התא ב-UI לאחר קבלת תשובה מוצלחת מהשרת
@@ -686,8 +678,7 @@ public class SheetController {
 
 public String getSelectedCellIndex() {
     if (selectedRow != -1 && selectedCol != -1) {
-        String cellID = getColumnName(selectedCol) + selectedRow;
-        return cellID;
+        return getColumnName(selectedCol) + selectedRow;
     }
 
     return "";
@@ -695,8 +686,6 @@ public String getSelectedCellIndex() {
 
 
     public void displayTemporarySheet(SheetDTO sheetDTO) {
-        // Use a temporary map to store the original cell labels
-        Map<String, Label> originalCellLabels = new HashMap<>(cellToLabel);
 
         // Clear the grid and cell labels
         cellToLabel.clear();

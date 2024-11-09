@@ -4,22 +4,22 @@
 <?import javafx.scene.layout.HBox?>
 <HBox alignment="CENTER" prefHeight="11.0" prefWidth="709.0" spacing="15" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="sheetView.components.actionLine.ActionLineController">
 
-    <!-- תווית להצגת מזהה התא הנבחר -->
+    <!-- Label for displaying selected cell ID -->
     <Label text="Cell ID:" />
     <Label fx:id="selectedCellId"  />
 
-    <!-- תווית להצגת הערך המקורי -->
+    <!-- Label for displaying original value -->
     <Label text="Original Value:" />
     <Label fx:id="originalValueLabel"  />
 
-    <!-- שדה לעריכת ערך התא -->
+    <!-- Field for editing cell value -->
     <Label text="New Value:" />
     <TextField fx:id="newValueField"  />
 
-    <!-- כפתור לעדכון ערך התא -->
+    <!-- Button to update cell value -->
     <Button onAction="#handleUpdateCell" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Update Value" />
 
-    <!-- תווית להצגת גרסת העדכון האחרונה של התא -->
+    <!-- Label for displaying last cell version update -->
     <Label text="Last Update Cell Version:" />
     <Label fx:id="lastUpdateCellVersion"  />
 

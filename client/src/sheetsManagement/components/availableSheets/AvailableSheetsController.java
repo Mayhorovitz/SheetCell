@@ -21,7 +21,6 @@ import util.http.HttpClientUtil;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Timer;
 
 public class AvailableSheetsController {
 
@@ -37,9 +36,10 @@ public class AvailableSheetsController {
     private TableColumn<SheetSummaryDTO, String> permissionTypeColumn;
 
     private SheetsManagementController mainController;
-    private AvailableSheetRefresher availableSheetRefresher;
-    private Timer refresherTimer;
 
+    private SheetSummaryDTO selectedSheet;
+
+    // Initializes the columns and sets listeners for table width and selection changes
     @FXML
     public void initialize() {
         sheetNameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -47,33 +47,35 @@ public class AvailableSheetsController {
         sheetSizeColumn.setCellValueFactory(new PropertyValueFactory<>("size"));
         permissionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("permissionType"));
 
-        // מאזין לגודל הטבלה שמעדכן את רוחב העמודות באופן יחסי
         availableSheetsTable.widthProperty().addListener((obs, oldWidth, newWidth) -> {
             double tableWidth = newWidth.doubleValue();
-            sheetNameColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
-            ownerColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
-            sheetSizeColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
-            permissionTypeColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
+            sheetNameColumn.setPrefWidth(tableWidth * 0.25);
+            ownerColumn.setPrefWidth(tableWidth * 0.25);
+            sheetSizeColumn.setPrefWidth(tableWidth * 0.25);
+            permissionTypeColumn.setPrefWidth(tableWidth * 0.25);
         });
 
         availableSheetsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                mainController.updatePermissionsTable(newValue); // עדכון טבלת ההרשאות
+                this.selectedSheet = newValue;
+                mainController.updatePermissionsTable(newValue);
             }
         });
-
-        // רענון תקופתי של גיליונות זמינים
-        availableSheetRefresher = new AvailableSheetRefresher(this::updateAvailableSheets);
-        refresherTimer = new Timer(true);
-        refresherTimer.schedule(availableSheetRefresher, 0, 5000); // רענון כל 5 שניות
 
         loadAvailableSheets();
     }
 
+    // Returns the currently selected sheet
+    public SheetSummaryDTO getSelectedSheet() {
+        return selectedSheet;
+    }
+
+    // Sets the main controller to enable communication with other components
     public void setMainController(SheetsManagementController mainController) {
         this.mainController = mainController;
     }
 
+    // Loads the available sheets from the server asynchronously
     private void loadAvailableSheets() {
         String finalUrl = HttpUrl
                 .parse(Constants.AVAILABLE_SHEETS_PAGE)
@@ -102,14 +104,17 @@ public class AvailableSheetsController {
         });
     }
 
+    // Returns the table view containing available sheets
     public TableView<SheetSummaryDTO> getAvailableSheetsTable() {
         return availableSheetsTable;
     }
 
-    private void updateAvailableSheets(List<SheetSummaryDTO> availableSheets) {
+    // Updates the available sheets table with a new list of sheets
+    public void updateAvailableSheets(List<SheetSummaryDTO> availableSheets) {
         availableSheetsTable.getItems().setAll(availableSheets);
     }
 
+    // Shows an error alert with the given message
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -118,7 +123,8 @@ public class AvailableSheetsController {
         alert.showAndWait();
     }
 
+    // Refreshes the sheets table by reloading data from the server
     public void refreshSheetsTable() {
-        loadAvailableSheets(); // רענון הנתונים מהשרת
+        loadAvailableSheets();
     }
 }

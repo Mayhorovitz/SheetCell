@@ -8,12 +8,9 @@ import sheetView.main.UIModel;
 import sheetView.components.actionLine.ActionLineController;
 import sheetView.components.sheet.SheetController;
 
-/**
- * Controller for displaying a read-only version of a sheet.
- */
+
 public class ReadOnlyPopupController {
 
-    private static final String SERVER_URL = "http://localhost:8080/shticell";
 
     @FXML
     private GridPane versionGridPane;
@@ -79,10 +76,7 @@ public class ReadOnlyPopupController {
         }
     }
 
-    // Utility method to throw a runtime error
-    private void throwRuntimeError(String message) {
-        throw new RuntimeException(message);
-    }
+
 
     public void displayFilterSheet() {
         initializeSheetController();

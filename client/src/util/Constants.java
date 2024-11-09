@@ -17,6 +17,22 @@ public class Constants {
     public static final String PERMISSION_REQUEST_PAGE = FULL_SERVER_PATH + "/permissionRequest";
     public static final String PERMISSION_RESPONSE_PAGE =  FULL_SERVER_PATH + "/permissionResponse";
     public static final String OWNED_SHEETS_PENDING_REQUESTS_PAGE =  FULL_SERVER_PATH +"/ownedSheetsPendingRequests";
+
+    public static final String GET_SHEET =  FULL_SERVER_PATH + "/getSheet" ;
+    public static final String UPDATE_CELL =  FULL_SERVER_PATH + "/updateCell" ;
+    public static final String GET_LATEST_VERSION =  FULL_SERVER_PATH + "/getLatestVersion" ;
+
+    public static final String GET_UNIQUE_VALUES =  FULL_SERVER_PATH + "/getUniqueValues" ;
+    public static final String FILTER_SHEET =  FULL_SERVER_PATH + "/filterSheet" ;
+    public static final String SORT_SHEET =  FULL_SERVER_PATH + "/sortSheetRange" ;
+
+    public static final String ADD_RANGE =  FULL_SERVER_PATH + "/addRange" ;
+    public static final String DELETE_RANGE =  FULL_SERVER_PATH + "/deleteRange" ;
+
+    public static final String UPDATE_BACKGROUND =  FULL_SERVER_PATH + "/updateBackgroundColor" ;
+    public static final String UPDATE_TEXT =  FULL_SERVER_PATH + "/updateTextColor" ;
+    public static final String RESET_CELL_DESIGN =  FULL_SERVER_PATH + "/resetCellDesign" ;
+
     public static final String GET_SHEET_VERSION =  FULL_SERVER_PATH +"/getSheetVersion";
 
     public static final String DYNAMIC_ANALYSIS =  FULL_SERVER_PATH +"/dynamicAnalysis";

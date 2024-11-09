@@ -7,6 +7,7 @@ import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
+import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class VersionRefresher {
         @Override
         public void run() {
             String finalUrl = HttpUrl
-                    .parse(SERVER_URL + "/getLatestVersion")
+                    .parse(Constants.GET_LATEST_VERSION)
                     .newBuilder()
                     .addQueryParameter("sheetName", sheetViewMainController.getCurrentSheetName())
                     .build()

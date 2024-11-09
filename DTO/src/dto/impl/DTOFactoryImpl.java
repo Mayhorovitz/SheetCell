@@ -1,6 +1,5 @@
 package dto.impl;
 
-
 import cell.api.Cell;
 import dto.api.DTOFactory;
 import dto.api.SheetDTO;
@@ -14,9 +13,9 @@ import java.util.stream.Collectors;
 
 public class DTOFactoryImpl implements DTOFactory {
 
+    // Creates a SheetDTO from a given Sheet, including cells and ranges
     @Override
     public SheetDTO createSheetDTO(Sheet sheet) {
-        // המרת התאים למפת CellDTOImpl
         Map<String, CellDTOImpl> cellDTOs = sheet.getActiveCells().entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey().toString(),
@@ -42,6 +41,7 @@ public class DTOFactoryImpl implements DTOFactory {
         );
     }
 
+    // Creates a CellDTOImpl for a given Cell with dependencies and influences
     public CellDTOImpl createCellDTO(Cell cell) {
         List<String> dependsOnIds = cell.getDependsOn().stream()
                 .map(depCell -> depCell.getCoordinate().toString())
@@ -64,11 +64,13 @@ public class DTOFactoryImpl implements DTOFactory {
         );
     }
 
+    // Creates an empty CellDTOImpl with default values for a specified identity
     @Override
     public CellDTOImpl createEmptyCellDTO(String identity) {
         return new dto.impl.CellDTOImpl(identity, "", "", 0, "", "#FFFFFF", "#000000", new ArrayList<>(), new ArrayList<>());
     }
 
+    // Creates a RangeDTOImpl for a given Range with its name, start, and end coordinates
     @Override
     public RangeDTOImpl createRangeDTO(Range range) {
         return new RangeDTOImpl(

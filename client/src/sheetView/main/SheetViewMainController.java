@@ -14,18 +14,18 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import main.AppMainController;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import sheetView.components.actionLine.ActionLineController;
 import sheetView.components.commands.CommandsController;
 import sheetView.components.ranges.RangeController;
 import sheetView.components.readOnlyPopup.ReadOnlyPopupController;
 import sheetView.components.sheet.SheetController;
+import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
 
 public class SheetViewMainController {
-
-    private static final String SERVER_URL = "http://localhost:8080/shticell";
 
     @FXML
     private SheetController sheetController;
@@ -46,7 +46,7 @@ public class SheetViewMainController {
     private boolean isReadOnly;
     private VersionRefresher versionRefresher;
 
-
+    // Initialize UI components and set controller references
     @FXML
     private void initialize() {
         uiModel = new UIModel();
@@ -56,11 +56,9 @@ public class SheetViewMainController {
         sheetController.setUiModel(uiModel);
         commandsController.setSheetController(sheetController);
         rangeController.setMainController(this);
-        versionRefresher = new VersionRefresher(this);
-
-
     }
 
+    // Set the current sheet and configure read-only mode
     public void setSheetDTO(SheetDTO sheetDTO, boolean isReadOnly) {
         this.currentSheet = sheetDTO;
         this.isReadOnly = isReadOnly;
@@ -70,11 +68,25 @@ public class SheetViewMainController {
             sheetController.initializeSheet(sheetDTO);
             actionLineController.setVersionSelectorItems(sheetDTO.getVersion());
             actionLineController.setReadOnly(isReadOnly);
-            versionRefresher.startRefreshing();
-
+            versionRefresher = new VersionRefresher(this);
         }
     }
 
+    // Start the version refresher to keep the sheet up to date
+    public void startVersionRefresher() {
+        if (versionRefresher != null) {
+            versionRefresher.startRefreshing();
+        }
+    }
+
+    // Stop the version refresher
+    public void stopVersionRefresher() {
+        if (versionRefresher != null) {
+            versionRefresher.stopRefreshing();
+        }
+    }
+
+    // Handle selection of a cell and update related information
     @FXML
     public void handleCellSelection(String cellId) {
         try {
@@ -88,23 +100,20 @@ public class SheetViewMainController {
                 sheetController.highlightDependenciesAndInfluences(selectedCell);
             }
         } catch (IllegalArgumentException e) {
-            actionLineController.updateActionLine(null , cellId);
+            actionLineController.updateActionLine(null, cellId);
         }
     }
 
+    // Handle updating a cell's value if allowed
     public void handleUpdateCell(String newValue, String selectedCell) {
         if (selectedCell != null && !newValue.isEmpty()) {
-            // בדיקת אם המשתמש נמצא על הגרסה העדכנית ביותר
             int currentVersion = currentSheet.getVersion();
             if (!isOnLatestVersion(currentVersion)) {
                 showErrorAlert("Update failed: You are not viewing the latest version of the sheet. Please update to the latest version and try again.");
                 return;
             }
 
-            // ביצוע העדכון אם המשתמש על הגרסה העדכנית ביותר
-            String finalUrl = SERVER_URL + "/updateCell";
-
-            HttpUrl url = HttpUrl.parse(finalUrl);
+            HttpUrl url = HttpUrl.parse(Constants.UPDATE_CELL);
             if (url == null) {
                 showErrorAlert("Invalid URL for updating cell.");
                 return;
@@ -123,12 +132,12 @@ public class SheetViewMainController {
 
             HttpClientUtil.runAsync(request, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> showErrorAlert("Failed to update cell: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String sheetJson = response.body().string();
                         SheetDTOImpl updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
@@ -145,12 +154,12 @@ public class SheetViewMainController {
         }
     }
 
+    // Check if the user is on the latest version of the sheet
     private boolean isOnLatestVersion(int currentVersion) {
-        // פונקציה לבדיקת אם המשתמש על הגרסה העדכנית ביותר
         return currentVersion == versionRefresher.getLatestVersion();
     }
 
-
+    // Display a read-only popup with a specific sheet version
     public void showSheetVersionPopup(SheetDTO sheetDTO) {
         try {
             Stage popupStage = new Stage();
@@ -173,7 +182,7 @@ public class SheetViewMainController {
         }
     }
 
-
+    // Show an error alert with a specific message
     public void showErrorAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -182,49 +191,52 @@ public class SheetViewMainController {
         alert.showAndWait();
     }
 
+    // Set the range controller reference
     public void setRangeController(RangeController rangeController) {
         this.rangeController = rangeController;
     }
 
+    // Set the sheet controller reference
     public void setSheetController(SheetController sheetController) {
         this.sheetController = sheetController;
     }
 
+    // Get the UI model
     public UIModel getUIModel() {
         return this.uiModel;
     }
 
+    // Get the sheet controller
     public SheetController getSheetController() {
         return sheetController;
     }
 
+    // Set the action line controller reference
     public void setActionLineController(ActionLineController actionLineController) {
         this.actionLineController = actionLineController;
     }
 
-
+    // Get the current sheet name
     public String getCurrentSheetName() {
         return currentSheet.getName();
     }
 
+    // Get the current sheet
     public SheetDTO getCurrentSheet() {
         return this.currentSheet;
     }
 
+    // Check if the sheet is in read-only mode
     public boolean isReadOnly() {
         return this.isReadOnly;
     }
 
-    public void stopVersionRefresher() {
-        if (versionRefresher != null) {
-            versionRefresher.stopRefreshing();
-        }
-    }
-
+    // Show a hint that a new version is available
     public void showVersionUpdateHint(int latestVersion) {
         actionLineController.updateVersionSelector(latestVersion);
     }
 
+    // Update the current sheet with a new version
     public void updateCurrentSheet(SheetDTOImpl updatedSheetDTO) {
         this.currentSheet = updatedSheetDTO;
         sheetController.setCurrentSheet(updatedSheetDTO);
@@ -233,13 +245,13 @@ public class SheetViewMainController {
         rangeController.updateRangeListView();
     }
 
+    // Handle return to sheet management view
     public void handleReturnToSheetManagment() {
         mainController.switchToSheetsManagement();
-
     }
 
+    // Set the main application controller reference
     public void setMainController(AppMainController appMainController) {
         this.mainController = appMainController;
     }
 }
-

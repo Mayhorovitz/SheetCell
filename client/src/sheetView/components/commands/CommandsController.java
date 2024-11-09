@@ -16,21 +16,19 @@ import sheetView.components.sort.SortPopupController;
 
 import java.io.IOException;
 
-/**
- * Controller for the commands panel, handling styling and data manipulation actions.
- */
+
 public class CommandsController {
 
     @FXML
-    private ColorPicker bgColorPicker;  // Background color picker
+    private ColorPicker bgColorPicker;
     @FXML
-    private ColorPicker textColorPicker;  // Text color picker
+    private ColorPicker textColorPicker;
     @FXML
-    private Spinner<Integer> columnWidthSpinner;  // Column width spinner
+    private Spinner<Integer> columnWidthSpinner;
     @FXML
-    private Spinner<Integer> rowHeightSpinner;  // Row height spinner
+    private Spinner<Integer> rowHeightSpinner;
     @FXML
-    private ComboBox<String> alignmentComboBox;  // Dropdown for alignment
+    private ComboBox<String> alignmentComboBox;
     @FXML
     private Button analyzeButton;
 
@@ -109,8 +107,7 @@ public class CommandsController {
     private void handleSetRowHeight() {
         Integer rowHeight = rowHeightSpinner.getValue();
         if (rowHeight != null) {
-            // Add logic to get the selected row index
-            int selectedRowIndex = sheetController.getSelectedRowIndex(); // You will need to implement this method
+            int selectedRowIndex = sheetController.getSelectedRowIndex();
             sheetController.setRowHeight(selectedRowIndex, rowHeight.doubleValue());
         }
     }
@@ -144,7 +141,6 @@ public class CommandsController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/sort/SortPopup.fxml"));
             Parent root = loader.load();
 
-            // Get the controller and pass the SheetController to it
             SortPopupController sortPopupController = loader.getController();
             sortPopupController.setSheetController(sheetController);
 
@@ -165,7 +161,6 @@ public class CommandsController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/filter/FilterPopup.fxml"));
             Parent root = loader.load();
 
-            // Get the controller and pass the SheetController to it
             FilterPopupController filterPopupController = loader.getController();
             filterPopupController.setSheetController(sheetController);
 

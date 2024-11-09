@@ -35,7 +35,6 @@ public class AvailableSheetRefresher extends TimerTask {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> {
-                    // Handle failure (e.g., show an error message to the user)
                     System.err.println("Failed to load available sheets: " + e.getMessage());
                 });
             }
@@ -49,7 +48,6 @@ public class AvailableSheetRefresher extends TimerTask {
                     Platform.runLater(() -> tableConsumer.accept(availableSheets));
                 } else {
                     Platform.runLater(() -> {
-                        // Handle non-200 response (e.g., show an error message to the user)
                         System.err.println("Failed to load available sheets: " + response.message());
                     });
                 }
@@ -57,7 +55,5 @@ public class AvailableSheetRefresher extends TimerTask {
         });
     }
 
-    public void setActive(boolean active) {
-        this.isActive = active;
-    }
+
 }

@@ -1,7 +1,5 @@
 package login;
 
-import util.Constants;
-import util.http.HttpClientUtil;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -9,13 +7,14 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
 import main.AppMainController;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
+import util.Constants;
+import util.http.HttpClientUtil;
 
 import java.io.IOException;
 
@@ -80,10 +79,6 @@ public class LoginController {
         });
     }
 
-    @FXML
-    private void userNameKeyTyped(KeyEvent event) {
-        errorMessageProperty.set("");
-    }
 
     @FXML
     private void quitButtonClicked(ActionEvent e) {

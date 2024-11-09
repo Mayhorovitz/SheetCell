@@ -13,32 +13,28 @@ import util.http.HttpClientUtil;
 import java.io.IOException;
 
 
-/**
- * Controller for the dynamic analysis popup, allowing the user to perform analysis on a selected cell.
- */
 public class DynamicAnalysisPopupController {
 
     @FXML
-    private Label selectedCellLabel;  // Label to display the selected cell ID
+    private Label selectedCellLabel;
 
     @FXML
-    private TextField minValueField;  // TextField for the minimum value input
+    private TextField minValueField;
 
     @FXML
-    private TextField maxValueField;  // TextField for the maximum value input
+    private TextField maxValueField;
 
     @FXML
-    private TextField stepSizeField;  // TextField for the step size input
+    private TextField stepSizeField;
     @FXML
     private Button applyButton;
 
     @FXML
-    private Slider valueSlider;  // Slider to adjust the value dynamically
+    private Slider valueSlider;
 
     private SheetController sheetController;
     private String selectedCell;
 
-    // Set the SheetController to allow interactions with the sheet
     public void setSheetController(SheetController sheetController) {
         this.sheetController = sheetController;
     }

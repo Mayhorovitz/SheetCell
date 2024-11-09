@@ -59,13 +59,15 @@ public class SheetsManagementController {
                 permissionsTableController.loadPermissionsForSheet(newValue.getName());
             }
         });
-
-        // Start the refresher to update the available sheets periodically
-        availableSheetRefresher = new AvailableSheetRefresher(this::updateAvailableSheets);
-        refresherTimer = new Timer(true);
-        refresherTimer.schedule(availableSheetRefresher, 0, 2000); // Refresh every 5 seconds
+        startAvailableSheetRefresher();
     }
-
+    private void startAvailableSheetRefresher() {
+        if (availableSheetRefresher == null || refresherTimer == null) {
+            availableSheetRefresher = new AvailableSheetRefresher(this::updateAvailableSheets);
+            refresherTimer = new Timer(true);
+            refresherTimer.schedule(availableSheetRefresher, 0, 2000); // Refresh every 2 seconds
+        }
+    }
     public void setMainController(AppMainController mainController) {
         this.mainController = mainController;
         availableSheetsController.setMainController(this);
@@ -94,7 +96,7 @@ public class SheetsManagementController {
                         for (int i = 0; i <= 100; i++) {
                             updateProgress(i, 100);
                             updateMessage(i + "%");
-                            Thread.sleep(10);
+                            Thread.sleep(5);
                         }
 
                         HttpClientUtil.getHttpClient().newCall(request).enqueue(new Callback() {
@@ -181,7 +183,8 @@ public class SheetsManagementController {
     }
 
     public void handleViewSheet() {
-        SheetSummaryDTO selectedSheet = availableSheetsController.getAvailableSheetsTable().getSelectionModel().getSelectedItem();
+        SheetSummaryDTO selectedSheet = availableSheetsController.getSelectedSheet();
+
         if (selectedSheet != null) {
             String permissionType = selectedSheet.getPermissionType();
             if (permissionType.equals("NONE")) {
@@ -196,14 +199,29 @@ public class SheetsManagementController {
     }
 
 
+
+    // Call this method when switching away from SheetsManagement
+    public void setInactive() {
+        stopAvailableSheetRefresher();
+    }
     public String getCurrentUserName() {
         return mainController.getUserName();
     }
 
-    public void setActive() {
-
-        if (availableSheetsController != null) {
-            availableSheetsController.refreshSheetsTable(); // לדוגמה: לרענן את טבלת הגיליונות
+    private void stopAvailableSheetRefresher() {
+        if (refresherTimer != null) {
+            refresherTimer.cancel();
+            refresherTimer = null;
         }
+        if (availableSheetRefresher != null) {
+            availableSheetRefresher.cancel();
+            availableSheetRefresher = null;
+        }
+    }
+
+    // Call this method when the SheetsManagementController becomes active
+    public void setActive() {
+        startAvailableSheetRefresher();
+        availableSheetsController.refreshSheetsTable();
     }
 }

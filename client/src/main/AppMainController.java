@@ -20,6 +20,7 @@ import okhttp3.HttpUrl;
 import okhttp3.Response;
 import sheetView.main.SheetViewMainController;
 import sheetsManagement.SheetsManagementController;
+import util.Constants;
 import util.http.HttpClientUtil;
 import login.LoginController;
 
@@ -36,6 +37,8 @@ public class AppMainController {
 
     private LoginController loginController;
     private SheetsManagementController sheetsManagementController;
+    private SheetViewMainController sheetViewMainController;
+
 
     private final StringProperty currentUserName;
 
@@ -92,18 +95,27 @@ public class AppMainController {
     }
 
     public void switchToSheetsManagement() {
-        setMainPanelTo(sheetsManagementComponent);
-        sheetsManagementController.setActive();
+        Platform.runLater(() -> {
+            setMainPanelTo(sheetsManagementComponent);
+            sheetsManagementController.setActive();
+
+            // Stop the VersionRefresher
+            if (sheetViewMainController != null) {
+                sheetViewMainController.stopVersionRefresher();
+            }
+        });
     }
+
 
     public void switchToViewSheet(SheetSummaryDTO selectedSheet, boolean isReadOnly) {
         if (selectedSheet == null) {
             showError("Please select a sheet to view.");
             return;
         }
+        sheetsManagementController.setInactive();
 
         String finalUrl = HttpUrl
-                .parse("http://localhost:8080/shticell/getSheet")
+                .parse(Constants.GET_SHEET)
                 .newBuilder()
                 .addQueryParameter("sheetName", selectedSheet.getName())
                 .build()
@@ -120,7 +132,6 @@ public class AppMainController {
                 if (response.isSuccessful()) {
                     String sheetJson = response.body().string();
 
-                    // המרה של JSON ל- SheetDTOImpl כדי לוודא שהממשק הופך למימוש
                     SheetDTOImpl sheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
 
                     Platform.runLater(() -> showSheetView(sheetDTO, isReadOnly));
@@ -138,14 +149,17 @@ public class AppMainController {
             FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(sheetPageUrl);
             Parent sheetComponent = fxmlLoader.load();
-            SheetViewMainController sheetViewMainController = fxmlLoader.getController();
+            sheetViewMainController = fxmlLoader.getController();
 
-            // הגדרת הגיליון ב-MainController
+            // Set up the sheet in MainController
             sheetViewMainController.setMainController(this);
             sheetViewMainController.setSheetDTO(sheetDTO, isReadOnly);
 
-
             setMainPanelTo(sheetComponent);
+
+            // Start the VersionRefresher
+            sheetViewMainController.startVersionRefresher();
+
         } catch (IOException e) {
             showError("Failed to load sheet view: " + e.getMessage());
         }

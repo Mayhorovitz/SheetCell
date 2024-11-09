@@ -15,7 +15,7 @@ import java.io.IOException;
 @WebServlet("/dynamicAnalysis")
 public class DynamicAnalysisServlet extends HttpServlet {
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String sheetName = request.getParameter("sheetName");
         String cellId = request.getParameter("cellId");
         String newValue = request.getParameter("newValue");

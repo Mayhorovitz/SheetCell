@@ -21,8 +21,8 @@ public class CellImpl implements Cell , Serializable {
     private String changedBy;
     private final List<Cell> dependsOn;
     private final List<Cell> influencingOn;
-    private String backgroundColor; // Store as String
-    private String textColor;     // Default black text
+    private String backgroundColor;
+    private String textColor;
     private SheetReadActions sheet;
 
 //constructors
@@ -31,7 +31,7 @@ public class CellImpl implements Cell , Serializable {
         this.originalValue = originalValue;
         this.version = version;
         this.changedBy = changedBy;
-        this.backgroundColor = "#FFFFFF"; // Default white background
+        this.backgroundColor = "#FFFFFF";
         this.textColor = "#000000";
         this.dependsOn = new ArrayList<>();
         this.influencingOn = new ArrayList<>();

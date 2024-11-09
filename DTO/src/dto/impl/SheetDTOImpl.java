@@ -5,15 +5,15 @@ import dto.api.SheetDTO;
 import java.util.Map;
 
 public class SheetDTOImpl implements SheetDTO {
-    private String name;
-    private String owner;
-    private int version;
-    private int rows;
-    private int cols;
-    private int rowHeight;
-    private int colWidth;
-    private Map<String, CellDTOImpl> cells;
-    private  Map<String, RangeDTOImpl> ranges;
+    private final String name;
+    private final String owner;
+    private final int version;
+    private final int rows;
+    private final int cols;
+    private final int rowHeight;
+    private final int colWidth;
+    private final Map<String, CellDTOImpl> cells;
+    private final Map<String, RangeDTOImpl> ranges;
 
 
     public SheetDTOImpl(String name,String owner, int version, int rows, int cols, int rowHeight, int colWidth, Map<String, CellDTOImpl> cells, Map<String, RangeDTOImpl> ranges) {

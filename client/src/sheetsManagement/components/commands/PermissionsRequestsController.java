@@ -41,6 +41,7 @@ public class PermissionsRequestsController {
     private SheetsManagementController mainController;
     private Timer refresherTimer;
 
+    // Initializes table columns and buttons
     @FXML
     public void initialize() {
         usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -53,10 +54,12 @@ public class PermissionsRequestsController {
         startRequestsRefresher();
     }
 
+    // Sets the main controller for this component
     public void setMainController(SheetsManagementController mainController) {
         this.mainController = mainController;
     }
 
+    // Handles approval of a selected request
     private void handleApproveRequest() {
         PermissionRequestDTOImpl selectedRequest = permissionsRequestsTable.getSelectionModel().getSelectedItem();
         if (selectedRequest == null) {
@@ -67,6 +70,7 @@ public class PermissionsRequestsController {
         updateRequestStatus(selectedRequest, "APPROVED");
     }
 
+    // Handles denial of a selected request
     private void handleDenyRequest() {
         PermissionRequestDTOImpl selectedRequest = permissionsRequestsTable.getSelectionModel().getSelectedItem();
         if (selectedRequest == null) {
@@ -77,6 +81,7 @@ public class PermissionsRequestsController {
         updateRequestStatus(selectedRequest, "DENIED");
     }
 
+    // Updates the status of a permission request
     private void updateRequestStatus(PermissionRequestDTOImpl request, String status) {
         String finalUrl = Constants.PERMISSION_RESPONSE_PAGE;
 
@@ -101,7 +106,6 @@ public class PermissionsRequestsController {
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     Platform.runLater(() -> {
-
                         permissionsRequestsTable.getItems().remove(request);
                     });
                 } else {
@@ -111,6 +115,7 @@ public class PermissionsRequestsController {
         });
     }
 
+    // Starts a timer to refresh pending requests periodically
     public void startRequestsRefresher() {
         if (refresherTimer == null) {
             refresherTimer = new Timer(true);
@@ -119,12 +124,11 @@ public class PermissionsRequestsController {
                 public void run() {
                     loadPendingRequests();
                 }
-            }, 0, 5000);
+            }, 0, 2000);
         }
     }
 
-
-
+    // Loads pending permission requests from the server
     private void loadPendingRequests() {
         String finalUrl = Constants.OWNED_SHEETS_PENDING_REQUESTS_PAGE + "?ownerUsername=" + mainController.getCurrentUserName();
 
@@ -148,6 +152,7 @@ public class PermissionsRequestsController {
         });
     }
 
+    // Shows an error alert with the given message
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
@@ -156,18 +161,16 @@ public class PermissionsRequestsController {
         alert.showAndWait();
     }
 
-
+    // Stops the requests refresher timer
     public void stopRequestsRefresher() {
         if (refresherTimer != null) {
             refresherTimer.cancel();
-            refresherTimer = null; // מבטיח שלא נשמור את הטיימר הישן בזיכרון
+            refresherTimer = null;
         }
     }
 
-
     @FXML
     private void handleClosePopup() {
-        // קבלת ה-stage הנוכחי וסגירתו
         Stage stage = (Stage) permissionsRequestsTable.getScene().getWindow();
         stage.close();
     }

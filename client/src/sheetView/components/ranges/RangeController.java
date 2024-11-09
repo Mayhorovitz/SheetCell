@@ -10,17 +10,16 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import sheetView.main.SheetViewMainController;
+import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
 import java.util.Collection;
 
-/**
- * Controller for managing ranges in the spreadsheet.
- */
+
 public class RangeController {
-    private static final String SERVER_URL = "http://localhost:8080/shticell";
 
     private SheetViewMainController sheetViewMainController;
 
@@ -28,7 +27,7 @@ public class RangeController {
     private TextField rangeNameField, rangeCellsField;
 
     @FXML
-    private ListView<String> rangeListView;  // ListView to display available ranges
+    private ListView<String> rangeListView;
 
     public void setMainController(SheetViewMainController sheetViewMainController) {
         this.sheetViewMainController = sheetViewMainController;
@@ -49,22 +48,19 @@ public class RangeController {
                 return;
             }
 
-            String finalUrl = SERVER_URL + "/addRange";
 
-            HttpUrl url = HttpUrl.parse(finalUrl);
+            HttpUrl url = HttpUrl.parse(Constants.ADD_RANGE);
             if (url == null) {
                 showErrorAlert("Invalid URL for adding range.");
                 return;
             }
 
-            // Create the form body with the necessary parameters
             RequestBody formBody = new FormBody.Builder()
                     .add("sheetName", sheetName)
                     .add("rangeName", rangeName)
                     .add("range", rangeCells)
                     .build();
 
-            // Create the POST request
             Request request = new Request.Builder()
                     .url(url)
                     .post(formBody)
@@ -73,13 +69,14 @@ public class RangeController {
             // Execute the asynchronous request
             HttpClientUtil.runAsync(request, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> showErrorAlert("Error adding range: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
+                        assert response.body() != null;
                         String sheetJson = response.body().string();
                         SheetDTOImpl updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
                         Platform.runLater(() -> {
@@ -115,9 +112,8 @@ public class RangeController {
         String rangeName = selectedRange.split(":")[0];  // Extract the range name
         String sheetName = sheetViewMainController.getCurrentSheetName();
 
-        String finalUrl = SERVER_URL + "/deleteRange";
 
-        HttpUrl url = HttpUrl.parse(finalUrl);
+        HttpUrl url = HttpUrl.parse(Constants.DELETE_RANGE);
         if (url == null) {
             showErrorAlert("Invalid URL for deleting range.");
             return;
@@ -138,13 +134,14 @@ public class RangeController {
         // Executing the asynchronous request
         HttpClientUtil.runAsync(request, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> showErrorAlert("Error deleting range: " + e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
+                    assert response.body() != null;
                     String sheetJson = response.body().string();
                     SheetDTOImpl updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
                     Platform.runLater(() -> sheetViewMainController.setSheetDTO(updatedSheetDTO,isReadOnly));
@@ -168,7 +165,6 @@ public class RangeController {
             if (selectedRange != null) {
                 String rangeName = selectedRange.split(":")[0];
 
-                // חיפוש הטווח מתוך ה- SheetDTO והדגשתו
                 RangeDTO range = sheetViewMainController.getCurrentSheet().getRanges().get(rangeName);
                 if (range != null) {
                     Platform.runLater(() -> sheetViewMainController.getSheetController().highlightRange(range));
@@ -178,7 +174,7 @@ public class RangeController {
 
     // Method to update the ListView with all ranges from the current sheet
     public void updateRangeListView() {
-        rangeListView.getItems().clear();  // Clear existing items
+        rangeListView.getItems().clear();
         Collection<RangeDTOImpl> ranges = sheetViewMainController.getCurrentSheet().getRanges().values();
 
         for (RangeDTO range : ranges) {

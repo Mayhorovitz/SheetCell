@@ -35,26 +35,27 @@ public class PermissionsTableController {
 
     private SheetsManagementController mainController;
 
+    // Initializes table columns and resizes them based on table width
     @FXML
     public void initialize() {
-        // הגדרת מאפייני התאים בעמודות
         usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         permissionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("requestedPermission"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // מאזין שמעדכן את רוחב העמודות בהתאם לרוחב הטבלה
         permissionsTable.widthProperty().addListener((obs, oldWidth, newWidth) -> {
             double tableWidth = newWidth.doubleValue();
-            usernameColumn.setPrefWidth(tableWidth * 0.33); // 33% מרוחב הטבלה
-            permissionTypeColumn.setPrefWidth(tableWidth * 0.34); // 34% מרוחב הטבלה
-            statusColumn.setPrefWidth(tableWidth * 0.33); // 33% מרוחב הטבלה
+            usernameColumn.setPrefWidth(tableWidth * 0.33);
+            permissionTypeColumn.setPrefWidth(tableWidth * 0.34);
+            statusColumn.setPrefWidth(tableWidth * 0.33);
         });
     }
 
+    // Sets the main controller for this component
     public void setMainController(SheetsManagementController mainController) {
         this.mainController = mainController;
     }
 
+    // Loads permission requests for a specific sheet from the server
     public void loadPermissionsForSheet(String sheetName) {
         String finalUrl = HttpUrl
                 .parse(Constants.PERMISSIONS_TABLE_PAGE)
@@ -67,7 +68,6 @@ public class PermissionsTableController {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> {
-                    // Handle failure (e.g., show an error message to the user)
                 });
             }
 
@@ -81,7 +81,6 @@ public class PermissionsTableController {
                     Platform.runLater(() -> permissionsTable.getItems().setAll(permissions));
                 } else {
                     Platform.runLater(() -> {
-                        // Handle non-200 response (e.g., show an error message to the user)
                     });
                 }
             }

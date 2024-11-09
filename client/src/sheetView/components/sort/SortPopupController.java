@@ -16,24 +16,22 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 import sheetView.main.UIModel;
 import sheetView.components.readOnlyPopup.ReadOnlyPopupController;
 import sheetView.components.sheet.SheetController;
+import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
 
-/**
- * Controller for the sort popup, allowing users to sort data within a range.
- */
+
 public class SortPopupController {
 
-    private static final String SERVER_URL = "http://localhost:8080/shticell";
-
     @FXML
-    private TextField rangeTextField;  // TextField for range input
+    private TextField rangeTextField;
     @FXML
-    private TextField columnsTextField;  // TextField for columns input
+    private TextField columnsTextField;
     @FXML
     private Button Sort;
 
@@ -51,7 +49,7 @@ public class SortPopupController {
         String columns = columnsTextField.getText().toUpperCase();
 
         if (range != null && !range.isEmpty() && columns != null && !columns.isEmpty()) {
-            String finalUrl = HttpUrl.parse(SERVER_URL + "/sortSheetRange")
+            String finalUrl = HttpUrl.parse(Constants.SORT_SHEET)
                     .newBuilder()
                     .addQueryParameter("sheetName", sheetController.getCurrentSheet().getName())
                     .addQueryParameter("range", range)
@@ -61,12 +59,12 @@ public class SortPopupController {
 
             HttpClientUtil.runAsync(finalUrl, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> showError("Error sorting sheet: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
                         SheetDTOImpl sortedSheetDTO = new Gson().fromJson(response.body().string(), SheetDTOImpl.class);
                         Platform.runLater(() -> showSortedSheetPopup(sortedSheetDTO));

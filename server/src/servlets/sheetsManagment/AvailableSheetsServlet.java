@@ -1,4 +1,4 @@
-package servlets;
+package servlets.sheetsManagment;
 
 import com.google.gson.Gson;
 import dto.impl.SheetSummaryDTO;

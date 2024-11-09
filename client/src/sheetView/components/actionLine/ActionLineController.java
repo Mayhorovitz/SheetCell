@@ -13,38 +13,38 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 import sheetView.main.SheetViewMainController;
 import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
 
-/**
- * Controller for the action line, allowing users to view and edit cell values.
- */
+
+
 public class ActionLineController {
 
     @FXML
-    private Label selectedCellId;  // Label to display selected cell ID
+    private Label selectedCellId;
 
     @FXML
-    private Label originalValueLabel;  // Label to display original value
+    private Label originalValueLabel;
 
     @FXML
-    private TextField newValueField;  // TextField for editing new value
+    private TextField newValueField;
 
     @FXML
-    private Label lastUpdateCellVersion;  // Label to display last update version
+    private Label lastUpdateCellVersion;
 
     @FXML
-    private Button updateButton;  // Update Cell button
+    private Button updateButton;
 
     @FXML
-    private ComboBox<String> versionSelector;  // ComboBox for selecting version
+    private ComboBox<String> versionSelector;
 
     private SheetViewMainController sheetViewMainController;
 
-    private boolean isReadOnly = false;  // Flag to indicate read-only mode
+    private boolean isReadOnly = false;
 
     public void setMainController(SheetViewMainController sheetViewMainController) {
         this.sheetViewMainController = sheetViewMainController;
@@ -55,7 +55,7 @@ public class ActionLineController {
             selectedCellId.setText(selectedCell.getIdentity());
             originalValueLabel.setText(selectedCell.getOriginalValue());
             newValueField.setText("");
-            lastUpdateCellVersion.setText(String.valueOf(selectedCell.getVersion()) + " " + selectedCell.getChangedBy());
+            lastUpdateCellVersion.setText(String.valueOf(selectedCell.getVersion()) + " changed by: " + selectedCell.getChangedBy());
         } else {
             selectedCellId.setText(cellId);
             originalValueLabel.setText("");
@@ -97,12 +97,12 @@ public class ActionLineController {
 
             HttpClientUtil.runAsync(finalUrl, new Callback() {
                 @Override
-                public void onFailure(Call call, IOException e) {
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
                     Platform.runLater(() -> showErrorAlert("Failed to get sheet version: " + e.getMessage()));
                 }
 
                 @Override
-                public void onResponse(Call call, Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     if (response.isSuccessful()) {
                         String sheetJson = response.body().string();
                         SheetDTOImpl selectedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
@@ -152,7 +152,6 @@ public class ActionLineController {
         }
     }
 
-    // Function to display an error (if needed)
     private void showErrorAlert(String message) {
         if (sheetViewMainController != null) {
             sheetViewMainController.showErrorAlert("Error: " + message);
@@ -162,7 +161,6 @@ public class ActionLineController {
     public void updateVersionSelector(int latestVersion) {
         // Update the ComboBox with the latest versions
         setVersionSelectorItems(latestVersion);
-
 
         // Highlight the ComboBox to indicate a new version is available
         versionSelector.setStyle("-fx-border-color: #00ffcc; -fx-border-width: 2px;");
