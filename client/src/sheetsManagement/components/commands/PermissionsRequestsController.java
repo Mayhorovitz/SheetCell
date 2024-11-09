@@ -101,7 +101,7 @@ public class PermissionsRequestsController {
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     Platform.runLater(() -> {
-                        showMessage("Request status updated successfully.");
+
                         permissionsRequestsTable.getItems().remove(request);
                     });
                 } else {
@@ -156,13 +156,7 @@ public class PermissionsRequestsController {
         alert.showAndWait();
     }
 
-    private void showMessage(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
+
     public void stopRequestsRefresher() {
         if (refresherTimer != null) {
             refresherTimer.cancel();

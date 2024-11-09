@@ -682,4 +682,41 @@ public class SheetController {
     public boolean isReadOnly() {
         return sheetViewMainController.isReadOnly();
     }
+
+
+public String getSelectedCellIndex() {
+    if (selectedRow != -1 && selectedCol != -1) {
+        String cellID = getColumnName(selectedCol) + selectedRow;
+        return cellID;
+    }
+
+    return "";
+}
+
+
+    public void displayTemporarySheet(SheetDTO sheetDTO) {
+        // Use a temporary map to store the original cell labels
+        Map<String, Label> originalCellLabels = new HashMap<>(cellToLabel);
+
+        // Clear the grid and cell labels
+        cellToLabel.clear();
+        clearGridPane();
+
+        // Initialize the sheet grid with the updated sheetDTO
+        initializeSheet(sheetDTO);
+
+    }
+
+    public CellDTOImpl getCellDTO(String cellId) {
+        // Fetch cell data from the current sheet
+        return currentSheet.getCells().get(cellId);
+    }
+
+    public void displayOriginalSheet(SheetDTO originalSheet) {
+        if (currentSheet != null) {
+            this.currentSheet = originalSheet;
+            displaySheet();
+        }
+    }
+
 }

@@ -518,4 +518,34 @@ public class EngineImpl implements Engine {
         return currentVersion;
     }
 
+    @Override
+        public SheetDTO performDynamicAnalysis(String sheetName, String cellId, String newValue) {
+            Sheet currentSheet = getCurrentSheet(sheetName);
+            // Create a deep copy of the current sheet to avoid modifying the original
+            Sheet tempSheet = currentSheet.copySheet();
+
+            Coordinate coordinate = parseCellId(cellId);
+            validateCoordinate(tempSheet, coordinate);
+
+            Cell cell = tempSheet.getCell(coordinate);
+            if (cell == null) {
+                // If the cell does not exist, create it
+                cell = new CellImpl(coordinate.getRow(), coordinate.getColumn(), newValue, 1, tempSheet.getOwner(), tempSheet);
+                tempSheet.addCell(coordinate, cell);
+            } else {
+                // Update the cell value
+                cell.setOriginalValue(newValue);
+            }
+
+            // Recalculate the sheet
+            tempSheet.updateDependenciesAndInfluences();
+            for (Cell c : tempSheet.orderCellsForCalculation()) {
+                c.calculateEffectiveValue();
+            }
+
+            return dtoFactory.createSheetDTO(tempSheet);
+
+
+    }
+
 }

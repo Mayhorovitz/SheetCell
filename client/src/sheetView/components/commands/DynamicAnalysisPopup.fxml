@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.commands.DynamicAnalysisPopupController" alignment="CENTER" spacing="10.0" style="-fx-padding: 20;">
+    <children>
+        <!-- הגדרת טווח מינימלי -->
+        <HBox spacing="10">
+            <Label text="Minimum Value:" />
+            <TextField fx:id="minValueField" prefWidth="100"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Maximum Value:" />
+            <TextField fx:id="maxValueField" prefWidth="100"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <Label text="Step Size:" />
+            <TextField fx:id="stepSizeField" prefWidth="100"/>
+        </HBox>
+
+        <Button fx:id="applyButton" text="Apply" onAction="#handleApplyButton"/>
+
+        <Slider fx:id="valueSlider" min="0" max="100" blockIncrement="1" />
+        <Label fx:id="selectedCellLabel" text="Selected Cell:" />
+
+    </children>
+</VBox>

@@ -277,7 +277,8 @@ public class SheetImpl implements Sheet, Serializable {
     }
 
     // Copy sheet to create a new version
-    private SheetImpl copySheet() {
+    @Override
+    public SheetImpl copySheet() {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos);

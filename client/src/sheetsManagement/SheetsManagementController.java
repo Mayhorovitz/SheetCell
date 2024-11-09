@@ -63,7 +63,7 @@ public class SheetsManagementController {
         // Start the refresher to update the available sheets periodically
         availableSheetRefresher = new AvailableSheetRefresher(this::updateAvailableSheets);
         refresherTimer = new Timer(true);
-        refresherTimer.schedule(availableSheetRefresher, 0, 5000); // Refresh every 5 seconds
+        refresherTimer.schedule(availableSheetRefresher, 0, 2000); // Refresh every 5 seconds
     }
 
     public void setMainController(AppMainController mainController) {

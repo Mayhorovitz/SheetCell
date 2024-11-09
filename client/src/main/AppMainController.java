@@ -141,6 +141,7 @@ public class AppMainController {
             SheetViewMainController sheetViewMainController = fxmlLoader.getController();
 
             // הגדרת הגיליון ב-MainController
+            sheetViewMainController.setMainController(this);
             sheetViewMainController.setSheetDTO(sheetDTO, isReadOnly);
 
 

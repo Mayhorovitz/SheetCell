@@ -1,6 +1,8 @@
 package sheetView.components.commands;
 
 
+import dto.api.SheetDTO;
+import dto.impl.CellDTOImpl;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -29,6 +31,8 @@ public class CommandsController {
     private Spinner<Integer> rowHeightSpinner;  // Row height spinner
     @FXML
     private ComboBox<String> alignmentComboBox;  // Dropdown for alignment
+    @FXML
+    private Button analyzeButton;
 
     private SheetController sheetController;
 
@@ -172,6 +176,51 @@ public class CommandsController {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void handleDynamicAnalysis() {
+        SheetDTO currentSheet = sheetController.getCurrentSheet();
+        String selectedCell = sheetController.getSelectedCellIndex();
+        CellDTOImpl cellDTO = sheetController.getCellDTO(selectedCell);
+        if (cellDTO == null || selectedCell.isEmpty()) {
+            showErrorAlert("Please select a cell before starting dynamic analysis.");
+            return;
+        }
+        if (!isNumeric(cellDTO.getOriginalValue())) {
+            showErrorAlert("Selected cell contains a function. Please select a numerical cell.");
+            return;
+        }
+
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/commands/DynamicAnalysisPopup.fxml"));
+            Parent root = loader.load();
+
+            DynamicAnalysisPopupController dynamicAnalysisPopupController = loader.getController();
+            dynamicAnalysisPopupController.setSheetController(sheetController);
+            dynamicAnalysisPopupController.setSelectedCell(selectedCell);
+
+            Stage stage = new Stage();
+            stage.setTitle("Dynamic Analysis");
+            stage.setScene(new Scene(root));
+            stage.setOnCloseRequest(event -> sheetController.displayOriginalSheet(currentSheet));
+
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private boolean isNumeric(String str) {
+        if (str == null) {
+            return false;
+        }
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
     public void showErrorAlert(String message) {

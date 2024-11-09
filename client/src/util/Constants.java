@@ -19,4 +19,7 @@ public class Constants {
     public static final String OWNED_SHEETS_PENDING_REQUESTS_PAGE =  FULL_SERVER_PATH +"/ownedSheetsPendingRequests";
     public static final String GET_SHEET_VERSION =  FULL_SERVER_PATH +"/getSheetVersion";
 
+    public static final String DYNAMIC_ANALYSIS =  FULL_SERVER_PATH +"/dynamicAnalysis";
+
+
 }

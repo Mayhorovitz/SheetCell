@@ -12,6 +12,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import main.AppMainController;
 import okhttp3.*;
 import sheetView.components.actionLine.ActionLineController;
 import sheetView.components.commands.CommandsController;
@@ -37,6 +38,7 @@ public class SheetViewMainController {
     @FXML
     private CommandsController commandsController;
 
+    private AppMainController mainController;
 
     private SheetDTO currentSheet;
 
@@ -231,5 +233,13 @@ public class SheetViewMainController {
         rangeController.updateRangeListView();
     }
 
+    public void handleReturnToSheetManagment() {
+        mainController.switchToSheetsManagement();
+
+    }
+
+    public void setMainController(AppMainController appMainController) {
+        this.mainController = appMainController;
+    }
 }
 

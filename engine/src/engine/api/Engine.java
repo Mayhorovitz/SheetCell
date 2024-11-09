@@ -69,4 +69,6 @@ public interface Engine {
     List<PermissionRequestDTO> getPendingRequestsForOwner(String ownerUsername);
 
     int getLatestVersion(String sheetName);
+
+    SheetDTO performDynamicAnalysis(String sheetName, String cellId, String newValue);
 }

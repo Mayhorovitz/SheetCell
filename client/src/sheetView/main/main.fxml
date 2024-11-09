@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-
 <BorderPane xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.main.SheetViewMainController">
 
     <top>
@@ -29,5 +29,14 @@
     <center>
         <fx:include fx:id="sheet" source="../components/sheet/sheet.fxml" />
     </center>
-
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" prefHeight="43.0" prefWidth="1059.0" BorderPane.alignment="CENTER">
+            <children>
+                <Button mnemonicParsing="false" onAction="#handleReturnToSheetManagment" text="Main Screen">
+                    <HBox.margin>
+                        <Insets bottom="5.0" right="7.0" top="3.0" />
+                    </HBox.margin></Button>
+            </children>
+        </HBox>
+    </bottom>
 </BorderPane>

@@ -37,11 +37,18 @@ public class PermissionsTableController {
 
     @FXML
     public void initialize() {
+        // הגדרת מאפייני התאים בעמודות
         usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         permissionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("requestedPermission"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Listener for updating permissions table when a sheet is selected
+        // מאזין שמעדכן את רוחב העמודות בהתאם לרוחב הטבלה
+        permissionsTable.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+            double tableWidth = newWidth.doubleValue();
+            usernameColumn.setPrefWidth(tableWidth * 0.33); // 33% מרוחב הטבלה
+            permissionTypeColumn.setPrefWidth(tableWidth * 0.34); // 34% מרוחב הטבלה
+            statusColumn.setPrefWidth(tableWidth * 0.33); // 33% מרוחב הטבלה
+        });
     }
 
     public void setMainController(SheetsManagementController mainController) {

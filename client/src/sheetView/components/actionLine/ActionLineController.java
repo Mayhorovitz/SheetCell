@@ -85,7 +85,7 @@ public class ActionLineController {
 
         if (sheetViewMainController != null && selectedVersion != null) {
             int selectedVersionNumber = Integer.parseInt(selectedVersion);
-            int currentVersionNumber = sheetViewMainController.getCurrentSheet().getVersion();
+            int currentVersionNumber = Integer.parseInt(versionSelector.getItems().getLast());
 
             String finalUrl = HttpUrl
                     .parse(Constants.GET_SHEET_VERSION)

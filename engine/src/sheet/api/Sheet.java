@@ -4,6 +4,7 @@ package sheet.api;
 import cell.api.Cell;
 import coordinate.Coordinate;
 import range.api.Range;
+import sheet.impl.SheetImpl;
 
 import java.util.Collection;
 import java.util.List;
@@ -51,4 +52,6 @@ public interface Sheet extends SheetReadActions, SheetUpdateActions {
     void setOwner(String owner);
 
     String getOwner();
+
+    SheetImpl copySheet();
 }

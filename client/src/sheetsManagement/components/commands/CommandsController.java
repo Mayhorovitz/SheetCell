@@ -101,10 +101,9 @@ public class CommandsController {
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                     try {
-                        if (response.isSuccessful()) {
-                            Platform.runLater(() -> showMessage("Permission requested successfully."));
-                        } else {
+                        if (!response.isSuccessful()) {
                             Platform.runLater(() -> showError("Failed to request permission: " + response.message()));
+
                         }
                     } finally {
                         response.close(); // Ensure the response body is closed to prevent leaks
@@ -160,11 +159,5 @@ public class CommandsController {
         alert.showAndWait();
     }
 
-    private void showMessage(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
+
 }

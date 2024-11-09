@@ -5,7 +5,7 @@
 
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetsManagement.components.availableSheets.AvailableSheetsController">
     <children>
-        <TableView fx:id="availableSheetsTable" layoutX="14.0" layoutY="14.0" prefHeight="200.0" prefWidth="400.0">
+        <TableView fx:id="availableSheetsTable" layoutX="14.0" layoutY="14.0" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
             <columns>
                 <TableColumn fx:id="sheetNameColumn" text="Sheet Name" />
                 <TableColumn fx:id="ownerColumn" text="Owner" />

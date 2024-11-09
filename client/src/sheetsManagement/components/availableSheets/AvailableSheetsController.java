@@ -47,17 +47,25 @@ public class AvailableSheetsController {
         sheetSizeColumn.setCellValueFactory(new PropertyValueFactory<>("size"));
         permissionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("permissionType"));
 
+        // מאזין לגודל הטבלה שמעדכן את רוחב העמודות באופן יחסי
+        availableSheetsTable.widthProperty().addListener((obs, oldWidth, newWidth) -> {
+            double tableWidth = newWidth.doubleValue();
+            sheetNameColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
+            ownerColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
+            sheetSizeColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
+            permissionTypeColumn.setPrefWidth(tableWidth * 0.25); // 25% מרוחב הטבלה
+        });
+
         availableSheetsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                // עדכון טבלת ההרשאות כאשר נבחר גיליון חדש
-                mainController.updatePermissionsTable(newValue);
+                mainController.updatePermissionsTable(newValue); // עדכון טבלת ההרשאות
             }
         });
 
-        // Start the refresher to update the available sheets periodically
+        // רענון תקופתי של גיליונות זמינים
         availableSheetRefresher = new AvailableSheetRefresher(this::updateAvailableSheets);
         refresherTimer = new Timer(true);
-        refresherTimer.schedule(availableSheetRefresher, 0, 5000); // Refresh every 5 seconds
+        refresherTimer.schedule(availableSheetRefresher, 0, 5000); // רענון כל 5 שניות
 
         loadAvailableSheets();
     }
@@ -111,6 +119,6 @@ public class AvailableSheetsController {
     }
 
     public void refreshSheetsTable() {
-        loadAvailableSheets(); // קריאה מחדש לנתונים מהשרת
+        loadAvailableSheets(); // רענון הנתונים מהשרת
     }
 }
