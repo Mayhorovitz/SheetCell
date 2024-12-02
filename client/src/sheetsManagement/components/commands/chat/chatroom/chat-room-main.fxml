@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+
+
+    <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="412.0" prefWidth="888.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetsManagement.components.commands.chat.chatroom.ChatRoomMainController">
+        <left>
+            <fx:include fx:id="usersListComponent" source="../users/users.fxml" />
+        </left>
+        <center>
+            <fx:include fx:id="chatAreaComponent" source="../chatarea/chat-area.fxml" />
+        </center>
+        <right>
+            <fx:include fx:id="actionCommandsComponent" source="../chatCommands/action-commands.fxml" />
+        </right>
+    </BorderPane>
