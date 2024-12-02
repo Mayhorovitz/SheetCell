@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 import sheetsManagement.SheetsManagementController;
+import sheetsManagement.components.commands.chat.chatroom.ChatRoomMainController;
 import util.Constants;
 import util.http.HttpClientUtil;
 
@@ -35,13 +36,20 @@ public class CommandsController {
     private Button requestPermissionButton;
     @FXML
     private Button ackDenyPermissionButton;
+    @FXML
+    private Button chatButton;
+
+
 
     @FXML
     public void initialize() {
         viewSheetButton.setOnAction(event -> handleViewSheet());
         requestPermissionButton.setOnAction(event -> handleRequestPermission());
         ackDenyPermissionButton.setOnAction(event -> handleAckDenyPermissionRequest());
+        chatButton.setOnAction(event -> handleChatEnter());
+
     }
+
 
     public void setMainController(SheetsManagementController mainController) {
         this.mainController = mainController;
@@ -142,6 +150,33 @@ public class CommandsController {
         }
     }
 
+    private void handleChatEnter() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetsManagement/components/commands/chat/chatroom/chat-room-main.fxml"));
+            Parent root = loader.load();
+
+            Stage popupStage = new Stage();
+            popupStage.setTitle("Chat room");
+            popupStage.initModality(Modality.WINDOW_MODAL);
+
+            ChatRoomMainController chatRoomController = loader.getController();
+            chatRoomController.setChatAppMainController(this);
+
+            Scene scene = new Scene(root);
+            popupStage.setScene(scene);
+            chatRoomController.setActive();
+
+            popupStage.showAndWait();
+
+            chatRoomController.setInActive();
+
+
+        } catch (IOException e) {
+            showError("Failed to open chat: " + e.getMessage());
+        }
+
+
+    }
 
 
     private void showError(String message) {

@@ -10,5 +10,7 @@
         <Button fx:id="viewSheetButton" text="View Sheet" />
         <Button fx:id="requestPermissionButton" text="Request Permission" />
         <Button fx:id="ackDenyPermissionButton" maxWidth="-Infinity" text="Acknowledge/Deny Permission" />
+        <Button fx:id="chatButton" maxWidth="-Infinity" text="Chat" />
+
     </children>
 </VBox>
