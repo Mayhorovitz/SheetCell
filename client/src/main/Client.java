@@ -11,7 +11,6 @@ import util.http.HttpClientUtil;
 import java.io.IOException;
 import java.net.URL;
 
-import static util.Constants.MAIN_PAGE_FXML_RESOURCE_LOCATION;
 
 public class Client extends Application {
 
@@ -24,7 +23,7 @@ public class Client extends Application {
         primaryStage.setMinWidth(600);
         primaryStage.setTitle("shticell");
 
-        URL mainPageUrl = getClass().getResource(MAIN_PAGE_FXML_RESOURCE_LOCATION); // URL of the main page FXML
+        URL mainPageUrl = getClass().getResource("/main/AppMain.fxml"); // URL of the main page FXML
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(mainPageUrl);

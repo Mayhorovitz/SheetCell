@@ -32,10 +32,16 @@ public class Constants {
     public static final String UPDATE_BACKGROUND =  FULL_SERVER_PATH + "/updateBackgroundColor" ;
     public static final String UPDATE_TEXT =  FULL_SERVER_PATH + "/updateTextColor" ;
     public static final String RESET_CELL_DESIGN =  FULL_SERVER_PATH + "/resetCellDesign" ;
-
     public static final String GET_SHEET_VERSION =  FULL_SERVER_PATH +"/getSheetVersion";
-
+    public static final String SINGLE_DYNAMIC_ANALYSIS = FULL_SERVER_PATH +"/singleDynamicAnalysis";
     public static final String DYNAMIC_ANALYSIS =  FULL_SERVER_PATH +"/dynamicAnalysis";
+
+    public final static int REFRESH_RATE = 2000;
+
+    public final static String USERS_LIST = FULL_SERVER_PATH + "/userslist";
+    public final static String CHAT_LINES_LIST = FULL_SERVER_PATH + "/chat";
+    public final static String SEND_CHAT_LINE = FULL_SERVER_PATH + "/pages/chatroom/sendChat";
+    public final static String CHAT_LINE_FORMATTING = "%tH:%tM:%tS | %.10s: %s%n";
 
 
 }

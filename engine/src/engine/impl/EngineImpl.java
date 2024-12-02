@@ -4,22 +4,23 @@ import cell.api.Cell;
 import cell.impl.CellImpl;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
-import dto.api.DTOFactory;
 import dto.api.PermissionRequestDTO;
 import dto.api.RangeDTO;
 import dto.api.SheetDTO;
 import dto.impl.CellDTOImpl;
-import dto.impl.DTOFactoryImpl;
 import dto.impl.PermissionRequestDTOImpl;
 import dto.impl.SheetSummaryDTO;
+import engine.DTOFactory.DTOFactory;
+import engine.DTOFactory.DTOFactoryImpl;
 import engine.api.Engine;
 import generated.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import permission.PermissionRequest;
-import permission.PermissionStatus;
-import permission.PermissionType;
+
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
 import permission.PermissionsManager;
 import range.api.Range;
 import sheet.api.Sheet;
@@ -475,20 +476,72 @@ public class EngineImpl implements Engine {
     }
 
     @Override
-        public SheetDTO performDynamicAnalysis(String sheetName, String cellId, String newValue) {
+    public SheetDTO performDynamicAnalysis(String sheetName, Map<String, Double> cellValues) {
             Sheet currentSheet = getCurrentSheet(sheetName);
             // Create a deep copy of the current sheet to avoid modifying the original
             Sheet tempSheet = currentSheet.copySheet();
 
+        try {
+            // Update each cell with the new value
+            for (Map.Entry<String, Double> entry : cellValues.entrySet()) {
+                String cellId = entry.getKey();
+                String newValue = String.valueOf(entry.getValue());
+                Coordinate coordinate = parseCellId(cellId);
+                validateCoordinate(tempSheet, coordinate);
+
+                Cell cell = tempSheet.getCell(coordinate);
+                if (cell == null) {
+                    throw new IllegalArgumentException("Cell " + cellId + " does not exist in the sheet.");
+                } else {
+                    if (!isNumeric(cell.getOriginalValue())) {
+                        throw new IllegalArgumentException("Cell " + cellId + " does not contain a numeric value.");
+                    }
+                }
+                    // Update the cell value
+                    cell.setOriginalValue(newValue);
+
+            }
+
+            // Recalculate the sheet
+            tempSheet.updateDependenciesAndInfluences();
+            for (Cell c : tempSheet.orderCellsForCalculation()) {
+                c.calculateEffectiveValue();
+            }
+
+            return dtoFactory.createSheetDTO(tempSheet);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error during dynamic analysis: " + e.getMessage(), e);
+        }
+    }
+
+    private boolean isNumeric(String str) {
+        if (str == null) {
+            return false;
+        }
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public SheetDTO performSingleDynamicAnalysis(String sheetName, String cellId, String newValue) {
+        Sheet currentSheet = getCurrentSheet(sheetName);
+        // Create a deep copy of the current sheet
+        Sheet tempSheet = currentSheet.copySheet();
+
+        try {
             Coordinate coordinate = parseCellId(cellId);
             validateCoordinate(tempSheet, coordinate);
 
             Cell cell = tempSheet.getCell(coordinate);
             if (cell == null) {
-                // If the cell does not exist, create it
-                cell = new CellImpl(coordinate.getRow(), coordinate.getColumn(), newValue, 1, tempSheet.getOwner(), tempSheet);
-                tempSheet.addCell(coordinate, cell);
+                throw new IllegalArgumentException("Cell " + cellId + " does not exist in the sheet.");
             } else {
+                if (!isNumeric(cell.getOriginalValue())) {
+                    throw new IllegalArgumentException("Cell " + cellId + " does not contain a numeric value.");
+                }
                 // Update the cell value
                 cell.setOriginalValue(newValue);
             }
@@ -500,8 +553,11 @@ public class EngineImpl implements Engine {
             }
 
             return dtoFactory.createSheetDTO(tempSheet);
-
-
+        } catch (Exception e) {
+            throw new IllegalStateException("Error during dynamic analysis: " + e.getMessage(), e);
+        }
     }
+
+
 
 }

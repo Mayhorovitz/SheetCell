@@ -7,13 +7,14 @@ import dto.api.RangeDTO;
 import dto.api.SheetDTO;
 import dto.impl.SheetSummaryDTO;
 import permission.PermissionRequest;
-import permission.PermissionStatus;
-import permission.PermissionType;
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
 import permission.PermissionsManager;
 
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface Engine {
 
@@ -42,5 +43,7 @@ public interface Engine {
     List<PermissionRequestDTO> getPermissionRequestsDTO(String sheetName);
     List<PermissionRequestDTO> getPendingRequestsForOwner(String ownerUsername);
     int getLatestVersion(String sheetName);
-    SheetDTO performDynamicAnalysis(String sheetName, String cellId, String newValue);
+    SheetDTO performDynamicAnalysis(String sheetName, Map<String, Double> cellValues);
+
+    SheetDTO performSingleDynamicAnalysis(String sheetName, String cellId, String newValue);
 }
