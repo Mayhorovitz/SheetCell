@@ -2,13 +2,13 @@ package servlets.sheetsManagment;
 
 import com.google.gson.Gson;
 import dto.api.PermissionRequestDTO;
+import dto.permission.PermissionStatus;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import permission.PermissionStatus;
 
 import java.io.IOException;
 import java.io.PrintWriter;

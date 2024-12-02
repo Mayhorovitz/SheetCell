@@ -37,7 +37,7 @@ public class PermissionsRequestsController {
     private Button approveButton;
     @FXML
     private Button denyButton;
-
+    private PermissionRequestDTOImpl currentRequest;
     private SheetsManagementController mainController;
     private Timer refresherTimer;
 
@@ -52,6 +52,14 @@ public class PermissionsRequestsController {
         denyButton.setOnAction(event -> handleDenyRequest());
 
         startRequestsRefresher();
+
+        // Add a listener to update currentRequest when a new item is selected
+        permissionsRequestsTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                currentRequest = newValue;
+            }
+        });
+
     }
 
     // Sets the main controller for this component
@@ -61,24 +69,22 @@ public class PermissionsRequestsController {
 
     // Handles approval of a selected request
     private void handleApproveRequest() {
-        PermissionRequestDTOImpl selectedRequest = permissionsRequestsTable.getSelectionModel().getSelectedItem();
-        if (selectedRequest == null) {
+        if (currentRequest == null) {
             showError("Please select a request to approve.");
             return;
         }
 
-        updateRequestStatus(selectedRequest, "APPROVED");
+        updateRequestStatus(currentRequest, "APPROVED");
     }
 
     // Handles denial of a selected request
     private void handleDenyRequest() {
-        PermissionRequestDTOImpl selectedRequest = permissionsRequestsTable.getSelectionModel().getSelectedItem();
-        if (selectedRequest == null) {
+        if (currentRequest == null) {
             showError("Please select a request to deny.");
             return;
         }
 
-        updateRequestStatus(selectedRequest, "DENIED");
+        updateRequestStatus(currentRequest, "DENIED");
     }
 
     // Updates the status of a permission request

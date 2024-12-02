@@ -1,5 +1,8 @@
 package permission;
 
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
+
 public class PermissionRequest {
     private final String username;
     private final PermissionType requestedPermission;

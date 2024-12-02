@@ -1,12 +1,12 @@
 package servlets.sheetsManagment;
 
+import dto.permission.PermissionType;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import permission.PermissionType;
 
 import java.io.IOException;
 

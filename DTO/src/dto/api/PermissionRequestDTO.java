@@ -1,7 +1,8 @@
 package dto.api;
 
-import permission.PermissionStatus;
-import permission.PermissionType;
+
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
 
 public interface PermissionRequestDTO {
     String getUsername();

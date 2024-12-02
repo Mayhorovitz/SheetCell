@@ -1,5 +1,8 @@
 package permission;
 
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

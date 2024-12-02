@@ -1,8 +1,9 @@
 package dto.impl;
 
 import dto.api.PermissionRequestDTO;
-import permission.PermissionStatus;
-import permission.PermissionType;
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
+
 
 public class PermissionRequestDTOImpl implements PermissionRequestDTO {
     private String username;

@@ -1,4 +1,4 @@
-package permission;
+package dto.permission;
 
 /**
  * Enum representing different types of permissions.

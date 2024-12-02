@@ -76,6 +76,8 @@ public class PermissionsTableController {
                 if (response.code() == 200) {
                     String responseBody = response.body().string();
                     Type listType = new TypeToken<List<PermissionRequestDTOImpl>>() {}.getType();
+
+
                     List<PermissionRequestDTOImpl> permissions = new Gson().fromJson(responseBody, listType);
 
                     Platform.runLater(() -> permissionsTable.getItems().setAll(permissions));
