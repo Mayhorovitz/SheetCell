@@ -14,6 +14,8 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
+import login.LoginController;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -22,7 +24,6 @@ import sheetView.main.SheetViewMainController;
 import sheetsManagement.SheetsManagementController;
 import util.Constants;
 import util.http.HttpClientUtil;
-import login.LoginController;
 
 import java.io.IOException;
 import java.net.URL;
@@ -89,6 +90,7 @@ public class AppMainController {
             sheetsManagementComponent = fxmlLoader.load();
             sheetsManagementController = fxmlLoader.getController();
             sheetsManagementController.setMainController(this);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -96,7 +98,11 @@ public class AppMainController {
 
     public void switchToSheetsManagement() {
         Platform.runLater(() -> {
+
             setMainPanelTo(sheetsManagementComponent);
+            Stage stage = (Stage) mainPanel.getScene().getWindow();
+            stage.setWidth(700);
+            stage.setHeight(600);
             sheetsManagementController.setActive();
 
             // Stop the VersionRefresher
@@ -104,6 +110,7 @@ public class AppMainController {
                 sheetViewMainController.stopVersionRefresher();
             }
         });
+
     }
 
 

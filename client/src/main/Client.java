@@ -19,8 +19,7 @@ public class Client extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        primaryStage.setMinHeight(600);
-        primaryStage.setMinWidth(600);
+
         primaryStage.setTitle("shticell");
 
         URL mainPageUrl = getClass().getResource("/main/AppMain.fxml"); // URL of the main page FXML
@@ -30,9 +29,10 @@ public class Client extends Application {
             Parent root = fxmlLoader.load();
             appMainController = fxmlLoader.getController();
 
-            Scene scene = new Scene(root, 700, 600);
+            Scene scene = new Scene(root, 400, 200);
             primaryStage.setScene(scene);
             primaryStage.show();
+
 
             // Set the initial screen to Login page
             appMainController.switchToLogin();

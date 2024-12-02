@@ -1,0 +1,59 @@
+/* loginStyle.css */
+
+.root {
+    -fx-font-family: "Arial";
+    -fx-font-size: 14px;
+    -fx-background-color: #e8f5e9;
+    -fx-padding: 10px;
+}
+
+.main-action-button {
+    -fx-background-color: #81c784;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8px;
+    -fx-pref-width: 90px;
+    -fx-background-radius: 5;
+}
+
+.main-action-button:hover {
+    -fx-background-color: #66bb6a;
+}
+
+.main-action-button:pressed {
+    -fx-background-color: #388E3C;
+}
+
+.error-label {
+    -fx-text-fill: #e57373;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+
+.text-field {
+    -fx-background-radius: 5;
+    -fx-border-color: #a5d6a7;
+    -fx-border-radius: 5;
+    -fx-padding: 5px;
+    -fx-background-color: #ffffff;
+}
+
+.button {
+    -fx-cursor: hand;
+}
+
+.label {
+    -fx-text-fill: #455a64;
+    -fx-font-weight: normal;
+}
+
+.hbox {
+    -fx-spacing: 2px; /* Reduced spacing to minimize gap between buttons */
+    -fx-alignment: center;
+}
+
+.grid-pane {
+    -fx-vgap: 15px;
+    -fx-hgap: 10px;
+    -fx-alignment: center;
+}
