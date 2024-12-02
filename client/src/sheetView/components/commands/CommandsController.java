@@ -10,6 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import sheetView.components.commands.DynamicAnalysis.DynamicAnalysisPopupController;
+import sheetView.components.commands.DynamicAnalysis.SingleVariableAnalysisPopupController;
 import sheetView.components.filter.FilterPopupController;
 import sheetView.components.sheet.SheetController;
 import sheetView.components.sort.SortPopupController;
@@ -173,9 +175,8 @@ public class CommandsController {
             e.printStackTrace();
         }
     }
-
     @FXML
-    public void handleDynamicAnalysis() {
+    public void handleSingleVariableDynamicAnalysis() {
         SheetDTO currentSheet = sheetController.getCurrentSheet();
         String selectedCell = sheetController.getSelectedCellIndex();
         CellDTOImpl cellDTO = sheetController.getCellDTO(selectedCell);
@@ -190,23 +191,26 @@ public class CommandsController {
 
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/commands/DynamicAnalysisPopup.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/commands/DynamicAnalysis/SingleVariableAnalysisPopup.fxml"));
             Parent root = loader.load();
 
-            DynamicAnalysisPopupController dynamicAnalysisPopupController = loader.getController();
-            dynamicAnalysisPopupController.setSheetController(sheetController);
-            dynamicAnalysisPopupController.setSelectedCell(selectedCell);
+            SingleVariableAnalysisPopupController singleVariableAnalysisPopupController = loader.getController();
+            singleVariableAnalysisPopupController.setSheetController(sheetController);
+            singleVariableAnalysisPopupController.setSelectedCell(selectedCell);
 
             Stage stage = new Stage();
             stage.setTitle("Dynamic Analysis");
             stage.setScene(new Scene(root));
             stage.setOnCloseRequest(event -> sheetController.displayOriginalSheet(currentSheet));
 
+
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    // Helper method to check if a string is numeric
     private boolean isNumeric(String str) {
         if (str == null) {
             return false;
@@ -218,6 +222,34 @@ public class CommandsController {
             return false;
         }
     }
+
+    @FXML
+    public void handleMultiVariableDynamicAnalysis() {
+        SheetDTO currentSheet = sheetController.getCurrentSheet();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/sheetView/components/commands/DynamicAnalysis/DynamicAnalysisPopup.fxml"));
+            Parent root = loader.load();
+
+            DynamicAnalysisPopupController dynamicAnalysisPopupController = loader.getController();
+            dynamicAnalysisPopupController.setSheetController(sheetController);
+
+            Stage stage = new Stage();
+            stage.setTitle("Multi Variable Dynamic Analysis");
+
+            // Adjust the scene size
+            Scene scene = new Scene(root, 600, 200);
+            stage.setScene(scene);
+            stage.setOnCloseRequest(event -> sheetController.displayOriginalSheet(currentSheet));
+
+            // Optional: Make the stage resizable
+            stage.setResizable(true);
+
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void showErrorAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");

@@ -66,9 +66,26 @@
             </Button>
         </children>
     </HBox>
-    <Button fx:id="analyzeButton" onAction="#handleDynamicAnalysis" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Analyze Selected Cell">
-      <font>
-         <Font size="11.0" />
-      </font></Button>
+    <HBox prefHeight="25.0" prefWidth="201.0">
+        <children>
+            <Button fx:id="singleVariableAnalysisButton" onAction="#handleSingleVariableDynamicAnalysis" prefHeight="25.0" prefWidth="170.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Single Var Analysis" textOverrun="CENTER_WORD_ELLIPSIS">
+                <HBox.margin>
+                    <Insets />
+                </HBox.margin>
+                <font>
+                    <Font size="11.0" />
+                </font>
+            </Button>
+            <Button fx:id="multiVariableAnalysisButton" onAction="#handleMultiVariableDynamicAnalysis" prefHeight="25.0" prefWidth="170.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Multi Var Analysis" textAlignment="CENTER" textOverrun="CENTER_WORD_ELLIPSIS">
+                <HBox.margin>
+                    <Insets left="5.0" />
+                </HBox.margin>
+                <font>
+                    <Font size="11.0" />
+                </font>
+            </Button>
+        </children>
+    </HBox>
+
 
 </VBox>

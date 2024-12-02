@@ -1,7 +1,6 @@
 package servlets.sheetView;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import dto.api.SheetDTO;
 import engine.api.Engine;
 import jakarta.servlet.ServletException;
@@ -12,34 +11,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import utils.ServletUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.Map;
 
-@WebServlet("/dynamicAnalysis")
-public class DynamicAnalysisServlet extends HttpServlet {
+@WebServlet("/singleDynamicAnalysis")
+public class SingleDynamicAnalysisServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String sheetName = request.getParameter("sheetName");
-        String cellValuesJson = request.getParameter("cellValues");
+        String cellId = request.getParameter("cellId");
+        String newValue = request.getParameter("newValue");
 
         try {
-            Gson gson = new Gson();
-            Type type = new TypeToken<Map<String, Double>>() {}.getType();
-            Map<String, Double> cellValues = gson.fromJson(cellValuesJson, type);
-
             Engine engine = ServletUtils.getEngine(getServletContext());
-            SheetDTO temporarySheetDTO = engine.performDynamicAnalysis(sheetName, cellValues);
-            String sheetJson = gson.toJson(temporarySheetDTO);
+            SheetDTO temporarySheetDTO = engine.performSingleDynamicAnalysis(sheetName, cellId, newValue);
+            String sheetJson = new Gson().toJson(temporarySheetDTO);
             response.setContentType("application/json");
             response.getWriter().write(sheetJson);
-        } catch (IllegalArgumentException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(e.getMessage());
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(e.getMessage());
+            response.getWriter().write("Error: " + e.getMessage());
         }
     }
 }
-
-
