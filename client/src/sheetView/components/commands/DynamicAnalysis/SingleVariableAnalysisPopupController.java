@@ -1,19 +1,21 @@
-package sheetView.components.commands;
+package sheetView.components.commands.DynamicAnalysis;
+
 
 import com.google.gson.Gson;
 import dto.impl.SheetDTOImpl;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import sheetView.components.sheet.SheetController;
 import util.Constants;
 import util.http.HttpClientUtil;
 
 import java.io.IOException;
 
-
-public class DynamicAnalysisPopupController {
+public class SingleVariableAnalysisPopupController {
 
     @FXML
     private Label selectedCellLabel;
@@ -26,6 +28,7 @@ public class DynamicAnalysisPopupController {
 
     @FXML
     private TextField stepSizeField;
+
     @FXML
     private Button applyButton;
 
@@ -39,15 +42,18 @@ public class DynamicAnalysisPopupController {
         this.sheetController = sheetController;
     }
 
+    public void setSelectedCell(String cellId) {
+        this.selectedCell = cellId;
+        selectedCellLabel.setText("Selected Cell: " + cellId);
+    }
 
-    // Initialize the dynamic analysis UI components
     @FXML
     private void initialize() {
         valueSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
             handleSliderValueChanged(newValue.doubleValue());
         });
-
     }
+
     @FXML
     private void handleApplyButton() {
         try {
@@ -68,23 +74,23 @@ public class DynamicAnalysisPopupController {
             valueSlider.setShowTickMarks(true);
             valueSlider.setShowTickLabels(true);
 
-            // Initialize the temporary sheet with the current sheet data
+            // Initialize the dynamic analysis with the initial value
+            performDynamicAnalysis(selectedCell, minValue);
 
         } catch (NumberFormatException e) {
             showError("Please enter valid numerical values for min, max, and step size.");
         }
     }
 
-    // Handle slider value change to update the sheet temporarily
     private void handleSliderValueChanged(double newValue) {
         if (sheetController != null && selectedCell != null) {
-            // Send the new value and selected cell to the server to get updated sheet data
             performDynamicAnalysis(selectedCell, newValue);
         }
     }
+
     private void performDynamicAnalysis(String cellId, double newValue) {
         String sheetName = sheetController.getCurrentSheet().getName();
-        String finalUrl = Constants.DYNAMIC_ANALYSIS;
+        String finalUrl = Constants.SINGLE_DYNAMIC_ANALYSIS; // Update the constant accordingly
 
         HttpUrl url = HttpUrl.parse(finalUrl);
         if (url == null) {
@@ -105,40 +111,41 @@ public class DynamicAnalysisPopupController {
 
         HttpClientUtil.runAsync(request, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> showError("Failed to perform dynamic analysis: " + e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     String sheetJson = response.body().string();
                     SheetDTOImpl updatedSheetDTO = new Gson().fromJson(sheetJson, SheetDTOImpl.class);
                     Platform.runLater(() -> {
-                        // Display the updated sheet without changing the actual sheet controller's data
                         sheetController.displayTemporarySheet(updatedSheetDTO);
                     });
                 } else {
-                    Platform.runLater(() -> showError("Failed to perform dynamic analysis: " + response.message()));
+                    String errorMessage = response.body().string();
+                    Platform.runLater(() -> showError("Failed to perform dynamic analysis: " + errorMessage));
                 }
             }
         });
     }
 
+    @FXML
+    private void handleCloseButton() {
+        // Restore the original sheet
+        sheetController.displaySheet();
 
-
-    public void setSelectedCell(String cellId) {
-        this.selectedCell = cellId;
-        selectedCellLabel.setText("Selected Cell: " + cellId);
-
+        // Close the popup window
+        Stage stage = (Stage) selectedCellLabel.getScene().getWindow();
+        stage.close();
     }
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
+        alert.setTitle("Dynamic Analysis Error");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
     }
-
 }

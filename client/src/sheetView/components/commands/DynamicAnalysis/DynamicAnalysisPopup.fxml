@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.commands.DynamicAnalysis.DynamicAnalysisPopupController" alignment="CENTER" spacing="10.0" style="-fx-padding: 20;">
+    <children>
+        <Button text="Add Cell" onAction="#handleAddCellButton"/>
+
+        <!-- Wrap cellsContainer in a ScrollPane -->
+        <ScrollPane fitToWidth="true" prefHeight="400.0">
+            <content>
+                <VBox fx:id="cellsContainer" spacing="10"/>
+            </content>
+        </ScrollPane>
+
+        <Button text="Start Analysis" onAction="#handleStartAnalysisButton"/>
+    </children>
+</VBox>

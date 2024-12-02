@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.commands.DynamicAnalysisPopupController" alignment="CENTER" spacing="10.0" style="-fx-padding: 20;">
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.commands.DynamicAnalysis.SingleVariableAnalysisPopupController" alignment="CENTER" spacing="10.0" style="-fx-padding: 20;">
     <children>
         <HBox spacing="10">
             <Label text="Minimum Value:" />
