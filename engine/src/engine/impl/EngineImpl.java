@@ -1,7 +1,6 @@
 package engine.impl;
 
 import cell.api.Cell;
-import cell.impl.CellImpl;
 import coordinate.Coordinate;
 import coordinate.CoordinateImpl;
 import dto.api.PermissionRequestDTO;
@@ -10,23 +9,18 @@ import dto.api.SheetDTO;
 import dto.impl.CellDTOImpl;
 import dto.impl.PermissionRequestDTOImpl;
 import dto.impl.SheetSummaryDTO;
+import dto.permission.PermissionStatus;
+import dto.permission.PermissionType;
 import engine.DTOFactory.DTOFactory;
 import engine.DTOFactory.DTOFactoryImpl;
 import engine.api.Engine;
-import generated.*;
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Unmarshaller;
+import engine.file.FileLoader;
 import permission.PermissionRequest;
-
-import dto.permission.PermissionStatus;
-import dto.permission.PermissionType;
 import permission.PermissionsManager;
 import range.api.Range;
 import sheet.api.Sheet;
-import sheet.impl.SheetImpl;
+import sheet.impl.SheetManager;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,27 +34,24 @@ public class EngineImpl implements Engine {
 
     private Map<String, Map<Integer, Sheet>> allSheets = new HashMap<>();
     private Map<String, Integer> currentSheetVersions = new HashMap<>();
-    private DTOFactory dtoFactory = new DTOFactoryImpl();
+    private final DTOFactory dtoFactory = new DTOFactoryImpl();
     private Map<String, PermissionsManager> permissionsManagers = new HashMap<>();
+    private final SheetManager sheetManager =  new SheetManager(dtoFactory);
 
 
     // Handles loading an XML file into the engine.
     @Override
     public void loadFile(InputStream inputStream, String owner) throws Exception {
-        STLSheet loadedSheetFromXML = loadXMLFile(inputStream);
-        String sheetName = loadedSheetFromXML.getName();
+        FileLoader fileLoader = new FileLoader();
+        Sheet sheet = fileLoader.loadSheetFromXML(inputStream, owner);
+        String sheetName = sheet.getName();
 
-        if (allSheets.containsKey(sheetName)) {
+        if (sheetManager.sheetExists(sheetName)) {
             throw new IllegalArgumentException("A sheet with the name '" + sheetName + "' already exists.");
         }
+        sheet.setOwner(owner);
+        sheetManager.addSheet(sheetName, sheet);
 
-        Map<Integer, Sheet> versionsMap = new HashMap<>();
-        Sheet currentSheet = STLSheetToSheet(loadedSheetFromXML, owner);
-        currentSheet.setSheetVersion(LOAD_VERSION);
-        currentSheet.setOwner(owner);
-        versionsMap.put(LOAD_VERSION, currentSheet);
-        allSheets.put(sheetName, versionsMap);
-        currentSheetVersions.put(sheetName, LOAD_VERSION);
 
         PermissionsManager permissionsManager = new PermissionsManager(owner);
         permissionsManager.addPermission(owner, PermissionType.OWNER);
@@ -79,40 +70,6 @@ public class EngineImpl implements Engine {
         return permissionsManagers.get(sheetName);
     }
 
-    private STLSheet loadXMLFile(InputStream inputStream) throws IOException {
-        try {
-            JAXBContext context = JAXBContext.newInstance(STLSheet.class);
-            Unmarshaller unmarshaller = context.createUnmarshaller();
-            STLSheet sheet = (STLSheet) unmarshaller.unmarshal(inputStream);
-            validateSheet(sheet);
-            return sheet;
-        } catch (JAXBException e) {
-            throw new IOException("An error occurred while loading the XML file.", e);
-        }
-    }
-
-
-    //  Validates the loaded STLSheet object.
-
-    private void validateSheet(STLSheet sheet) {
-        STLLayout layout = sheet.getSTLLayout();
-        if (layout.getRows() < 1 || layout.getRows() > MAX_ROWS ||
-                layout.getColumns() < 1 || layout.getColumns() > MAX_COLS) {
-            throw new IllegalArgumentException("Invalid sheet layout: Rows and columns must be within allowed range.");
-        }
-
-        for (STLCell cell : sheet.getSTLCells().getSTLCell()) {
-            int row = cell.getRow();
-            String column = cell.getColumn();
-            int columnIndex = convertColumnToIndex(column);
-
-            if (row < 1 || row > layout.getRows() || columnIndex < 1 || columnIndex > layout.getColumns()) {
-                throw new IllegalArgumentException("Invalid cell location: Cell at row " + row + ", column " + column + " is out of bounds.");
-            }
-        }
-    }
-
-    //  Extracts row number from a cell coordinate string.
 
     private int extractRowFromCoordinate(String coordinateString) {
         String rowPart = coordinateString.replaceAll("[^0-9]", "");
@@ -134,51 +91,6 @@ public class EngineImpl implements Engine {
             result = result * 26 + (c - 'A' + 1);
         }
         return result;
-    }
-
-    //  Converts an STLSheet object into a Sheet object.
-    private Sheet STLSheetToSheet(STLSheet stlSheet, String owner) {
-        Sheet newSheet = new SheetImpl();
-        newSheet.setName(stlSheet.getName());
-
-        STLLayout layout = stlSheet.getSTLLayout();
-        newSheet.setRows(layout.getRows());
-        newSheet.setCols(layout.getColumns());
-        STLSize size = layout.getSTLSize();
-        newSheet.setRowHeight(size.getRowsHeightUnits());
-        newSheet.setColWidth(size.getColumnWidthUnits());
-
-        // Process ranges
-        if (stlSheet.getSTLRanges() != null && stlSheet.getSTLRanges().getSTLRange() != null) {
-            for (STLRange range : stlSheet.getSTLRanges().getSTLRange()) {
-                String name = range.getName();
-                String from = range.getSTLBoundaries().getFrom();
-                String to = range.getSTLBoundaries().getTo();
-                newSheet.addRange(name, from + ".." + to);
-            }
-        }
-
-        // Process cells
-        for (STLCell stlCell : stlSheet.getSTLCells().getSTLCell()) {
-            String originalValue = stlCell.getSTLOriginalValue();
-            int row = stlCell.getRow();
-            String column = stlCell.getColumn();
-            int col = convertColumnToIndex(column);
-
-            Coordinate coordinate = new CoordinateImpl(row, col);
-            Cell cell = new CellImpl(row, col, originalValue, 1, owner,newSheet);
-            newSheet.addCell(coordinate, cell);
-        }
-
-        newSheet.updateDependenciesAndInfluences();
-
-        // Calculate the effective values for each cell
-        for (Cell cell : newSheet.orderCellsForCalculation()) {
-            cell.calculateEffectiveValue();
-            newSheet.addCellThatChanged(cell);
-        }
-
-        return newSheet;
     }
 
     //  Updates a cell's value.
