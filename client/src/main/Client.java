@@ -49,7 +49,7 @@ public class Client extends Application {
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop(){
         HttpClientUtil.shutdown();
         if (appMainController != null) {
             appMainController.close();

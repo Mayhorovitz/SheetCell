@@ -49,7 +49,6 @@ public class SheetsManagementController {
     public void initialize() {
         // Set the main controller for the subcomponents
         availableSheetsController.setMainController(this);
-        permissionsTableController.setMainController(this);
         commandsController.setMainController(this);
 
         uploadSheetButton.setOnAction(event -> handleUploadSheet());
@@ -71,7 +70,6 @@ public class SheetsManagementController {
     public void setMainController(AppMainController mainController) {
         this.mainController = mainController;
         availableSheetsController.setMainController(this);
-        permissionsTableController.setMainController(this);
         commandsController.setMainController(this);
     }
 
@@ -165,14 +163,6 @@ public class SheetsManagementController {
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    private void showMessage(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();

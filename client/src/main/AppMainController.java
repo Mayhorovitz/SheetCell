@@ -20,6 +20,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 import sheetView.main.SheetViewMainController;
 import sheetsManagement.SheetsManagementController;
 import util.Constants;
@@ -130,12 +131,12 @@ public class AppMainController {
 
         HttpClientUtil.runAsync(finalUrl, new Callback() {
             @Override
-            public void onFailure(Call call, IOException e) {
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
                 Platform.runLater(() -> showError("Failed to load sheet: " + e.getMessage()));
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (response.isSuccessful()) {
                     String sheetJson = response.body().string();
 

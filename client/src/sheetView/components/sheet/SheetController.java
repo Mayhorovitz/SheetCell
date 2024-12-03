@@ -31,7 +31,6 @@ import java.util.function.Consumer;
  * Controller for displaying and interacting with the spreadsheet grid.
  */
 public class SheetController {
-    private static final String SERVER_URL = "http://localhost:8080/shticell";
 
     private SheetViewMainController sheetViewMainController;
     private UIModel uiModel;
@@ -115,32 +114,30 @@ public class SheetController {
 
         spreadsheetScrollPane.setPannable(true);
     }
-
-    public void initializeSheet(SheetDTO sheetDTO) {
-        this.currentSheet = sheetDTO;
+    private void initializeSheetBase(SheetDTO sheetDTO, int numRows, int numCols, int rowHeight, int colWidth) {
         cellToLabel.clear();
         clearGridPane();
 
-        int numRows = sheetDTO.getRows();
-        int numCols = sheetDTO.getCols();
-
         spreadsheetGrid.setHgap(0);
         spreadsheetGrid.setVgap(0);
-
-        // Remove padding and border from the GridPane
         spreadsheetGrid.setPadding(Insets.EMPTY);
         spreadsheetGrid.setStyle("-fx-border-color: transparent;");
 
-        // Get row height and column width from the sheet
-        int rowHeightFromSheet = sheetDTO.getRowHeight();
-        int colWidthFromSheet = sheetDTO.getColWidth();
-
-        // Initialize rows and columns based on values from the sheet
-        addColumnAndRowConstraints(numCols, colWidthFromSheet, numRows, rowHeightFromSheet);
-        addColumnsAndRowHeaders(numCols, numRows);
-        populateSheetGrid(sheetDTO, numCols, numRows);
+        addColumnAndRowConstraints(numCols, colWidth, numRows, rowHeight);
     }
 
+    public void initializeSheet(SheetDTO sheetDTO) {
+        this.currentSheet = sheetDTO;
+
+        int numRows = sheetDTO.getRows();
+        int numCols = sheetDTO.getCols();
+        int rowHeight = sheetDTO.getRowHeight();
+        int colWidth = sheetDTO.getColWidth();
+
+        initializeSheetBase(sheetDTO, numRows, numCols, rowHeight, colWidth);
+        addHeaders(1, numCols, 1, numRows, 0, 0);
+        populateSheetGrid(sheetDTO, numCols, numRows);
+    }
     private void clearGridPane() {
         // Clear existing cells in the GridPane
         spreadsheetGrid.getChildren().clear();
@@ -172,39 +169,88 @@ public class SheetController {
             spreadsheetGrid.getRowConstraints().add(rowConstraints);
         }
     }
+    // Helper method to add headers
+    private void addHeaders(int startCol, int endCol, int startRow, int endRow, int colOffset, int rowOffset) {
+        // Add the top-left corner cell (usually left empty or used as needed)
+        Label cornerLabel = new Label();
+        cornerLabel.getStyleClass().add("corner-header");
+        spreadsheetGrid.add(cornerLabel, colOffset, rowOffset);
 
-    private void addColumnsAndRowHeaders(int numCols, int numRows) {
-        for (int col = 1; col <= numCols; col++) {
+        // Adding column headers (start from colOffset + 1)
+        for (int col = startCol; col <= endCol; col++) {
             Label colHeader = new Label(getColumnName(col));
-            colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; "
-                    + "-fx-border-color: black; -fx-border-width: 1px;");
+            colHeader.getStyleClass().add("column-header");
             colHeader.setAlignment(Pos.CENTER);
 
-            ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(col);
+            ColumnConstraints colConstraints = spreadsheetGrid.getColumnConstraints().get(col - startCol + colOffset + 1);
             colHeader.prefWidthProperty().bind(colConstraints.prefWidthProperty());
 
-            RowConstraints headerRowConstraints = spreadsheetGrid.getRowConstraints().getFirst();
+            RowConstraints headerRowConstraints = spreadsheetGrid.getRowConstraints().get(rowOffset);
             colHeader.prefHeightProperty().bind(headerRowConstraints.prefHeightProperty());
 
-            spreadsheetGrid.add(colHeader, col, 0);
+            spreadsheetGrid.add(colHeader, col - startCol + colOffset + 1, rowOffset);
         }
 
-        for (int row = 1; row <= numRows; row++) {
+        // Adding row headers (start from rowOffset + 1)
+        for (int row = startRow; row <= endRow; row++) {
             Label rowHeader = new Label(String.valueOf(row));
-            rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; "
-                    + "-fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setAlignment(Pos.CENTER); // Center the text
+            rowHeader.getStyleClass().add("row-header");
+            rowHeader.setAlignment(Pos.CENTER);
 
-            RowConstraints rowConstraints = spreadsheetGrid.getRowConstraints().get(row);
+            RowConstraints rowConstraints = spreadsheetGrid.getRowConstraints().get(row - startRow + rowOffset + 1);
             rowHeader.prefHeightProperty().bind(rowConstraints.prefHeightProperty());
 
-            ColumnConstraints headerColConstraints = spreadsheetGrid.getColumnConstraints().getFirst();
+            ColumnConstraints headerColConstraints = spreadsheetGrid.getColumnConstraints().get(colOffset);
             rowHeader.prefWidthProperty().bind(headerColConstraints.prefWidthProperty());
 
-            spreadsheetGrid.add(rowHeader, 0, row);
+            spreadsheetGrid.add(rowHeader, colOffset, row - startRow + rowOffset + 1);
         }
     }
 
+
+    // Helper method to process individual cells
+    private void processCell(CellDTOImpl cellDTO, int row, int col, int gridRowIndex, int gridColIndex) {
+        String cellID = getColumnName(col) + row;
+
+        if (cellToLabel.containsKey(cellID)) {
+            Label existingLabel = cellToLabel.get(cellID);
+
+            // Update the value and reapply style
+            existingLabel.setText(cellDTO != null ? cellDTO.getEffectiveValue() : "");
+            applyCellStyle(cellDTO, existingLabel);
+
+        } else {
+            // Create a new label if it doesn't exist
+            Label cellLabel = new Label(cellDTO != null ? cellDTO.getEffectiveValue() : "");
+            cellLabel.setAlignment(Pos.CENTER);
+
+            cellLabel.setPrefHeight(uiModel.getRowHeight());
+            cellLabel.setPrefWidth(uiModel.getColWidth());
+            cellLabel.getStyleClass().add("cell");
+            applyCellStyle(cellDTO, cellLabel);
+
+            cellToLabel.put(cellID, cellLabel);
+
+            spreadsheetGrid.add(cellLabel, gridColIndex, gridRowIndex);
+
+            // Add listener for clicks on the cell
+            final int finalRow = row;
+            final int finalCol = col;
+            cellLabel.setOnMouseClicked(event -> {
+                selectedRow = finalRow;
+                selectedCol = finalCol;
+                String selectedCellId = getColumnName(selectedCol) + selectedRow;
+
+                if (isReadOnly && onCellSelected != null) {
+                    onCellSelected.accept(selectedCellId);
+                } else if (sheetViewMainController != null) {
+                    sheetViewMainController.handleCellSelection(selectedCellId);
+                }
+            });
+        }
+    }
+
+    // Refactored populateSheetGrid method
     private void populateSheetGrid(SheetDTO sheetDTO, int numCols, int numRows) {
         Map<String, CellDTOImpl> cells = sheetDTO.getCells();
 
@@ -212,46 +258,27 @@ public class SheetController {
             for (int col = 1; col <= numCols; col++) {
                 String cellID = getColumnName(col) + row;
                 CellDTOImpl cellDTO = cells.get(cellID);
-
-                if (cellToLabel.containsKey(cellID)) {
-                    Label existingLabel = cellToLabel.get(cellID);
-
-                    // Update the value and reapply style
-                    existingLabel.setText(cellDTO != null ? cellDTO.getEffectiveValue() : "");
-                    applyCellStyle(cellDTO, existingLabel);
-
-                } else {
-                    // Create a new label if it doesn't exist
-                    Label cellLabel = new Label(cellDTO != null ? cellDTO.getEffectiveValue() : "");
-                    cellLabel.setAlignment(Pos.CENTER);
-
-                    cellLabel.setPrefHeight(uiModel.getRowHeight());
-                    cellLabel.setPrefWidth(uiModel.getColWidth());
-                    cellLabel.getStyleClass().add("cell");
-                    applyCellStyle(cellDTO, cellLabel);
-
-                    cellToLabel.put(cellID, cellLabel);
-
-                    spreadsheetGrid.add(cellLabel, col, row);
-
-                    // Add listener for clicks on the cell
-                    final int finalRow = row;
-                    final int finalCol = col;
-                    cellLabel.setOnMouseClicked(event -> {
-                        selectedRow = finalRow;
-                        selectedCol = finalCol;
-                        String selectedCellId = getColumnName(selectedCol) + selectedRow;
-
-                        if (isReadOnly && onCellSelected != null) {
-                            onCellSelected.accept(selectedCellId);
-                        } else if (sheetViewMainController != null) {
-                            sheetViewMainController.handleCellSelection(selectedCellId);
-                        }
-                    });
-                }
+                processCell(cellDTO, row, col, row, col);
             }
         }
     }
+
+    // Refactored populateFilterSheetGrid method
+    private void populateFilterSheetGrid(SheetDTO sheetDTO, int minCol, int minRow) {
+        Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
+
+        for (String cellId : activeCells.keySet()) {
+            int row = extractRowFromCellId(cellId);
+            int col = extractColumnFromCellId(cellId);
+            int gridRowIndex = row - minRow + 1;
+            int gridColIndex = col - minCol + 1;
+
+            CellDTOImpl cellDTO = activeCells.get(cellId);
+
+            processCell(cellDTO, row, col, gridRowIndex, gridColIndex);
+        }
+    }
+
 
     private void applyCellStyle(CellDTOImpl cellDTO, Label label) {
         String borderStyle = "-fx-border-color: black; -fx-border-width: 1px;";
@@ -372,7 +399,7 @@ public class SheetController {
                 }
 
                 @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
                             Label selectedLabel = cellToLabel.get(cellID);
@@ -420,7 +447,7 @@ public class SheetController {
                 }
 
                 @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
                             Label selectedLabel = cellToLabel.get(cellID);
@@ -493,7 +520,7 @@ public class SheetController {
                 }
 
                 @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                public void onResponse(@NotNull Call call, @NotNull Response response) {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
                             // עדכון העיצוב של התא ב-UI לאחר קבלת תשובה מוצלחת מהשרת
@@ -549,15 +576,10 @@ public class SheetController {
     }
 
     public void initializeFilterSheet(SheetDTO sheetDTO) {
-        cellToLabel.clear();
-        clearGridPane();
-
         Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
 
-        int minRow = Integer.MAX_VALUE;
-        int maxRow = Integer.MIN_VALUE;
-        int minCol = Integer.MAX_VALUE;
-        int maxCol = Integer.MIN_VALUE;
+        int minRow = Integer.MAX_VALUE, maxRow = Integer.MIN_VALUE;
+        int minCol = Integer.MAX_VALUE, maxCol = Integer.MIN_VALUE;
 
         for (String cellId : activeCells.keySet()) {
             int row = extractRowFromCellId(cellId);
@@ -570,88 +592,14 @@ public class SheetController {
 
         int numRows = maxRow - minRow + 1;
         int numCols = maxCol - minCol + 1;
+        int rowHeight = sheetDTO.getRowHeight();
+        int colWidth = sheetDTO.getColWidth();
 
-        // Remove gaps between cells
-        spreadsheetGrid.setHgap(0);
-        spreadsheetGrid.setVgap(0);
-
-        // Remove padding and border from the GridPane
-        spreadsheetGrid.setPadding(Insets.EMPTY);
-        spreadsheetGrid.setStyle("-fx-border-color: transparent;");
-
-        // Get row height and column width from the sheet
-        int rowHeightFromSheet = sheetDTO.getRowHeight();
-        int colWidthFromSheet = sheetDTO.getColWidth();
-
-        // Initialize rows and columns based on values from the sheet
-        addColumnAndRowConstraints(numCols, colWidthFromSheet, numRows, rowHeightFromSheet);
-        addFilterColumnsAndRowHeaders(minCol, maxCol, minRow, maxRow);
-        populateFilterSheetGrid(sheetDTO, numCols, numRows, minCol, minRow);
+        initializeSheetBase(sheetDTO, numRows, numCols, rowHeight, colWidth);
+        addHeaders(minCol, maxCol, minRow, maxRow, 0, 0);
+        populateFilterSheetGrid(sheetDTO, minCol, minRow);
     }
 
-    private void addFilterColumnsAndRowHeaders(int minCol, int maxCol, int minRow, int maxRow) {
-        // Adding column headers
-        for (int col = minCol; col <= maxCol; col++) {
-            Label colHeader = new Label(getColumnName(col));
-            colHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            colHeader.setPrefWidth(uiModel.getColWidth());
-            colHeader.setPrefHeight(uiModel.getRowHeight());
-            colHeader.setAlignment(Pos.CENTER);
-            spreadsheetGrid.add(colHeader, col - minCol + 1, 0);
-        }
-
-        for (int row = minRow; row <= maxRow; row++) {
-            Label rowHeader = new Label(String.valueOf(row));
-            rowHeader.setStyle("-fx-font-weight: bold; -fx-background-color: #e0e0e0; -fx-border-color: black; -fx-border-width: 1px;");
-            rowHeader.setPrefWidth(uiModel.getColWidth());
-            rowHeader.setPrefHeight(uiModel.getRowHeight());
-            rowHeader.setAlignment(Pos.CENTER);
-            spreadsheetGrid.add(rowHeader, 0, row - minRow + 1);
-        }
-    }
-
-    private void populateFilterSheetGrid(SheetDTO sheetDTO, int numCols, int numRows, int minCol, int minRow) {
-        Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
-
-        // Build the column and row headers using original indices
-        for (String cellId : activeCells.keySet()) {
-            int row = extractRowFromCellId(cellId);
-            int col = extractColumnFromCellId(cellId);
-            int rowIndex = row - minRow + 1;
-            int colIndex = col - minCol + 1;
-
-            CellDTOImpl cellDTO = activeCells.get(cellId);
-
-            Label cellLabel = new Label(cellDTO.getEffectiveValue());
-            cellLabel.setAlignment(Pos.CENTER);
-
-            // Set cell dimensions based on the UI model
-            cellLabel.setPrefHeight(uiModel.getRowHeight());
-            cellLabel.setPrefWidth(uiModel.getColWidth());
-            cellLabel.getStyleClass().add("cell");
-            applyCellStyle(cellDTO, cellLabel);
-            cellToLabel.put(cellId, cellLabel);
-
-            spreadsheetGrid.add(cellLabel, colIndex, rowIndex);
-
-            // Add listener for clicks on the cell
-            final int finalRow = row;
-            final int finalCol = col;
-            cellLabel.setOnMouseClicked(event -> {
-                selectedRow = finalRow;
-                selectedCol = finalCol;
-                String selectedCellId = getColumnName(selectedCol) + selectedRow;
-
-                if (isReadOnly && onCellSelected != null) {
-                    // In read-only mode, use the provided listener
-                    onCellSelected.accept(selectedCellId);
-                } else if (sheetViewMainController != null) {
-                    // In normal mode, notify the main controller
-                    sheetViewMainController.handleCellSelection(selectedCellId);
-                }
-            });
-        }
-    }
 
     private int extractRowFromCellId(String cellId) {
         String rowPart = cellId.replaceAll("[^0-9]", "");

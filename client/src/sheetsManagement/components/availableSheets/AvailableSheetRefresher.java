@@ -34,9 +34,7 @@ public class AvailableSheetRefresher extends TimerTask {
         HttpClientUtil.runAsync(Constants.AVAILABLE_SHEETS_PAGE, new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                Platform.runLater(() -> {
-                    System.err.println("Failed to load available sheets: " + e.getMessage());
-                });
+                Platform.runLater(() -> System.err.println("Failed to load available sheets: " + e.getMessage()));
             }
 
             @Override
@@ -47,9 +45,7 @@ public class AvailableSheetRefresher extends TimerTask {
 
                     Platform.runLater(() -> tableConsumer.accept(availableSheets));
                 } else {
-                    Platform.runLater(() -> {
-                        System.err.println("Failed to load available sheets: " + response.message());
-                    });
+                    Platform.runLater(() -> System.err.println("Failed to load available sheets: " + response.message()));
                 }
             }
         });

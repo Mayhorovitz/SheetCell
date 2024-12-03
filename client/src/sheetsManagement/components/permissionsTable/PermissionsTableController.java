@@ -14,7 +14,6 @@ import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
-import sheetsManagement.SheetsManagementController;
 import util.Constants;
 import util.http.HttpClientUtil;
 
@@ -33,7 +32,6 @@ public class PermissionsTableController {
     @FXML
     private TableColumn<PermissionRequestDTO, String> statusColumn;
 
-    private SheetsManagementController mainController;
 
     // Initializes table columns and resizes them based on table width
     @FXML
@@ -50,10 +48,6 @@ public class PermissionsTableController {
         });
     }
 
-    // Sets the main controller for this component
-    public void setMainController(SheetsManagementController mainController) {
-        this.mainController = mainController;
-    }
 
     // Loads permission requests for a specific sheet from the server
     public void loadPermissionsForSheet(String sheetName) {

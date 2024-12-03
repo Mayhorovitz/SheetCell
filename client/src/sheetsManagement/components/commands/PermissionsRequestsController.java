@@ -109,11 +109,9 @@ public class PermissionsRequestsController {
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
                 if (response.isSuccessful()) {
-                    Platform.runLater(() -> {
-                        permissionsRequestsTable.getItems().remove(request);
-                    });
+                    Platform.runLater(() -> permissionsRequestsTable.getItems().remove(request));
                 } else {
                     Platform.runLater(() -> showError("Failed to update request status: " + response.message()));
                 }

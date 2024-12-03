@@ -21,7 +21,6 @@ public class ReadOnlyPopupController {
     private SheetController sheetController;
     private UIModel uiModel;
 
-    private int versionNumber;
     private SheetDTO sheetToDisplay;
 
     public void setUiModel(UIModel uiModel) {
@@ -32,9 +31,7 @@ public class ReadOnlyPopupController {
         this.sheetToDisplay = sheetDTO;
     }
 
-    public void setVersionNumber(int versionNumber) {
-        this.versionNumber = versionNumber;
-    }
+
 
     public void displaySheet() {
         initializeSheetController();

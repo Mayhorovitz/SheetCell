@@ -3,7 +3,6 @@ package login;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -36,7 +35,7 @@ public class LoginController {
     }
 
     @FXML
-    private void loginButtonClicked(ActionEvent event) {
+    private void loginButtonClicked() {
 
         String userName = userNameTextField.getText();
         if (userName.isEmpty()) {
@@ -62,9 +61,8 @@ public class LoginController {
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse(@NotNull Call call, @NotNull Response response) {
                 if (response.code() != 200) {
-                    String responseBody = response.body().string();
                     Platform.runLater(() -> {
                         errorMessageProperty.set("Username already in use. Please try a different one.");
                         userNameTextField.clear();
@@ -81,7 +79,7 @@ public class LoginController {
 
 
     @FXML
-    private void quitButtonClicked(ActionEvent e) {
+    private void quitButtonClicked() {
         Platform.exit();
     }
 
