@@ -281,18 +281,13 @@ public class SheetController {
 
 
     private void applyCellStyle(CellDTOImpl cellDTO, Label label) {
-        String borderStyle = "-fx-border-color: black; -fx-border-width: 1px;";
+        // Remove any previous highlight classes
+        label.getStyleClass().removeAll("cell", "cell-custom");
 
-        if (cellDTO != null) {
-            label.setStyle(String.format(
-                    "-fx-background-color: %s; -fx-text-fill: %s; %s",
-                    cellDTO.getBackgroundColor(), cellDTO.getTextColor(), borderStyle
-            ));
-        } else {
-            // Default to white background and black text, always with the border
-            label.setStyle("-fx-background-color: white; -fx-text-fill: black;" + borderStyle);
-        }
+        label.getStyleClass().add("cell");
+
     }
+
 
     private String getColumnName(int colIndex) {
         StringBuilder columnName = new StringBuilder();
@@ -304,75 +299,50 @@ public class SheetController {
         return columnName.toString();
     }
 
+
     public void highlightDependenciesAndInfluences(CellDTOImpl selectedCellDTO) {
-        resetCellBorders();  // Reset previous highlights
+        resetCellHighlights();  // Reset previous highlights
+
         if (selectedCellDTO != null) {
             lastSelectedCell = selectedCellDTO;
-            highlightCells(selectedCellDTO.getDependsOn(), "lightblue");
-            highlightCells(selectedCellDTO.getInfluencingOn(), "lightgreen");
+
+            highlightCells(selectedCellDTO.getDependsOn(), "cell-dependency");
+            highlightCells(selectedCellDTO.getInfluencingOn(), "cell-influence");
         }
+
         Label selectedLabel = cellToLabel.get(getColumnName(selectedCol) + selectedRow);
         if (selectedLabel != null) {
-            String currentStyle = selectedLabel.getStyle();
-            selectedLabel.setStyle(currentStyle + "; -fx-border-color: blue; -fx-border-width: 3px;");
+            selectedLabel.getStyleClass().add("cell-selected");
         }
     }
 
-    private void highlightCells(List<String> cellIds, String color) {
+    private void highlightCells(List<String> cellIds, String styleClass) {
         for (String cellId : cellIds) {
             Label cellLabel = cellToLabel.get(cellId);
             if (cellLabel != null) {
-                String currentStyle = cellLabel.getStyle();
-                String newStyle = currentStyle + ";-fx-border-color:" + color + ";-fx-border-width: 4px;-fx-border-style: dashed;";
-                cellLabel.setStyle(newStyle);
+                cellLabel.getStyleClass().add(styleClass);
             }
         }
     }
 
     public void clearPreviousHighlights() {
         if (lastSelectedCell != null) {
-            clearHighlights(lastSelectedCell.getDependsOn());
-            clearHighlights(lastSelectedCell.getInfluencingOn());
+            resetCellHighlights();
         }
     }
 
-    public void clearHighlights(List<String> cellIds) {
-        for (String cellId : cellIds) {
-            Label cellLabel = cellToLabel.get(cellId);
-            if (cellLabel != null) {
-                String currentStyle = cellLabel.getStyle()
-                        .replaceAll("-fx-border-color:.*?;", "")
-                        .replaceAll("-fx-border-width:.*?;", "")
-                        .replaceAll("-fx-border-style:.*?;", "");
-
-                // Restore default border
-                cellLabel.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px; ");
-            }
-        }
-    }
-
-    private void resetCellBorders() {
+    private void resetCellHighlights() {
         cellToLabel.values().forEach(label -> {
-            // Reset borders without changing other styles
-            String currentStyle = label.getStyle().replaceAll("-fx-border-color:.*?;", "")
-                    .replaceAll("-fx-border-width:.*?;", "").replaceAll("-fx-border-style:.*?;", "");
-            label.setStyle(currentStyle + "-fx-border-color: black; -fx-border-width: 1px;");
+            label.getStyleClass().removeAll("cell-selected", "cell-dependency", "cell-influence", "cell-range-highlight");
         });
     }
 
-    // Highlight a specific cell with a style
-    private void highlightCell(String cellId, String style) {
-        Label cellLabel = cellToLabel.get(cellId);
-        if (cellLabel != null) {
-            cellLabel.setStyle(cellLabel.getStyle() + style);
-        }
-    }
+
 
     public void applyBackgroundColorToSelectedCell(Color color) {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
-
 
             HttpUrl url = HttpUrl.parse(Constants.UPDATE_BACKGROUND);
             if (url == null) {
@@ -386,7 +356,6 @@ public class SheetController {
                     .add("colorHex", colorHex)
                     .build();
 
-            // יצירת בקשת POST
             Request request = new Request.Builder()
                     .url(url)
                     .post(formBody)
@@ -405,6 +374,7 @@ public class SheetController {
                             Label selectedLabel = cellToLabel.get(cellID);
                             if (selectedLabel != null) {
                                 String currentStyle = selectedLabel.getStyle();
+                                // Update the background color inline
                                 selectedLabel.setStyle(currentStyle + "-fx-background-color: " + colorHex + ";");
                             }
                         });
@@ -421,7 +391,6 @@ public class SheetController {
         if (selectedRow != -1 && selectedCol != -1) {
             String cellID = getColumnName(selectedCol) + selectedRow;
             String colorHex = toHexString(color);
-
 
             HttpUrl url = HttpUrl.parse(Constants.UPDATE_TEXT);
             if (url == null) {
@@ -453,6 +422,7 @@ public class SheetController {
                             Label selectedLabel = cellToLabel.get(cellID);
                             if (selectedLabel != null) {
                                 String currentStyle = selectedLabel.getStyle();
+                                // Update the text color inline
                                 selectedLabel.setStyle(currentStyle + "-fx-text-fill: " + colorHex + ";");
                             }
                         });
@@ -523,14 +493,15 @@ public class SheetController {
                 public void onResponse(@NotNull Call call, @NotNull Response response) {
                     if (response.isSuccessful()) {
                         Platform.runLater(() -> {
-                            // עדכון העיצוב של התא ב-UI לאחר קבלת תשובה מוצלחת מהשרת
                             Label cellLabel = cellToLabel.get(cellID);
                             if (cellLabel != null) {
+                                // Reset inline styles for background and text color
                                 String currentStyle = cellLabel.getStyle();
-                                // מחליפים רק את צבע הטקסט והרקע, מבלי להשפיע על שאר הסטיילים
-                                currentStyle = currentStyle.replaceAll("-fx-text-fill:.*?;", "");
-                                currentStyle = currentStyle.replaceAll("-fx-background-color:.*?;", "");
-                                cellLabel.setStyle(currentStyle + "-fx-text-fill: black; -fx-background-color: white;");
+                                // Remove background color
+                                currentStyle = currentStyle.replaceAll("-fx-background-color: #[A-Fa-f0-9]{6};", "");
+                                // Remove text color
+                                currentStyle = currentStyle.replaceAll("-fx-text-fill: #[A-Fa-f0-9]{6};", "");
+                                cellLabel.setStyle(currentStyle);
                             }
                         });
                     } else {
@@ -541,11 +512,10 @@ public class SheetController {
         }
     }
 
+
     public void highlightRange(RangeDTO rangeDTO) {
-        // First, reset any previously highlighted range
         resetRangeHighlight();
 
-        // Extract the start and end coordinates of the range
         String startCellId = rangeDTO.getFrom();
         String endCellId = rangeDTO.getTo();
 
@@ -554,27 +524,23 @@ public class SheetController {
         int endRow = extractRowFromCellId(endCellId);
         int endCol = extractColumnFromCellId(endCellId);
 
-        // Loop through all the cells in the range and highlight them
         for (int row = startRow; row <= endRow; row++) {
             for (int col = startCol; col <= endCol; col++) {
                 String cellId = getColumnName(col) + row;
 
-                // Apply the highlight style
-                highlightCell(cellId, "-fx-border-color: #00ffcc; -fx-border-width: 2px; -fx-background-color: rgba(0,255,204,0.28);");
+                Label cellLabel = cellToLabel.get(cellId);
+                if (cellLabel != null) {
+                    cellLabel.getStyleClass().add("cell-range-highlight");
+                }
             }
         }
     }
 
     public void resetRangeHighlight() {
         cellToLabel.values().forEach(label -> {
-            String currentStyle = label.getStyle();
-            // Remove the range highlight
-            currentStyle = currentStyle.replaceAll("-fx-background-color: rgba\\(0,255,204,0.28\\);", "");
-            currentStyle = currentStyle.replaceAll("-fx-border-color: #00ffcc; -fx-border-width: 2px;", "");
-            label.setStyle(currentStyle);
+            label.getStyleClass().remove("cell-range-highlight");
         });
     }
-
     public void initializeFilterSheet(SheetDTO sheetDTO) {
         Map<String, CellDTOImpl> activeCells = sheetDTO.getCells();
 

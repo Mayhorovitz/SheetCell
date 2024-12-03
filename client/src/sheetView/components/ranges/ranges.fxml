@@ -41,7 +41,7 @@
         </font>
     </Label>
 
-    <ListView fx:id="rangeListView" prefHeight="200" styleClass="list-view"/>
+    <ListView fx:id="rangeListView" prefHeight="200"/>
 
     <Button onAction="#handleRangeSelection" styleClass="range-button" text="Highlight Selected Range">
         <font>
