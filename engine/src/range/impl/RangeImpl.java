@@ -27,7 +27,7 @@ public class RangeImpl implements Range, Serializable {
         // Validate range and load cells
         validateAndLoadRange(sheet);
     }
-    public RangeImpl(String name, Coordinate startCellId, Coordinate endCellId, Sheet sheet) {
+    public RangeImpl(String name, Coordinate startCellId, Coordinate endCellId) {
         this.name = name;
         this.fromCoordinate = startCellId;
         this.toCoordinate = endCellId;

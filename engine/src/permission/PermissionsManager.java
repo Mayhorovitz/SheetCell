@@ -32,11 +32,14 @@ public class PermissionsManager {
         if (username == null || permissionType == null) {
             throw new IllegalArgumentException("Username and permission type cannot be null.");
         }
-        PermissionRequest request = new PermissionRequest(username, permissionType, PermissionStatus.APPROVED);
-        permissionRequests.add(request);    }
+        userPermissions.put(username, permissionType);
+    }
 
     // Submits a permission request from a user.
     public synchronized void submitPermissionRequest(String requesterUsername, PermissionType requestedPermission) {
+        if (requesterUsername == null || requestedPermission == null) {
+            throw new IllegalArgumentException("Requester username and requested permission cannot be null.");
+        }
         PermissionRequest request = new PermissionRequest(requesterUsername, requestedPermission, PermissionStatus.PENDING);
         permissionRequests.add(request);
     }
@@ -79,6 +82,7 @@ public class PermissionsManager {
     }
 
     public synchronized Map<String, PermissionType> getUserPermissions() {
+        // Return a copy to prevent external modification.
         return new HashMap<>(userPermissions);
     }
 }

@@ -3,6 +3,7 @@ package sheet.impl;
 import cell.api.Cell;
 import cell.impl.CellImpl;
 import coordinate.Coordinate;
+import coordinate.CoordinateUtils;
 import range.api.Range;
 import range.impl.RangeImpl;
 import sheet.api.Sheet;
@@ -26,14 +27,14 @@ public class SheetImpl implements Sheet, Serializable {
     private final Map<Coordinate, Cell> activeCells;
     private List<Cell> cellsThatHaveChanged;
     private final Map<String, Range> ranges;
-    private Map<String, List<Cell>> rangeUsageMap; // מפת טווחים לתאים המשתמשים בהם
+    private Map<String, List<Cell>> rangeUsageMap;
 
     // Constructors
     public SheetImpl() {
         this.activeCells = new HashMap<>();
         this.cellsThatHaveChanged = new ArrayList<>();
         this.ranges = new HashMap<>();
-        this.rangeUsageMap = new HashMap<>(); // אתחול המפה
+        this.rangeUsageMap = new HashMap<>();
 
 
     }
@@ -200,12 +201,10 @@ public class SheetImpl implements Sheet, Serializable {
         // Add the updated cell to the activeCells map
         newSheetVersion.activeCells.put(coordinate, newCell);
 
-        boolean dependenciesNeedUpdate = true;  // Flag to determine if dependencies should be updated
-
         try {
-            if (dependenciesNeedUpdate) {
+
                 newSheetVersion.updateDependenciesAndInfluences();
-            }
+
 
             // Calculate effective values for cells that changed and update their versions
             List<Cell> cellsThatHaveChanged = newSheetVersion.orderCellsForCalculation()
@@ -393,7 +392,7 @@ public class SheetImpl implements Sheet, Serializable {
             throw new IllegalArgumentException("Range '" + name + "' is out of sheet bounds.");
         }
 
-        ranges.put(name, new RangeImpl(name, startCell, endCell, this));
+        ranges.put(name, new RangeImpl(name, startCell, endCell));
     }
 
     @Override
@@ -590,11 +589,7 @@ public class SheetImpl implements Sheet, Serializable {
 
 
     private int getColumnIndexFromName(String columnName) {
-        int index = 0;
-        for (char c : columnName.toUpperCase().toCharArray()) {
-            index = index * 26 + (c - 'A' + 1);
-        }
-        return index;
+        return CoordinateUtils.convertColumnToIndex(columnName);
     }
 
 }
