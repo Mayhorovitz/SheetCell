@@ -7,13 +7,13 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.AppMainController">
+<VBox xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="main.AppMainController" style="-fx-background-color: #e8f5e9;">
     <children>
         <HBox spacing="10">
             <Label fx:id="userGreetingLabel" text="Hello Guest" textOverrun="WORD_ELLIPSIS">
-            <font>
-                <Font name="Arial Black" size="16.0" />
-            </font>
+                <font>
+                    <Font name="Arial Black" size="16.0" />
+                </font>
             </Label>
             <Region HBox.hgrow="ALWAYS" />
             <Label alignment="CENTER" text="shticell" textOverrun="WORD_ELLIPSIS">

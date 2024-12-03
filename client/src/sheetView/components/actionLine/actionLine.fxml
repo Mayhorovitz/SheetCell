@@ -2,28 +2,33 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.HBox?>
-<HBox alignment="CENTER" prefHeight="11.0" prefWidth="709.0" spacing="15" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="sheetView.components.actionLine.ActionLineController">
+<?import javafx.scene.text.Font?>
+<HBox alignment="CENTER" prefHeight="11.0" prefWidth="709.0" spacing="15" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="sheetView.components.actionLine.ActionLineController" stylesheets="@/sheetView/main/sheetViewStyle.css" styleClass="hbox">
 
     <!-- Label for displaying selected cell ID -->
-    <Label text="Cell ID:" />
-    <Label fx:id="selectedCellId"  />
+    <Label text="Cell ID:" styleClass="label"/>
+    <Label fx:id="selectedCellId" styleClass="label"/>
 
     <!-- Label for displaying original value -->
-    <Label text="Original Value:" />
-    <Label fx:id="originalValueLabel"  />
+    <Label text="Original Value:" styleClass="label"/>
+    <Label fx:id="originalValueLabel" styleClass="label"/>
 
     <!-- Field for editing cell value -->
-    <Label text="New Value:" />
-    <TextField fx:id="newValueField"  />
+    <Label text="New Value:" styleClass="label"/>
+    <TextField fx:id="newValueField" styleClass="text-field"/>
 
     <!-- Button to update cell value -->
-    <Button onAction="#handleUpdateCell" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Update Value" />
+    <Button onAction="#handleUpdateCell" styleClass="command-button" text="Update Value">
+        <font>
+            <Font size="11.0" />
+        </font>
+    </Button>
 
     <!-- Label for displaying last cell version update -->
-    <Label text="Last Update Cell Version:" />
-    <Label fx:id="lastUpdateCellVersion"  />
+    <Label text="Last Update Cell Version:" styleClass="label"/>
+    <Label fx:id="lastUpdateCellVersion" styleClass="label"/>
 
-    <Label text="Version:" />
-    <ComboBox fx:id="versionSelector" onAction="#handleVersionSelection" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" />
+    <Label text="Version:" styleClass="label"/>
+    <ComboBox fx:id="versionSelector" onAction="#handleVersionSelection" styleClass="combo-box"/>
 
 </HBox>

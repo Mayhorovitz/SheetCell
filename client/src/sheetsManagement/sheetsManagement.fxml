@@ -1,19 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.*?>
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetsManagement.SheetsManagementController">
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetsManagement.SheetsManagementController" stylesheets="@sheetsManagementStyle.css">
     <children>
-        <BorderPane AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.bottomAnchor="10.0">
+        <BorderPane AnchorPane.topAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.bottomAnchor="10.0" style="-fx-background-color: #e8f5e9; -fx-padding: 15px;">
             <!-- Top Section: Title and Upload Button -->
             <top>
                 <HBox spacing="10.0">
-                    <Label text="Sheets Management" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
-                    <Button fx:id="uploadSheetButton" text="Load new File" />
-                    <ProgressBar fx:id="progressBar" prefWidth="300" visible="true" />
+                    <Label text="Sheets Management" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #004d40;" />
+                    <Button fx:id="uploadSheetButton" text="Load new File" style="-fx-background-color: #81c784; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8px; -fx-background-radius: 5;" />
+                    <ProgressBar fx:id="progressBar" prefWidth="300" visible="true" style="-fx-accent: #81c784;" />
                     <Label fx:id="progressLabel" text="Loading..." />
-
-
                 </HBox>
             </top>
 
@@ -30,7 +28,7 @@
 
             <!-- Right Section: Commands -->
             <right>
-                <fx:include fx:id="commands" source="components/commands/commands.fxml"/>
+                <fx:include fx:id="commands" source="components/commands/commands.fxml" />
             </right>
         </BorderPane>
     </children>

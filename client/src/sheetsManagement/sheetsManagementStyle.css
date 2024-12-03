@@ -1,0 +1,92 @@
+/* sheetsManagementStyle.css */
+
+.root {
+    -fx-font-family: "Arial";
+    -fx-font-size: 14px;
+    -fx-background-color: #d7ffd9; /* Light green background for the entire application */
+    -fx-padding: 10px;
+}
+
+.border-pane {
+    -fx-background-color: #e0f7fa;
+    -fx-padding: 15px;
+}
+
+.sheets-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #004d40;
+}
+
+.upload-button {
+    -fx-background-color: #81c784;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8px;
+    -fx-background-radius: 5;
+}
+
+.upload-button:hover {
+    -fx-background-color: #66bb6a;
+}
+
+.upload-button:pressed {
+    -fx-background-color: #388E3C;
+}
+
+.progress-bar {
+    -fx-accent: #81c784;
+}
+
+.permissions-table, .available-sheets {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #DCEDC8FF;
+    -fx-border-radius: 5;
+    -fx-padding: 10px;
+}
+
+.commands {
+    -fx-background-color: #dcedc8;
+    -fx-padding: 10px;
+    -fx-border-radius: 5;
+}
+
+.available-sheets-table {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #DCEDC8FF;
+    -fx-border-radius: 5;
+    -fx-padding: 10px;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.permissions-table-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #DCEDC8FF;
+    -fx-border-radius: 5;
+    -fx-padding: 10px;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.commands-box {
+    -fx-background-color: #dcedc8;
+    -fx-padding: 15px;
+    -fx-border-radius: 5;
+}
+
+.command-button {
+    -fx-background-color: #81c784;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8px;
+    -fx-background-radius: 5;
+}
+
+.command-button:hover {
+    -fx-background-color: #66bb6a;
+}
+
+.command-button:pressed {
+    -fx-background-color: #388E3C;
+}

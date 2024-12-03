@@ -2,8 +2,9 @@
 
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.GridPane?>
-<ScrollPane fx:id="spreadsheetScrollPane" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.sheet.SheetController">
+
+<ScrollPane fx:id="spreadsheetScrollPane" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sheetView.components.sheet.SheetController" stylesheets="@/sheetView/main/sheetViewStyle.css" styleClass="scroll-pane">
     <content>
-        <GridPane fx:id="spreadsheetGrid"/>
+        <GridPane fx:id="spreadsheetGrid" styleClass="sheet-table"/>
     </content>
 </ScrollPane>

@@ -9,39 +9,44 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" prefWidth="261.0" spacing="10" style="-fx-background-color: #d0f3f7; -fx-border-color: #9bc0c4;" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="sheetView.components.ranges.RangeController">
+<VBox alignment="CENTER" prefWidth="261.0" spacing="10" stylesheets="@/sheetView/main/sheetViewStyle.css" styleClass="range-container" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/22" fx:controller="sheetView.components.ranges.RangeController">
 
-    <TextField fx:id="rangeNameField" promptText="Range Name" />
-    <TextField fx:id="rangeCellsField" promptText="Range Cells (e.g., A1..B3)" />
+    <TextField fx:id="rangeNameField" promptText="Range Name" styleClass="text-field"/>
+    <TextField fx:id="rangeCellsField" promptText="Range Cells (e.g., A1..B3)" styleClass="text-field"/>
+
     <HBox prefHeight="0.0" prefWidth="250.0">
         <children>
-            <Button onAction="#handleAddRange" prefHeight="28.0" prefWidth="111.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Add Range">
+            <Button onAction="#handleAddRange" prefHeight="28.0" prefWidth="111.0" styleClass="range-button" text="Add Range">
                 <HBox.margin>
                     <Insets left="10.0" />
                 </HBox.margin>
-            <font>
-               <Font size="11.0" />
-            </font>
+                <font>
+                    <Font size="11.0" />
+                </font>
             </Button>
-            <Button onAction="#handleDeleteRange" prefHeight="28.0" prefWidth="115.0" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Delete Range" textAlignment="CENTER">
+            <Button onAction="#handleDeleteRange" prefHeight="28.0" prefWidth="115.0" styleClass="range-button" text="Delete Range" textAlignment="CENTER">
                 <HBox.margin>
                     <Insets left="10.0" right="10.0" />
                 </HBox.margin>
-            <font>
-               <Font size="11.0" />
-            </font>
+                <font>
+                    <Font size="11.0" />
+                </font>
             </Button>
         </children>
     </HBox>
 
-    <Label text="Available Ranges:">
-      <font>
-         <Font name="System Bold" size="11.0" />
-      </font></Label>
-    <ListView fx:id="rangeListView" prefHeight="200" />
-    <Button onAction="#handleRangeSelection" style="-fx-background-color: #ffffff; -fx-border-color: #9bc0c4;" text="Highlight Selected Range">
-      <font>
-         <Font size="11.0" />
-      </font></Button>
+    <Label text="Available Ranges:" styleClass="label">
+        <font>
+            <Font name="System Bold" size="11.0" />
+        </font>
+    </Label>
+
+    <ListView fx:id="rangeListView" prefHeight="200" styleClass="list-view"/>
+
+    <Button onAction="#handleRangeSelection" styleClass="range-button" text="Highlight Selected Range">
+        <font>
+            <Font size="11.0" />
+        </font>
+    </Button>
 
 </VBox>
